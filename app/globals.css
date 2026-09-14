@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background-color: #fbfaf8;
+  color: #24252d;
+}
+
+.card {
+  @apply rounded-2xl border border-ink-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(21,22,27,0.04)];
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-xl bg-ink-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-900 disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-xl border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50;
+}
+
+.btn-quiet {
+  @apply inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium text-ink-400 transition hover:bg-ink-50 hover:text-ink-600;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50;
+}
+
+.input {
+  @apply w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-800 transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
+}
+
+.label {
+  @apply mb-1 block text-xs font-medium text-ink-400;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-medium text-ink-600 transition hover:border-ink-400 hover:text-ink-800;
+}
+
+.chip-active {
+  @apply border-ink-800 bg-ink-800 text-white hover:border-ink-800 hover:text-white;
+}
+
+/* 큰 숫자는 이 앱의 주인공이다. 자간을 좁혀 한 덩어리로 읽히게 한다. */
+.numeral {
+  @apply font-bold tabular-nums tracking-tight;
+}
