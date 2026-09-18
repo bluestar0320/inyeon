@@ -6,8 +6,21 @@ import { useMemo } from "react";
 import BigNumber from "@/components/BigNumber";
 import EmptyState from "@/components/EmptyState";
 import StatCard from "@/components/StatCard";
-import { computeMoment, computeRelationship, lifeProgress, remainingYears, resolveAge } from "@/lib/calc";
-import { formatAge, formatCount, formatPercent, formatYears } from "@/lib/format";
+import {
+  computeMarriage,
+  computeMoment,
+  computeRelationship,
+  lifeProgress,
+  remainingYears,
+  resolveAge,
+} from "@/lib/calc";
+import {
+  formatAge,
+  formatCount,
+  formatFrequency,
+  formatPercent,
+  formatYears,
+} from "@/lib/format";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 
@@ -30,6 +43,14 @@ export default function HomePage() {
         .map((moment) => ({ moment, result: computeMoment(moment, profile) }))
         .sort((a, b) => a.result.total - b.result.total),
     [state.moments, profile],
+  );
+
+  const marriage = useMemo(
+    () =>
+      state.marriage === null
+        ? null
+        : { plan: state.marriage, result: computeMarriage(state.marriage, profile) },
+    [state.marriage, profile],
   );
 
   if (!hydrated) {
@@ -174,6 +195,43 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-ink-800">결혼 계획</h2>
+        {marriage === null ? (
+          <EmptyState
+            title={copy.emptyMarriage}
+            body="목표 결혼 나이와 새로운 사람을 만나는 빈도를 넣으면 그때까지의 기회가 나옵니다."
+            actionHref="/marriage"
+            actionLabel="계획 세우기"
+          />
+        ) : (
+          <Link
+            href="/marriage"
+            className="card flex items-center justify-between py-4 transition hover:border-ink-400"
+          >
+            <span className="flex items-center gap-3">
+              <span className="text-xl">💍</span>
+              <span>
+                <span className="block text-sm font-medium text-ink-800">
+                  만 {marriage.plan.targetAge}세까지
+                </span>
+                <span className="block text-xs text-ink-400">
+                  {formatFrequency(marriage.plan.frequency)}
+                  {marriage.result.yearsLeft !== null &&
+                    ` · ${formatYears(marriage.result.yearsLeft)} 남음`}
+                </span>
+              </span>
+            </span>
+            <span className="shrink-0 pl-3 text-right">
+              <span className="numeral block text-2xl text-ink-900">
+                {formatCount(marriage.result.total)}
+              </span>
+              <span className="block text-[11px] text-ink-400">번 남음</span>
+            </span>
+          </Link>
         )}
       </section>
     </div>

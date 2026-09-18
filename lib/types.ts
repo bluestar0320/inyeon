@@ -82,6 +82,20 @@ export interface Moment {
   updatedAt: string;
 }
 
+/**
+ * 결혼 계획. 목표 결혼 나이까지 새로운 사람을 몇 번 만날 수 있는지 센다.
+ * 목표 나이는 하나뿐이라 배열이 아니라 단일 값으로 둔다(profile과 같은 취급).
+ */
+export interface MarriagePlan {
+  /** 목표 결혼 나이. */
+  targetAge: number;
+  /** 새로운 사람을 만나는 빈도(소개팅·모임 등). */
+  frequency: Frequency;
+  filters: CalcFilter[];
+  note?: string;
+  updatedAt: string;
+}
+
 /** 숫자가 주는 무게감을 고르는 옵션. 문구만 바뀌고 계산은 같다. */
 export type Tone = "calm" | "aware";
 
@@ -94,5 +108,6 @@ export interface AppState {
   profile: Profile | null;
   people: Person[];
   moments: Moment[];
+  marriage: MarriagePlan | null;
   settings: Settings;
 }

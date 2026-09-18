@@ -132,3 +132,12 @@ export const RELATION_PRESETS: RelationPreset[] = [
   { relation: "자녀", emoji: "🧸", frequency: { count: 6, unit: "week" }, hoursPerMeeting: 3 },
   { relation: "가까운 친구", emoji: "🍻", frequency: { count: 1, unit: "quarter" }, hoursPerMeeting: 4 },
 ];
+
+/** 결혼 계획에서 "새로운 사람을 얼마나 자주 만나는지" 고르는 칩. */
+export const MEETING_FREQUENCY_PRESETS: { label: string; frequency: Frequency }[] = [
+  { label: "주 1회", frequency: { count: 1, unit: "week" } },
+  { label: "월 2회", frequency: { count: 2, unit: "month" } },
+  { label: "월 1회", frequency: { count: 1, unit: "month" } },
+  { label: "분기 1회", frequency: { count: 1, unit: "quarter" } },
+  { label: "연 1회", frequency: { count: 1, unit: "year" } },
+];

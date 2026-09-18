@@ -4,7 +4,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import { DEFAULT_COUNTRY_CODE } from "./lifeExpectancy";
 import { newId } from "./presets";
-import type { AppState, Moment, Person, Profile, Settings } from "./types";
+import type { AppState, MarriagePlan, Moment, Person, Profile, Settings } from "./types";
 
 const STORAGE_KEY = "relationship-countdown.v1";
 
@@ -21,6 +21,7 @@ const EMPTY_STATE: AppState = {
   profile: null,
   people: [],
   moments: [],
+  marriage: null,
   settings: DEFAULT_SETTINGS,
 };
 
@@ -40,6 +41,8 @@ function normalise(raw: unknown): AppState {
     profile: value.profile ?? null,
     people: Array.isArray(value.people) ? value.people : [],
     moments: Array.isArray(value.moments) ? value.moments : [],
+    // 결혼 계획이 생기기 전에 저장된 데이터에는 이 키가 없다. null로 떨어뜨린다.
+    marriage: value.marriage ?? null,
     settings: { ...DEFAULT_SETTINGS, ...(value.settings ?? {}) },
   };
 }
@@ -136,6 +139,14 @@ export function useActions() {
     update((current) => ({ ...current, moments: current.moments.filter((m) => m.id !== id) }));
   }, []);
 
+  const saveMarriage = useCallback((marriage: MarriagePlan) => {
+    update((current) => ({ ...current, marriage }));
+  }, []);
+
+  const removeMarriage = useCallback(() => {
+    update((current) => ({ ...current, marriage: null }));
+  }, []);
+
   const saveSettings = useCallback((settings: Partial<Settings>) => {
     update((current) => ({ ...current, settings: { ...current.settings, ...settings } }));
   }, []);
@@ -154,6 +165,8 @@ export function useActions() {
     removePerson,
     saveMoment,
     removeMoment,
+    saveMarriage,
+    removeMarriage,
     saveSettings,
     replaceAll,
     clearAll,
@@ -182,6 +195,17 @@ export function emptyPerson(): Person {
     filters: [],
     createdAt: now,
     updatedAt: now,
+  };
+}
+
+/** 목표 나이는 현재 나이보다 뒤여야 의미가 있으므로, 나이를 알면 그 위에서 잡는다. */
+export function emptyMarriage(currentAge: number | null): MarriagePlan {
+  const base = currentAge === null ? 35 : Math.ceil((currentAge + 5) / 5) * 5;
+  return {
+    targetAge: Math.min(70, Math.max(20, base)),
+    frequency: { count: 1, unit: "month" },
+    filters: [],
+    updatedAt: new Date().toISOString(),
   };
 }
 

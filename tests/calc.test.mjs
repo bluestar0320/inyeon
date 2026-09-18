@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   DAYS_PER_YEAR,
+  computeMarriage,
   computeMoment,
   computeRelationship,
   countOccurrences,
@@ -259,6 +260,79 @@ test("untilAge in the past does not go negative", () => {
     updatedAt: NOW.toISOString(),
   };
   assert.equal(computeMoment(moment, profile(), NOW).total, 0);
+});
+
+function marriagePlan(overrides = {}) {
+  return {
+    targetAge: 35,
+    frequency: { count: 1, unit: "month" },
+    filters: [],
+    updatedAt: NOW.toISOString(),
+    ...overrides,
+  };
+}
+
+test("the concept example: 30세, 목표 35세, 월 1회 소개팅 = 60번의 기회", () => {
+  const result = computeMarriage(marriagePlan(), profile(), NOW);
+  assert.equal(result.yearsLeft, 5);
+  assert.equal(result.total, 60);
+  assert.equal(result.targetPassed, false);
+});
+
+test("marriage frequency presets from the concept all resolve", () => {
+  const at = (frequency) => computeMarriage(marriagePlan({ frequency }), profile(), NOW).total;
+  assert.equal(at({ count: 1, unit: "year" }), 5);
+  assert.equal(at({ count: 1, unit: "month" }), 60);
+  assert.ok(Math.abs(at({ count: 1, unit: "week" }) - (5 * DAYS_PER_YEAR) / 7) < 1e-9);
+});
+
+test("a target age already passed yields zero and says so", () => {
+  const result = computeMarriage(marriagePlan({ targetAge: 25 }), profile(), NOW);
+  assert.equal(result.yearsLeft, 0);
+  assert.equal(result.total, 0);
+  assert.equal(result.targetPassed, true);
+});
+
+test("a target age exactly at the current age counts as passed, not as unknown", () => {
+  const result = computeMarriage(marriagePlan({ targetAge: 30 }), profile({ ageYears: 30 }), NOW);
+  assert.equal(result.total, 0);
+  assert.equal(result.targetPassed, true);
+  assert.equal(result.yearsLeft, 0);
+});
+
+test("without a profile the horizon is unknown rather than zero-but-passed", () => {
+  const result = computeMarriage(marriagePlan(), null, NOW);
+  assert.equal(result.yearsLeft, null);
+  assert.equal(result.total, 0);
+  // 나이를 몰라서 못 센 것이지 목표를 지난 것이 아니다 — 화면 문구가 갈리는 지점.
+  assert.equal(result.targetPassed, false);
+});
+
+test("marriage plans take the same filters as everything else", () => {
+  const result = computeMarriage(
+    marriagePlan({
+      filters: [
+        { id: "f", label: "바빠지는 해", enabled: true, kind: "decay", ratePerYear: 0.2 },
+      ],
+    }),
+    profile(),
+    NOW,
+  );
+  assert.equal(result.baselineTotal, 60);
+  assert.ok(result.total < 60);
+  assert.ok(result.total > 30);
+});
+
+test("marriage interval is derived from the same frequency", () => {
+  const result = computeMarriage(marriagePlan(), profile(), NOW);
+  assert.ok(Math.abs(result.intervalDays - DAYS_PER_YEAR / 12) < 1e-9);
+  const never = computeMarriage(
+    marriagePlan({ frequency: { count: 0, unit: "month" } }),
+    profile(),
+    NOW,
+  );
+  assert.equal(never.intervalDays, null);
+  assert.equal(never.total, 0);
 });
 
 test("lifeProgress is a clamped 0..1 ratio", () => {

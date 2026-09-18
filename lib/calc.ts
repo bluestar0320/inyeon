@@ -4,6 +4,7 @@ import type {
   Frequency,
   FrequencyUnit,
   LifeSpan,
+  MarriagePlan,
   Moment,
   MomentHorizon,
   Person,
@@ -235,6 +236,41 @@ export function computeMoment(
     filters: moment.filters,
   });
   return { ...counted, horizonYears: span };
+}
+
+export interface MarriageResult extends CountResult {
+  /** 목표 나이까지 남은 기간(년). 프로필이 없으면 null. */
+  yearsLeft: number | null;
+  /** 목표 나이를 이미 지났는지. 0번과 "계산 불가"를 구분하기 위한 것. */
+  targetPassed: boolean;
+  /** 기회 사이의 평균 간격(일). 빈도가 0이면 null. */
+  intervalDays: number | null;
+}
+
+/**
+ * 결혼 계획: 목표 결혼 나이까지 새로운 사람을 몇 번 만날 수 있는지.
+ * 기간 산출은 "n세까지"인 순간(Moment)과 같은 규칙이라 horizonYears를 그대로 쓴다.
+ */
+export function computeMarriage(
+  plan: MarriagePlan,
+  profile: Profile | null,
+  now: Date = new Date(),
+): MarriageResult {
+  const yearsLeft = horizonYears({ kind: "untilAge", age: plan.targetAge }, profile, now);
+  const perYear = toPerYear(plan.frequency);
+  const counted = countOccurrences({
+    years: yearsLeft ?? 0,
+    perYear,
+    filters: plan.filters,
+  });
+
+  const age = profile ? resolveAge(profile, now) : null;
+  return {
+    ...counted,
+    yearsLeft,
+    targetPassed: age !== null && age >= plan.targetAge,
+    intervalDays: perYear > 0 ? DAYS_PER_YEAR / perYear : null,
+  };
 }
 
 /** 살아온 비율. 진행 막대와 "인생의 몇 %가 남았나"에 쓴다. */
