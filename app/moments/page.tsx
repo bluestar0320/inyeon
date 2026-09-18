@@ -1,25 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import ListControls, { type SortOption } from "@/components/ListControls";
 import { computeMoment } from "@/lib/calc";
 import { formatCount, formatFrequency } from "@/lib/format";
-import { useAppState } from "@/lib/store";
+import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+
+type Sort = "fewest" | "most" | "name" | "added";
+
+const SORTS: SortOption<Sort>[] = [
+  { key: "fewest", label: "적게 남은 순" },
+  { key: "most", label: "많이 남은 순" },
+  { key: "name", label: "이름순" },
+  { key: "added", label: "최근 추가순" },
+];
 
 export default function MomentsPage() {
   const { state, hydrated } = useAppState();
   const copy = copyFor(state.settings.tone);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<Sort>("fewest");
 
-  const rows = useMemo(
-    () =>
-      state.moments
-        .map((moment) => ({ moment, result: computeMoment(moment, state.profile) }))
-        .sort((a, b) => a.result.total - b.result.total),
-    [state.moments, state.profile],
-  );
+  const rows = useMemo(() => {
+    const all = state.moments.map((moment) => ({
+      moment,
+      result: computeMoment(moment, state.profile),
+    }));
+    const found = all.filter(({ moment }) => matches(query, [moment.title, moment.note]));
+    const sorted = [...found];
+    sorted.sort((a, b) => {
+      if (sort === "name") return a.moment.title.localeCompare(b.moment.title, "ko");
+      if (sort === "added") return b.moment.createdAt.localeCompare(a.moment.createdAt);
+      if (sort === "most") return b.result.total - a.result.total;
+      return a.result.total - b.result.total;
+    });
+    return { all, sorted };
+  }, [state.moments, state.profile, query, sort]);
 
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
@@ -37,16 +57,31 @@ export default function MomentsPage() {
         </Link>
       </div>
 
-      {rows.length === 0 ? (
+      <ListControls
+        total={rows.all.length}
+        shown={rows.sorted.length}
+        query={query}
+        onQuery={setQuery}
+        sort={sort}
+        onSort={setSort}
+        options={SORTS}
+        placeholder="제목, 메모로 찾기"
+      />
+
+      {rows.all.length === 0 ? (
         <EmptyState
           title={copy.emptyMoments}
           body="벚꽃, 해외여행, 서핑처럼 반복되는 일을 적어 보세요."
           actionHref="/moments/new"
           actionLabel="첫 순간 추가"
         />
+      ) : rows.sorted.length === 0 ? (
+        <p className="card text-sm text-ink-400">
+          &ldquo;{query}&rdquo;와(과) 맞는 순간이 없습니다.
+        </p>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
-          {rows.map(({ moment, result }) => (
+          {rows.sorted.map(({ moment, result }) => (
             <Link
               key={moment.id}
               href={`/moments/${moment.id}`}

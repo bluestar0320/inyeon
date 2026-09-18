@@ -222,6 +222,17 @@ export function emptyMoment(): Moment {
   };
 }
 
+/**
+ * 목록 검색. 공백으로 나눈 모든 조각이 어느 필드엔가 들어 있으면 통과시킨다
+ * ("어머 메모"처럼 두 단어로 좁히는 검색을 위해).
+ */
+export function matches(query: string, fields: (string | undefined)[]): boolean {
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return true;
+  const haystack = fields.filter(Boolean).join(" ").toLowerCase();
+  return terms.every((term) => haystack.includes(term));
+}
+
 export function exportState(): string {
   return JSON.stringify(state, null, 2);
 }

@@ -1,25 +1,59 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import ListControls, { type SortOption } from "@/components/ListControls";
 import { computeRelationship } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval } from "@/lib/format";
-import { useAppState } from "@/lib/store";
+import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+
+type Sort = "fewest" | "soonest" | "name" | "added";
+
+const SORTS: SortOption<Sort>[] = [
+  { key: "fewest", label: "남은 만남 적은 순" },
+  { key: "soonest", label: "자주 만나는 순" },
+  { key: "name", label: "이름순" },
+  { key: "added", label: "최근 추가순" },
+];
+
+const SORT_HINT: Record<Sort, string> = {
+  fewest: "남은 만남이 적은 순서입니다.",
+  soonest: "자주 만나는 순서입니다.",
+  name: "이름순입니다.",
+  added: "최근에 추가한 순서입니다.",
+};
 
 export default function PeoplePage() {
   const { state, hydrated } = useAppState();
   const copy = copyFor(state.settings.tone);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<Sort>("fewest");
 
-  const rows = useMemo(
-    () =>
-      state.people
-        .map((person) => ({ person, result: computeRelationship(person, state.profile) }))
-        .sort((a, b) => a.result.total - b.result.total),
-    [state.people, state.profile],
-  );
+  const rows = useMemo(() => {
+    const all = state.people.map((person) => ({
+      person,
+      result: computeRelationship(person, state.profile),
+    }));
+    const found = all.filter(({ person }) =>
+      matches(query, [person.name, person.relation, person.note]),
+    );
+    const sorted = [...found];
+    sorted.sort((a, b) => {
+      if (sort === "name") return a.person.name.localeCompare(b.person.name, "ko");
+      if (sort === "added") return b.person.createdAt.localeCompare(a.person.createdAt);
+      if (sort === "soonest") {
+        // 간격이 짧을수록 앞. 빈도가 0이면 맨 뒤로 보낸다.
+        const ai = a.result.intervalDays ?? Number.POSITIVE_INFINITY;
+        const bi = b.result.intervalDays ?? Number.POSITIVE_INFINITY;
+        return ai - bi;
+      }
+      return a.result.total - b.result.total;
+    });
+    return { all, sorted };
+  }, [state.people, state.profile, query, sort]);
 
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
@@ -30,12 +64,23 @@ export default function PeoplePage() {
       <div className="flex items-center justify-between pt-2">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-ink-900">인연</h1>
-          <p className="mt-1 text-sm text-ink-400">남은 만남이 적은 순서입니다.</p>
+          <p className="mt-1 text-sm text-ink-400">{SORT_HINT[sort]}</p>
         </div>
         <Link href="/people/new" className="btn-primary">
           추가
         </Link>
       </div>
+
+      <ListControls
+        total={rows.all.length}
+        shown={rows.sorted.length}
+        query={query}
+        onQuery={setQuery}
+        sort={sort}
+        onSort={setSort}
+        options={SORTS}
+        placeholder="이름, 관계, 메모로 찾기"
+      />
 
       {!state.profile && (
         <p className="rounded-xl bg-accent-50 px-4 py-3 text-xs text-accent-600">
@@ -46,16 +91,20 @@ export default function PeoplePage() {
         </p>
       )}
 
-      {rows.length === 0 ? (
+      {rows.all.length === 0 ? (
         <EmptyState
           title={copy.emptyPeople}
           body="이름, 나이, 만나는 빈도 세 가지면 충분합니다."
           actionHref="/people/new"
           actionLabel="첫 인연 추가"
         />
+      ) : rows.sorted.length === 0 ? (
+        <p className="card text-sm text-ink-400">
+          &ldquo;{query}&rdquo;와(과) 맞는 인연이 없습니다.
+        </p>
       ) : (
         <div className="space-y-2">
-          {rows.map(({ person, result }) => (
+          {rows.sorted.map(({ person, result }) => (
             <Link
               key={person.id}
               href={`/people/${person.id}`}
