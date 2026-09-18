@@ -121,6 +121,8 @@ export interface RelationPreset {
   emoji: string;
   frequency: Frequency;
   hoursPerMeeting?: number;
+  /** 고르면 성장 캘린더까지 한 번에 켜지는 프리셋(자녀). */
+  withGrowth?: boolean;
 }
 
 export const RELATION_PRESETS: RelationPreset[] = [
@@ -129,8 +131,22 @@ export const RELATION_PRESETS: RelationPreset[] = [
   { relation: "조부모", emoji: "🫖", frequency: { count: 2, unit: "year" }, hoursPerMeeting: 8 },
   { relation: "형제·자매", emoji: "🧩", frequency: { count: 1, unit: "month" }, hoursPerMeeting: 5 },
   { relation: "배우자·연인", emoji: "🕊️", frequency: { count: 5, unit: "week" }, hoursPerMeeting: 4 },
-  { relation: "자녀", emoji: "🧸", frequency: { count: 6, unit: "week" }, hoursPerMeeting: 3 },
+  {
+    relation: "자녀",
+    emoji: "🧸",
+    frequency: { count: 6, unit: "week" },
+    hoursPerMeeting: 3,
+    withGrowth: true,
+  },
   { relation: "가까운 친구", emoji: "🍻", frequency: { count: 1, unit: "quarter" }, hoursPerMeeting: 4 },
+];
+
+/** 저녁 식사 빈도 칩. 집집마다 다르니 출발점만 준다. */
+export const DINNER_PRESETS: { label: string; frequency: Frequency }[] = [
+  { label: "매일", frequency: { count: 7, unit: "week" } },
+  { label: "주 5회", frequency: { count: 5, unit: "week" } },
+  { label: "주 3회", frequency: { count: 3, unit: "week" } },
+  { label: "주 1회", frequency: { count: 1, unit: "week" } },
 ];
 
 /** 결혼 계획에서 "새로운 사람을 얼마나 자주 만나는지" 고르는 칩. */

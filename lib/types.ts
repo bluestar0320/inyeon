@@ -59,9 +59,25 @@ export interface Person extends LifeSpan {
   /** 한 번 만날 때 함께 보내는 시간(시간 단위). 총 체류 시간 환산에 쓴다. */
   hoursPerMeeting?: number;
   filters: CalcFilter[];
+  /** 자녀에게만 켜는 성장 캘린더. 없으면 캘린더를 보여주지 않는다. */
+  growth?: GrowthSetup;
   note?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * 자녀 성장 캘린더 설정.
+ *
+ * 계절·방학·저녁 식사를 Moment로 미리 만들어 두지 않고 매번 아이 나이에서 계산한다.
+ * Moment의 untilAge는 "내" 나이로 풀리기 때문에 "아이가 20세가 될 때까지"를 담을 수
+ * 없고, 생성 시점 기준 연수로 굳히면 아이가 자랄수록 캘린더가 조용히 낡는다.
+ */
+export interface GrowthSetup {
+  /** 성인으로 볼 나이. */
+  adultAge: number;
+  /** 함께하는 저녁 식사 빈도. 집마다 달라서 사용자가 직접 넣는다. */
+  dinners: Frequency;
 }
 
 /** 사람이 아니라 행동/순간을 세는 모듈. "앞으로 벚꽃을 몇 번 볼까" 같은 것. */

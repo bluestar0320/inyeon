@@ -238,6 +238,80 @@ export function computeMoment(
   return { ...counted, horizonYears: span };
 }
 
+/**
+ * 성장 캘린더에 들어가는 항목표. 화면 프리셋이 아니라 계산의 일부라 여기에 둔다
+ * (calc.ts는 런타임 import 없이 테스트에서 그대로 불러 쓴다).
+ * 저녁 식사만 집마다 달라서 사용자 입력으로 따로 받는다.
+ */
+const GROWTH_ITEMS: { key: string; label: string; emoji: string; perYear: number }[] = [
+  { key: "spring", label: "봄", emoji: "🌱", perYear: 1 },
+  { key: "summer", label: "여름", emoji: "🌻", perYear: 1 },
+  { key: "autumn", label: "가을", emoji: "🍁", perYear: 1 },
+  { key: "winter", label: "겨울", emoji: "⛄", perYear: 1 },
+  { key: "summerBreak", label: "여름방학", emoji: "🏖️", perYear: 1 },
+  { key: "winterBreak", label: "겨울방학", emoji: "🎿", perYear: 1 },
+  { key: "birthday", label: "생일", emoji: "🎂", perYear: 1 },
+  { key: "holiday", label: "설·추석", emoji: "🏮", perYear: 2 },
+  { key: "weekend", label: "주말", emoji: "🗓️", perYear: 52 },
+];
+
+export interface GrowthItem {
+  key: string;
+  label: string;
+  emoji: string;
+  count: number;
+}
+
+export interface GrowthResult {
+  /** 아이가 성인이 될 때까지 남은 기간(년). 나이를 모르면 null. */
+  yearsLeft: number | null;
+  adultAge: number;
+  /** 이미 성인 나이를 넘겼는지. 0번과 "계산 불가"를 구분한다. */
+  grownUp: boolean;
+  items: GrowthItem[];
+}
+
+/**
+ * 자녀 성장 캘린더: 아이가 성인이 될 때까지 함께 보낼 계절·방학·저녁 식사 횟수.
+ *
+ * 사람에게 걸린 조건 필터는 일부러 쓰지 않는다. 그 필터는 "만나는 빈도"를 두고 세운
+ * 것이라(예: 매년 5%씩 덜 만남) 계절이나 생일에 곱하면 0.95번 같은 값이 나온다.
+ * 캘린더는 아이 나이만으로 정해지는 값이어야 읽는 사람이 숫자를 믿을 수 있다.
+ */
+export function computeGrowth(
+  person: Person,
+  now: Date = new Date(),
+): GrowthResult | null {
+  const setup = person.growth;
+  if (!setup) return null;
+
+  const childAge = resolveAge(person, now);
+  const yearsLeft = childAge === null ? null : Math.max(0, setup.adultAge - childAge);
+  const years = yearsLeft ?? 0;
+
+  const specs = [
+    ...GROWTH_ITEMS,
+    {
+      key: "dinner",
+      label: "함께하는 저녁 식사",
+      emoji: "🍚",
+      perYear: toPerYear(setup.dinners),
+    },
+  ];
+
+  return {
+    yearsLeft,
+    adultAge: setup.adultAge,
+    grownUp: childAge !== null && childAge >= setup.adultAge,
+    items: specs.map((spec) => ({
+      key: spec.key,
+      label: spec.label,
+      emoji: spec.emoji,
+      count: countOccurrences({ years, perYear: spec.perYear }).total,
+    })),
+  };
+}
+
 export interface MarriageResult extends CountResult {
   /** 목표 나이까지 남은 기간(년). 프로필이 없으면 null. */
   yearsLeft: number | null;

@@ -5,14 +5,19 @@ import { useId, useMemo, useState } from "react";
 
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
+import GrowthCalendar from "@/components/GrowthCalendar";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import ResultPanel from "@/components/ResultPanel";
-import { computeRelationship } from "@/lib/calc";
+import { computeGrowth, computeRelationship, resolveAge } from "@/lib/calc";
 import { formatDays, formatInterval, formatYears } from "@/lib/format";
 import { RELATION_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
-import type { Person } from "@/lib/types";
+import type { GrowthSetup, Person } from "@/lib/types";
+
+function defaultGrowth(): GrowthSetup {
+  return { adultAge: 20, dinners: { count: 5, unit: "week" } };
+}
 
 export default function PersonEditor({ initial }: { initial: Person }) {
   const router = useRouter();
@@ -29,6 +34,11 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const isNew = !state.people.some((p) => p.id === draft.id);
   const nameForCopy = draft.name.trim() || draft.relation || "이 사람";
   const ageMissing = result.theirYears === null;
+
+  const growth = useMemo(() => computeGrowth(draft), [draft]);
+  // 아직 어린 사람이면 캘린더를 먼저 권한다. 켜는 건 어디까지나 사용자가 정한다.
+  const theirAge = resolveAge(draft);
+  const suggestGrowth = theirAge !== null && theirAge < 20;
 
   function save(): void {
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
@@ -102,6 +112,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
                   name: draft.name || preset.relation,
                   frequency: preset.frequency,
                   hoursPerMeeting: preset.hoursPerMeeting,
+                  // 자녀 프리셋은 성장 캘린더까지 한 번에 켠다. 이미 켜 둔 설정은 건드리지 않는다.
+                  growth: preset.withGrowth ? (draft.growth ?? defaultGrowth()) : draft.growth,
                 })
               }
             >
@@ -152,6 +164,32 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           onChange={(filters) => setDraft({ ...draft, filters })}
         />
       </div>
+
+      {growth !== null && draft.growth ? (
+        <GrowthCalendar
+          name={nameForCopy}
+          setup={draft.growth}
+          result={growth}
+          onChange={(setup) => setDraft({ ...draft, growth: setup })}
+          onDisable={() => setDraft({ ...draft, growth: undefined })}
+        />
+      ) : (
+        <button
+          type="button"
+          className="card flex w-full items-center justify-between border-dashed text-left transition hover:border-ink-400"
+          onClick={() => setDraft({ ...draft, growth: defaultGrowth() })}
+        >
+          <span>
+            <span className="block text-sm font-semibold text-ink-800">성장 캘린더 켜기</span>
+            <span className="mt-1 block text-xs text-ink-400">
+              {suggestGrowth
+                ? `${nameForCopy}이(가) 성인이 될 때까지 함께 보낼 계절·방학·저녁 식사를 세어 봅니다.`
+                : "자녀처럼 성인이 되기까지 시간이 남은 경우에 씁니다."}
+            </span>
+          </span>
+          <span className="shrink-0 pl-3 text-xl">🧸</span>
+        </button>
+      )}
 
       <div className="card space-y-2">
         <label className="label" htmlFor={`${ids}-note`}>
