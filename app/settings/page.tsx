@@ -5,7 +5,13 @@ import { useRef, useState } from "react";
 import { exportState, useActions, useAppState } from "@/lib/store";
 import { offerUndo } from "@/lib/undo";
 import { TONES } from "@/lib/tone";
-import type { Tone } from "@/lib/types";
+import type { Theme, Tone } from "@/lib/types";
+
+const THEMES: { value: Theme; label: string }[] = [
+  { value: "system", label: "시스템" },
+  { value: "light", label: "밝게" },
+  { value: "dark", label: "어둡게" },
+];
 
 export default function SettingsPage() {
   const { state, hydrated } = useAppState();
@@ -58,19 +64,40 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => saveSettings({ tone })}
                 className={`w-full rounded-xl border px-4 py-3 text-left transition ${
-                  active ? "border-ink-800 bg-ink-800 text-white" : "border-ink-200 hover:border-ink-400"
+                  active ? "border-ink-800 bg-ink-800 text-onInk" : "border-ink-200 hover:border-ink-400"
                 }`}
               >
                 <span className="block text-sm font-medium">{copy.label}</span>
-                <span className={`block text-xs ${active ? "text-white/70" : "text-ink-400"}`}>
+                <span className={`block text-xs ${active ? "text-onInk/70" : "text-ink-400"}`}>
                   {copy.description}
                 </span>
-                <span className={`mt-2 block text-xs ${active ? "text-white/90" : "text-ink-600"}`}>
+                <span className={`mt-2 block text-xs ${active ? "text-onInk/90" : "text-ink-600"}`}>
                   &ldquo;{copy.meetingSentence("어머니", "240")}&rdquo;
                 </span>
               </button>
             );
           })}
+        </div>
+      </section>
+
+      <section className="card space-y-3">
+        <div>
+          <p className="text-sm font-semibold text-ink-800">화면</p>
+          <p className="mt-1 text-xs text-ink-400">
+            시스템을 고르면 기기 설정을 따라갑니다.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {THEMES.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`chip ${state.settings.theme === option.value ? "chip-active" : ""}`}
+              onClick={() => saveSettings({ theme: option.value })}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </section>
 

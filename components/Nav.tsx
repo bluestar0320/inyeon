@@ -22,7 +22,7 @@ export default function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-10 border-b border-ink-200/70 bg-[#fbfaf8]/90 backdrop-blur">
+    <header className="sticky top-0 z-10 border-b border-ink-200/70 bg-page/90 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
         <Link
           href="/"
@@ -41,7 +41,7 @@ export default function Nav() {
                 href={link.href}
                 onClick={guard}
                 className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  active ? "bg-ink-800 text-white" : "text-ink-400 hover:bg-ink-50 hover:text-ink-800"
+                  active ? "bg-ink-800 text-onInk" : "text-ink-400 hover:bg-ink-50 hover:text-ink-800"
                 }`}
               >
                 {link.label}

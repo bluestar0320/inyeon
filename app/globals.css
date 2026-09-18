@@ -2,11 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 팔레트. 다크 모드는 여기 값만 바꾸고 컴포넌트는 건드리지 않는다.
+ * ink는 명도 사다리라 어두운 쪽에서 위아래가 뒤집힌다.
+ */
+:root {
+  --ink-50: 246 246 247;
+  --ink-200: 217 218 222;
+  --ink-400: 139 141 151;
+  --ink-600: 75 77 89;
+  --ink-800: 36 37 45;
+  --ink-900: 21 22 27;
+
+  --accent-50: 253 243 239;
+  --accent-100: 249 226 216;
+  --accent-400: 217 128 90;
+  --accent-500: 196 101 62;
+  --accent-600: 165 80 47;
+
+  --surface: 255 255 255;
+  --page: 251 250 248;
+  --on-ink: 255 255 255;
+
+  --toast-bg: 21 22 27;
+  --toast-fg: 255 255 255;
+  --toast-accent: 240 178 148;
+
+  --danger-border: 254 202 202;
+  --danger-bg: 254 242 242;
+  --danger-fg: 220 38 38;
+}
+
+.dark {
+  --ink-50: 32 33 39;
+  --ink-200: 60 62 71;
+  --ink-400: 146 148 158;
+  --ink-600: 191 193 201;
+  --ink-800: 229 230 234;
+  --ink-900: 245 245 247;
+
+  --accent-50: 56 36 28;
+  --accent-100: 78 50 38;
+  --accent-400: 226 148 112;
+  --accent-500: 233 162 128;
+  --accent-600: 240 183 154;
+
+  --surface: 26 27 32;
+  --page: 18 19 23;
+  --on-ink: 18 19 23;
+
+  --toast-bg: 240 240 243;
+  --toast-fg: 21 22 27;
+  --toast-accent: 154 71 38;
+
+  --danger-border: 96 44 44;
+  --danger-bg: 44 24 24;
+  --danger-fg: 248 138 138;
+}
+
 @layer base {
   html,
   body {
-    background-color: #fbfaf8;
-    color: #24252d;
+    background-color: rgb(var(--page));
+    color: rgb(var(--ink-800));
+  }
+
+  /* 브라우저 기본 위젯(날짜 선택기, 스크롤바)도 테마를 따라가게 한다. */
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
   }
 }
 
@@ -17,15 +84,15 @@
  */
 @layer components {
   .card {
-    @apply rounded-2xl border border-ink-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(21,22,27,0.04)];
+    @apply rounded-2xl border border-ink-200/70 bg-surface p-5 shadow-[0_1px_2px_rgba(21,22,27,0.04)];
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-ink-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-ink-900 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex items-center justify-center rounded-xl bg-ink-800 px-4 py-2 text-sm font-medium text-onInk transition hover:bg-ink-900 disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50;
+    @apply inline-flex items-center justify-center rounded-xl border border-ink-200 bg-surface px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50;
   }
 
   .btn-quiet {
@@ -33,11 +100,11 @@
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50;
+    @apply inline-flex items-center justify-center rounded-xl border border-danger-border bg-surface px-4 py-2 text-sm font-medium text-danger-fg transition hover:bg-danger-bg;
   }
 
   .input {
-    @apply w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-800 transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
+    @apply w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-sm text-ink-800 transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
   }
 
   .label {
@@ -45,11 +112,11 @@
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-medium text-ink-600 transition hover:border-ink-400 hover:text-ink-800;
+    @apply inline-flex items-center gap-1 rounded-full border border-ink-200 bg-surface px-3 py-1 text-xs font-medium text-ink-600 transition hover:border-ink-400 hover:text-ink-800;
   }
 
   .chip-active {
-    @apply border-ink-800 bg-ink-800 text-white hover:border-ink-800 hover:text-white;
+    @apply border-ink-800 bg-ink-800 text-onInk hover:border-ink-800 hover:text-onInk;
   }
 
   /* 큰 숫자는 이 앱의 주인공이다. 자간을 좁혀 한 덩어리로 읽히게 한다. */

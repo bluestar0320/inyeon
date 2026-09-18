@@ -134,8 +134,12 @@ export interface MarriagePlan {
 /** 숫자가 주는 무게감을 고르는 옵션. 문구만 바뀌고 계산은 같다. */
 export type Tone = "calm" | "aware";
 
+/** 화면 테마. system이면 기기 설정을 따라간다. */
+export type Theme = "system" | "light" | "dark";
+
 export interface Settings {
   tone: Tone;
+  theme: Theme;
 }
 
 export interface AppState {

@@ -4,12 +4,12 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import { DEFAULT_COUNTRY_CODE } from "./lifeExpectancy";
 import { newId } from "./presets";
+import { STORAGE_KEY } from "./storageKey";
 import type { AppState, MarriagePlan, Moment, Person, Profile, Settings } from "./types";
-
-const STORAGE_KEY = "relationship-countdown.v1";
 
 export const DEFAULT_SETTINGS: Settings = {
   tone: "calm",
+  theme: "system",
 };
 
 /**

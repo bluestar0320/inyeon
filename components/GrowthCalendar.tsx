@@ -61,7 +61,7 @@ export default function GrowthCalendar({
             {result.items.map((item) => (
               <div
                 key={item.key}
-                className="rounded-xl border border-ink-200/70 bg-white px-3 py-2.5"
+                className="rounded-xl border border-ink-200/70 bg-surface px-3 py-2.5"
               >
                 <p className="text-[11px] text-ink-400">
                   {item.emoji} {item.label}
