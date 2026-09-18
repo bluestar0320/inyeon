@@ -10,7 +10,6 @@ const STORAGE_KEY = "relationship-countdown.v1";
 
 export const DEFAULT_SETTINGS: Settings = {
   tone: "calm",
-  showShareFirst: false,
 };
 
 /**

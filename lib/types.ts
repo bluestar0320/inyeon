@@ -46,9 +46,8 @@ export interface LifeSpan extends AgeSource {
 
 export type Sex = "male" | "female" | "all";
 
-export interface Profile extends LifeSpan {
-  displayName?: string;
-}
+/** 나. 지금은 LifeSpan과 필드가 같지만, 계산에서 맡는 역할이 달라 이름을 따로 둔다. */
+export type Profile = LifeSpan;
 
 export interface Person extends LifeSpan {
   id: string;
@@ -88,8 +87,6 @@ export type Tone = "calm" | "aware";
 
 export interface Settings {
   tone: Tone;
-  /** 대시보드에서 남은 횟수 대신 남은 비율을 먼저 보여줄지. */
-  showShareFirst: boolean;
 }
 
 export interface AppState {

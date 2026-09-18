@@ -60,9 +60,9 @@ export const COUNTRIES: CountryLifeExpectancy[] = [
 export const DEFAULT_COUNTRY_CODE = "KR";
 
 /** 전 세계 평균(WPP 2024 기준 근사치). 목록에 없는 국가의 폴백. */
-export const WORLD_AVERAGE = 73.3;
+const WORLD_AVERAGE = 73.3;
 
-export function findCountry(code: string | undefined): CountryLifeExpectancy | null {
+function findCountry(code: string | undefined): CountryLifeExpectancy | null {
   if (!code) return null;
   return COUNTRIES.find((c) => c.code === code) ?? null;
 }

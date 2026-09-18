@@ -95,7 +95,8 @@ export interface MomentPreset {
   emoji: string;
   frequency: Frequency;
   horizon: MomentHorizon;
-  note?: string;
+  /** 화면에 띄우는 안내 문구. 사용자의 메모(note)와 다른 것이며 저장되지 않는다. */
+  hint?: string;
 }
 
 export const MOMENT_PRESETS: MomentPreset[] = [
@@ -109,7 +110,7 @@ export const MOMENT_PRESETS: MomentPreset[] = [
     emoji: "🏄",
     frequency: { count: 4, unit: "year" },
     horizon: { kind: "untilAge", age: 70 },
-    note: "파도 조건이 나빠지는 만큼 해마다 줄어듦 필터를 같이 걸어 보세요.",
+    hint: "파도 조건이 나빠지는 만큼 해마다 줄어듦 필터를 같이 걸어 보세요.",
   },
   { title: "좋아하는 밴드 공연", emoji: "🎸", frequency: { count: 1, unit: "year" }, horizon: { kind: "years", years: 15 } },
   { title: "눈 내리는 날", emoji: "❄️", frequency: { count: 5, unit: "year" }, horizon: { kind: "life" } },

@@ -26,6 +26,8 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
   const { saveMoment, removeMoment } = useActions();
   const ids = useId();
   const [draft, setDraft] = useState<Moment>(initial);
+  // 프리셋 안내 문구. 화면에만 뜨고 사용자의 메모에는 저장하지 않는다.
+  const [hint, setHint] = useState<string | null>(null);
 
   const copy = copyFor(state.settings.tone);
   const result = useMemo(() => computeMoment(draft, state.profile), [draft, state.profile]);
@@ -95,21 +97,23 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
               key={preset.title}
               type="button"
               className="chip"
-              onClick={() =>
+              onClick={() => {
+                setHint(preset.hint ?? null);
                 setDraft({
                   ...draft,
                   title: preset.title,
                   emoji: preset.emoji,
                   frequency: preset.frequency,
                   horizon: preset.horizon,
-                  note: preset.note ?? draft.note,
-                })
-              }
+                });
+              }}
             >
               {preset.emoji} {preset.title}
             </button>
           ))}
         </div>
+
+        {hint && <p className="text-xs text-accent-600">{hint}</p>}
       </div>
 
       <div className="card space-y-4">

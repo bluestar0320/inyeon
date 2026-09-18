@@ -64,6 +64,9 @@ export default function MomentsPage() {
                   조건 {moment.filters.filter((f) => f.enabled).length}개 적용됨
                 </p>
               )}
+              {moment.note && (
+                <p className="mt-1 line-clamp-2 text-xs text-ink-400">{moment.note}</p>
+              )}
             </Link>
           ))}
         </div>

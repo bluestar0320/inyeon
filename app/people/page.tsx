@@ -61,17 +61,20 @@ export default function PeoplePage() {
               href={`/people/${person.id}`}
               className="card flex items-center justify-between transition hover:border-ink-400"
             >
-              <span className="flex items-center gap-3">
+              <span className="flex min-w-0 items-center gap-3">
                 <span className="text-2xl">{person.emoji ?? "🫧"}</span>
-                <span>
+                <span className="min-w-0">
                   <span className="block text-sm font-medium text-ink-800">{person.name}</span>
                   <span className="block text-xs text-ink-400">
                     {formatFrequency(person.frequency)}
                     {result.intervalDays !== null && ` · ${formatInterval(result.intervalDays)}`}
                   </span>
+                  {person.note && (
+                    <span className="mt-0.5 block truncate text-xs text-ink-400">{person.note}</span>
+                  )}
                 </span>
               </span>
-              <span className="text-right">
+              <span className="shrink-0 pl-3 text-right">
                 <span className="numeral block text-2xl text-ink-900">
                   {formatCount(result.total)}
                 </span>

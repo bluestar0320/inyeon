@@ -61,7 +61,3 @@ export function formatPercent(ratio: number | null | undefined, digits = 0): str
   if (ratio === null || ratio === undefined || Number.isNaN(ratio)) return "-";
   return `${(ratio * 100).toFixed(digits)}%`;
 }
-
-export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
