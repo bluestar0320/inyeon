@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { exportState, useActions, useAppState } from "@/lib/store";
+import { offerUndo } from "@/lib/undo";
 import { TONES } from "@/lib/tone";
 import type { Tone } from "@/lib/types";
 
@@ -116,7 +117,10 @@ export default function SettingsPage() {
       <section className="card space-y-3">
         <div>
           <p className="text-sm font-semibold text-ink-800">전체 삭제</p>
-          <p className="mt-1 text-xs text-ink-400">되돌릴 수 없습니다. 먼저 내보내기를 권합니다.</p>
+          <p className="mt-1 text-xs text-ink-400">
+            지운 직후 잠깐만 되돌릴 수 있고, 그 뒤에는 방법이 없습니다. 먼저 내보내기를
+            권합니다.
+          </p>
         </div>
         {confirmingClear ? (
           <div className="flex gap-2">
@@ -124,9 +128,12 @@ export default function SettingsPage() {
               type="button"
               className="btn-danger"
               onClick={() => {
+                // 되돌릴 수 없다고 적어 뒀지만, 잠깐이라도 기회를 남기는 편이 낫다.
+                const snapshot = JSON.parse(exportState());
                 clearAll();
                 setConfirmingClear(false);
-                setMessage("모두 지웠습니다.");
+                setMessage(null);
+                offerUndo("모두 지웠습니다.", () => replaceAll(snapshot));
               }}
             >
               정말 지우기

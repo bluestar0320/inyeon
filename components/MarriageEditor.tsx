@@ -11,6 +11,7 @@ import { formatAge, formatInterval, formatYears } from "@/lib/format";
 import { MEETING_FREQUENCY_PRESETS } from "@/lib/presets";
 import { emptyMarriage, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+import { offerUndo } from "@/lib/undo";
 import type { Frequency, MarriagePlan } from "@/lib/types";
 
 function sameFrequency(a: Frequency, b: Frequency): boolean {
@@ -168,7 +169,11 @@ export default function MarriageEditor() {
             type="button"
             className="btn-danger ml-auto"
             onClick={() => {
+              const saved = state.marriage;
               removeMarriage();
+              if (saved) {
+                offerUndo("결혼 계획을 지웠습니다.", () => saveMarriage(saved));
+              }
               router.push("/");
             }}
           >

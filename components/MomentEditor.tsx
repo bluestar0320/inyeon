@@ -11,6 +11,7 @@ import { formatInterval, formatYears } from "@/lib/format";
 import { MOMENT_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+import { offerUndo } from "@/lib/undo";
 import { DAYS_PER_YEAR, toPerYear } from "@/lib/calc";
 import type { Moment, MomentHorizon } from "@/lib/types";
 
@@ -204,7 +205,11 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
             type="button"
             className="btn-danger ml-auto"
             onClick={() => {
+              const saved = state.moments.find((m) => m.id === draft.id);
               removeMoment(draft.id);
+              if (saved) {
+                offerUndo(`${saved.title}을(를) 지웠습니다.`, () => saveMoment(saved));
+              }
               router.push("/moments");
             }}
           >

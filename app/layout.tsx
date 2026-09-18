@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import Nav from "@/components/Nav";
+import UndoBar from "@/components/UndoBar";
 
 export const metadata: Metadata = {
   title: "인연 계산기",
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Nav />
         <main className="mx-auto max-w-3xl px-4 pb-24 pt-6">{children}</main>
+        <UndoBar />
       </body>
     </html>
   );

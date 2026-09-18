@@ -14,6 +14,7 @@ import { formatDays, formatInterval, formatYears } from "@/lib/format";
 import { RELATION_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+import { offerUndo } from "@/lib/undo";
 import type { GrowthSetup, Person } from "@/lib/types";
 
 function defaultGrowth(): GrowthSetup {
@@ -225,7 +226,13 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             type="button"
             className="btn-danger ml-auto"
             onClick={() => {
+              // 지우는 건 저장된 쪽이지 편집 중인 draft가 아니다. 되돌릴 때도
+              // 사용자가 마지막으로 저장한 모습 그대로 살아나야 한다.
+              const saved = state.people.find((p) => p.id === draft.id);
               removePerson(draft.id);
+              if (saved) {
+                offerUndo(`${saved.name}을(를) 지웠습니다.`, () => savePerson(saved));
+              }
               router.push("/people");
             }}
           >
