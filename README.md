@@ -53,6 +53,10 @@ E2E는 Playwright로 **프로덕션 빌드**를 띄워 돌립니다(개발 서�
 npx playwright install chromium
 ```
 
+위 네 가지는 `relationship-countdown/` 안이 바뀔 때마다 GitHub Actions에서 자동으로
+돕니다(`.github/workflows/relationship-countdown.yml`). E2E가 실패하면 Playwright
+리포트가 아티팩트로 남습니다.
+
 ## 구조
 
 ```
