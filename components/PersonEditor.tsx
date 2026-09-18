@@ -15,6 +15,7 @@ import { RELATION_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
+import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
 import type { GrowthSetup, Person } from "@/lib/types";
 
 function defaultGrowth(): GrowthSetup {
@@ -42,8 +43,24 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const theirAge = resolveAge(draft);
   const suggestGrowth = theirAge !== null && theirAge < 20;
 
+  // 새로 만드는 중이면 이름을 한 글자라도 적은 순간부터, 고치는 중이면 저장된
+  // 값과 달라진 순간부터 "안 저장됨"으로 본다. updatedAt은 저장할 때만 바뀌므로
+  // 비교에서 뺀다.
+  const saved = state.people.find((p) => p.id === draft.id);
+  const dirty = saved
+    ? JSON.stringify({ ...saved, updatedAt: "" }) !== JSON.stringify({ ...draft, updatedAt: "" })
+    : draft.name.trim() !== "" || draft.filters.length > 0;
+  useUnsavedGuard(dirty);
+
+  function leave(to: string): void {
+    if (!confirmLeave()) return;
+    clearDirty();
+    router.push(to);
+  }
+
   function save(): void {
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
+    clearDirty();
     router.push("/people");
   }
 
@@ -218,7 +235,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         <button type="button" className="btn-primary" onClick={save} disabled={!draft.name.trim()}>
           {isNew ? "추가하기" : "저장하기"}
         </button>
-        <button type="button" className="btn-secondary" onClick={() => router.push("/people")}>
+        <button type="button" className="btn-secondary" onClick={() => leave("/people")}>
           취소
         </button>
         {!isNew && (
@@ -228,11 +245,12 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             onClick={() => {
               // 지우는 건 저장된 쪽이지 편집 중인 draft가 아니다. 되돌릴 때도
               // 사용자가 마지막으로 저장한 모습 그대로 살아나야 한다.
-              const saved = state.people.find((p) => p.id === draft.id);
               removePerson(draft.id);
               if (saved) {
                 offerUndo(`${saved.name}을(를) 지웠습니다.`, () => savePerson(saved));
               }
+              // 지우기로 한 이상 편집 중이던 내용은 물어볼 것이 없다.
+              clearDirty();
               router.push("/people");
             }}
           >

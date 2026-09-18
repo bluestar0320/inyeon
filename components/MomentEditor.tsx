@@ -12,6 +12,7 @@ import { MOMENT_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
+import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
 import { DAYS_PER_YEAR, toPerYear } from "@/lib/calc";
 import type { Moment, MomentHorizon } from "@/lib/types";
 
@@ -44,8 +45,21 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
     else setDraft({ ...draft, horizon: { kind: "years", years: 10 } });
   }
 
+  const saved = state.moments.find((m) => m.id === draft.id);
+  const dirty = saved
+    ? JSON.stringify({ ...saved, updatedAt: "" }) !== JSON.stringify({ ...draft, updatedAt: "" })
+    : draft.title.trim() !== "" || draft.filters.length > 0;
+  useUnsavedGuard(dirty);
+
+  function leave(): void {
+    if (!confirmLeave()) return;
+    clearDirty();
+    router.push("/moments");
+  }
+
   function save(): void {
     saveMoment({ ...draft, title: draft.title.trim(), updatedAt: new Date().toISOString() });
+    clearDirty();
     router.push("/moments");
   }
 
@@ -197,7 +211,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
         <button type="button" className="btn-primary" onClick={save} disabled={!draft.title.trim()}>
           {isNew ? "추가하기" : "저장하기"}
         </button>
-        <button type="button" className="btn-secondary" onClick={() => router.push("/moments")}>
+        <button type="button" className="btn-secondary" onClick={leave}>
           취소
         </button>
         {!isNew && (
@@ -205,11 +219,11 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
             type="button"
             className="btn-danger ml-auto"
             onClick={() => {
-              const saved = state.moments.find((m) => m.id === draft.id);
               removeMoment(draft.id);
               if (saved) {
                 offerUndo(`${saved.title}을(를) 지웠습니다.`, () => saveMoment(saved));
               }
+              clearDirty();
               router.push("/moments");
             }}
           >

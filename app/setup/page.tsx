@@ -7,6 +7,7 @@ import LifeSpanFields from "@/components/LifeSpanFields";
 import { remainingYears } from "@/lib/calc";
 import { formatYears } from "@/lib/format";
 import { emptyProfile, useActions, useAppState } from "@/lib/store";
+import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
 import type { Profile } from "@/lib/types";
 
 export default function SetupPage() {
@@ -24,6 +25,10 @@ export default function SetupPage() {
   }, [hydrated, loaded, state.profile]);
 
   const remaining = remainingYears(draft);
+
+  const baseline = state.profile ?? emptyProfile();
+  const dirty = loaded && JSON.stringify(baseline) !== JSON.stringify(draft);
+  useUnsavedGuard(dirty);
 
   return (
     <div className="space-y-5">
@@ -56,13 +61,22 @@ export default function SetupPage() {
           disabled={remaining === null}
           onClick={() => {
             saveProfile(draft);
+            clearDirty();
             router.push("/");
           }}
         >
           저장하기
         </button>
         {state.profile && (
-          <button type="button" className="btn-secondary" onClick={() => router.push("/")}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              if (!confirmLeave()) return;
+              clearDirty();
+              router.push("/");
+            }}
+          >
             취소
           </button>
         )}

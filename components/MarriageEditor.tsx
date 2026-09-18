@@ -12,6 +12,7 @@ import { MEETING_FREQUENCY_PRESETS } from "@/lib/presets";
 import { emptyMarriage, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
+import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
 import type { Frequency, MarriagePlan } from "@/lib/types";
 
 function sameFrequency(a: Frequency, b: Frequency): boolean {
@@ -42,6 +43,19 @@ export default function MarriageEditor() {
   );
   const saved = state.marriage !== null;
   const perYear = toPerYear(draft.frequency);
+
+  // 폼을 채우기 전(loaded=false)에는 비교할 기준이 없으므로 묻지 않는다.
+  const baseline = state.marriage ?? emptyMarriage(myAge);
+  const dirty =
+    loaded &&
+    JSON.stringify({ ...baseline, updatedAt: "" }) !== JSON.stringify({ ...draft, updatedAt: "" });
+  useUnsavedGuard(dirty);
+
+  function leave(): void {
+    if (!confirmLeave()) return;
+    clearDirty();
+    router.push("/");
+  }
 
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
@@ -156,12 +170,13 @@ export default function MarriageEditor() {
           className="btn-primary"
           onClick={() => {
             saveMarriage({ ...draft, updatedAt: new Date().toISOString() });
+            clearDirty();
             router.push("/");
           }}
         >
           {saved ? "저장하기" : "계획 만들기"}
         </button>
-        <button type="button" className="btn-secondary" onClick={() => router.push("/")}>
+        <button type="button" className="btn-secondary" onClick={leave}>
           취소
         </button>
         {saved && (
@@ -169,11 +184,12 @@ export default function MarriageEditor() {
             type="button"
             className="btn-danger ml-auto"
             onClick={() => {
-              const saved = state.marriage;
+              const previous = state.marriage;
               removeMarriage();
-              if (saved) {
-                offerUndo("결혼 계획을 지웠습니다.", () => saveMarriage(saved));
+              if (previous) {
+                offerUndo("결혼 계획을 지웠습니다.", () => saveMarriage(previous));
               }
+              clearDirty();
               router.push("/");
             }}
           >
