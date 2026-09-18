@@ -7,6 +7,7 @@ import BigNumber from "@/components/BigNumber";
 import EmptyState from "@/components/EmptyState";
 import StatCard from "@/components/StatCard";
 import {
+  computeGrowth,
   computeMarriage,
   computeMoment,
   computeRelationship,
@@ -51,6 +52,19 @@ export default function HomePage() {
         ? null
         : { plan: state.marriage, result: computeMarriage(state.marriage, profile) },
     [state.marriage, profile],
+  );
+
+  // 성장 캘린더를 켠 사람들. 자녀 상세 화면에 묻어 두기엔 이 앱에서 가장 무거운
+  // 숫자라 홈으로 올린다.
+  const growing = useMemo(
+    () =>
+      state.people
+        .map((person) => ({ person, growth: computeGrowth(person) }))
+        .filter(
+          (row): row is { person: (typeof state.people)[number]; growth: NonNullable<ReturnType<typeof computeGrowth>> } =>
+            row.growth !== null && !row.growth.grownUp && row.growth.yearsLeft !== null,
+        ),
+    [state.people],
   );
 
   if (!hydrated) {
@@ -133,7 +147,7 @@ export default function HomePage() {
         {people.length === 0 ? (
           <EmptyState
             title={copy.emptyPeople}
-            body="나이와 만나는 빈도만 있으면 앞으로 몇 번 더 볼 수 있는지 바로 나옵니다."
+            body="부모님부터 시작해 보세요. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 뵐 수 있는지 바로 나옵니다."
             actionHref="/people/new"
             actionLabel="인연 추가"
           />
@@ -163,6 +177,48 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {growing.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-ink-800">아이와 남은 것들</h2>
+          {growing.map(({ person, growth }) => {
+            const pick = (key: string) => growth.items.find((i) => i.key === key);
+            return (
+              <Link
+                key={person.id}
+                href={`/people/${person.id}`}
+                className="card block transition hover:border-ink-400"
+              >
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-medium text-ink-800">
+                    {person.emoji ?? "🧸"} {person.name}
+                  </p>
+                  <p className="text-xs text-ink-400">
+                    만 {growth.adultAge}세까지 {formatYears(growth.yearsLeft)}
+                  </p>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {["summer", "winterBreak", "dinner"].map((key) => {
+                    const item = pick(key);
+                    if (!item) return null;
+                    return (
+                      <div key={key} className="rounded-xl border border-ink-200/70 px-3 py-2">
+                        <p className="text-[11px] text-ink-400">
+                          {item.emoji} {item.label}
+                        </p>
+                        <p className="numeral mt-0.5 text-lg text-ink-800">
+                          {formatCount(item.count)}
+                          <span className="ml-0.5 text-xs font-normal text-ink-400">번</span>
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Link>
+            );
+          })}
+        </section>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -198,23 +254,28 @@ export default function HomePage() {
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-ink-800">결혼 계획</h2>
-        {marriage === null ? (
-          <EmptyState
-            title={copy.emptyMarriage}
-            body="목표 결혼 나이와 새로운 사람을 만나는 빈도를 넣으면 그때까지의 기회가 나옵니다."
-            actionHref="/marriage"
-            actionLabel="계획 세우기"
-          />
-        ) : (
+      {/*
+        결혼 계획은 만든 사람에게만 카드로 보여준다. 세어 볼 생각이 없는 사람(이 앱의
+        주 사용자는 부모님을 세러 온다)에게 빈 카드를 늘 띄우면 그 자리는 영영 노이즈다.
+        안 만든 사람에게는 맨 아래 한 줄로만 남겨 둔다.
+      */}
+      {marriage === null ? (
+        <Link
+          href="/marriage"
+          className="block pt-2 text-center text-xs text-ink-400 transition hover:text-ink-600"
+        >
+          결혼까지 남은 기회도 세어 보기 →
+        </Link>
+      ) : (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-ink-800">결혼 계획</h2>
           <Link
             href="/marriage"
             className="card flex items-center justify-between py-4 transition hover:border-ink-400"
           >
-            <span className="flex items-center gap-3">
+            <span className="flex min-w-0 items-center gap-3">
               <span className="text-xl">💍</span>
-              <span>
+              <span className="min-w-0">
                 <span className="block text-sm font-medium text-ink-800">
                   만 {marriage.plan.targetAge}세까지
                 </span>
@@ -223,6 +284,11 @@ export default function HomePage() {
                   {marriage.result.yearsLeft !== null &&
                     ` · ${formatYears(marriage.result.yearsLeft)} 남음`}
                 </span>
+                {marriage.plan.note && (
+                  <span className="mt-0.5 block truncate text-xs text-ink-400">
+                    {marriage.plan.note}
+                  </span>
+                )}
               </span>
             </span>
             <span className="shrink-0 pl-3 text-right">
@@ -232,8 +298,8 @@ export default function HomePage() {
               <span className="block text-[11px] text-ink-400">번 남음</span>
             </span>
           </Link>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

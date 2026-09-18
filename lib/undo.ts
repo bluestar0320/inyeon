@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * 방금 지운 것을 잠깐 붙들어 두는 자리.
@@ -68,13 +68,11 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+/** 화면을 옮겨도 타이머는 계속 돌아야 해서(삭제 후 목록으로 이동한다) 정리하지 않는다. */
 export function useUndo(): UndoEntry | null {
-  const value = useSyncExternalStore(
+  return useSyncExternalStore(
     subscribe,
     () => entry,
     () => null,
   );
-  // 화면을 떠나도 타이머는 계속 돌아야 하므로 정리하지 않는다.
-  useEffect(() => undefined, []);
-  return value;
 }

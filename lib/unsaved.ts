@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 
 /**
  * 편집 중 저장하지 않은 변경이 있는지 알리는 자리.
@@ -8,32 +8,11 @@ import { useEffect, useSyncExternalStore } from "react";
  * App Router에는 화면 이동을 가로챌 공식 훅이 없어서, 편집기가 여기에 "지금
  * 안 저장된 게 있다"고 표시해 두면 내비게이션과 브라우저가 각자 확인한다.
  * 뒤로 가기(popstate)는 막지 못한다 — 아래 KNOWN GAP 참고.
+ *
+ * 이 값을 구독하는 화면은 없다. 링크를 누르는 순간에만 동기적으로 읽으면 되므로
+ * 그냥 모듈 변수다.
  */
 let dirty = false;
-const listeners = new Set<() => void>();
-
-function emit(): void {
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export function isDirty(): boolean {
-  return dirty;
-}
-
-export function useIsDirty(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => dirty,
-    () => false,
-  );
-}
 
 export const LEAVE_MESSAGE = "저장하지 않은 변경이 있습니다. 나가면 사라집니다.";
 
@@ -43,11 +22,9 @@ export function confirmLeave(): boolean {
   return window.confirm(`${LEAVE_MESSAGE}\n\n그래도 나가시겠습니까?`);
 }
 
-/** 저장/취소로 편집을 끝냈을 때 호출해 표시를 지운다. */
+/** 저장/삭제로 편집을 끝냈을 때 호출해 표시를 지운다. */
 export function clearDirty(): void {
-  if (!dirty) return;
   dirty = false;
-  emit();
 }
 
 /**
@@ -61,10 +38,8 @@ export function clearDirty(): void {
 export function useUnsavedGuard(changed: boolean): void {
   useEffect(() => {
     dirty = changed;
-    emit();
     return () => {
       dirty = false;
-      emit();
     };
   }, [changed]);
 
