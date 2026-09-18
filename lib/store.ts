@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { DEFAULT_COUNTRY_CODE } from "./lifeExpectancy";
+import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "./lifeExpectancy";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
 import type { AppState, MarriagePlan, Moment, Person, Profile, Settings } from "./types";
@@ -175,7 +175,7 @@ export function useActions() {
 
 export function emptyProfile(): Profile {
   return {
-    lifeExpectancy: 83.5,
+    lifeExpectancy: lookupLifeExpectancy(DEFAULT_COUNTRY_CODE, "all"),
     lifeExpectancyManual: false,
     countryCode: DEFAULT_COUNTRY_CODE,
     sex: "all",
@@ -187,7 +187,7 @@ export function emptyPerson(): Person {
   return {
     id: newId(),
     name: "",
-    lifeExpectancy: 83.5,
+    lifeExpectancy: lookupLifeExpectancy(DEFAULT_COUNTRY_CODE, "all"),
     lifeExpectancyManual: false,
     countryCode: DEFAULT_COUNTRY_CODE,
     sex: "all",

@@ -1,0 +1,13 @@
+﻿node : (node:35484) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/%EC%9D%B4%EC%B2%AD%EA%B7%9C
+/Desktop/%EC%95%B1%20%EA%B0%9C%EB%B0%9C/Auction/relationship-countdown/lib/lifeExpectancy.ts is not specified and it do
+esn't parse as CommonJS.
+At line:2 char:1
++ node -e "
++ ~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:35484) [M...se as CommonJS.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\이청규\Desktop\앱 개발\Auction\relationship-countdown\package
+.json.
+(Use `node --trace-warnings ...` to show where the warning was created)

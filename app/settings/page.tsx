@@ -179,10 +179,18 @@ export default function SettingsPage() {
       <section className="card space-y-2">
         <p className="text-sm font-semibold text-ink-800">예상 수명 데이터</p>
         <p className="text-xs leading-relaxed text-ink-400">
-          국가별 평균 수명은 UN World Population Prospects 2024와 각국 통계청 공표치를
-          반올림한 근사값을 앱에 내장해 쓰고 있습니다. 출생 시 기준 통계라 이미 나이가
-          있는 사람의 실제 기대 여명보다 짧게 나오는 경향이 있으니, 필요하면 예상 수명을
-          직접 조정하세요.
+          WHO Global Health Observatory의 연령별 생명표(2021년)를 앱에 내장해 씁니다.
+          37개국을 나이·성별로 나눠 담고 있어서, 같은 나라 사람이라도 나이에 따라 다른
+          값이 나옵니다. 한국 수치는 통계청(KOSIS) 생명표와 일치합니다.
+        </p>
+        <p className="text-xs leading-relaxed text-ink-400">
+          흔히 말하는 &ldquo;평균 수명 83.5세&rdquo;는 갓 태어난 사람 기준입니다. 이미
+          68세까지 살아온 분은 일찍 떠난 분들이 끌어내린 그 평균에 해당하지 않아, 실제로는
+          더 오래 사십니다. 그래서 나이별 표를 그대로 씁니다.
+        </p>
+        <p className="text-xs leading-relaxed text-ink-400">
+          대만·홍콩은 WHO 회원국이 아니라 실측 표가 없어, 일본 표를 조정한 근사치를
+          씁니다. 어느 경우든 예상 수명은 직접 바꿀 수 있습니다.
         </p>
       </section>
     </div>

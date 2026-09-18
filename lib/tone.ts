@@ -46,7 +46,7 @@ const CALM: ToneCopy = {
     if (limitedBy === "horizon") return "이 횟수는 정해 둔 목표 시점이 기준이에요.";
     return "나이를 채우면 기준이 되는 쪽을 알려드려요.";
   },
-  emptyPeople: "부모님부터 한 분 적어 보세요.",
+  emptyPeople: "자주 만나는 사람부터 한 명 적어 보세요.",
   emptyMoments: "올해 꼭 하고 싶은 일을 하나 적어 보세요.",
   emptyMarriage: "목표로 하는 나이가 있다면 세어 볼 수 있어요.",
 };
@@ -69,7 +69,7 @@ const AWARE: ToneCopy = {
     if (limitedBy === "horizon") return "수명보다 목표 시점이 먼저 옵니다.";
     return "나이를 채우면 어느 쪽이 먼저 끝나는지 계산됩니다.";
   },
-  emptyPeople: "아직 아무도 세지 않았습니다. 부모님부터.",
+  emptyPeople: "아직 아무도 세지 않았습니다.",
   emptyMoments: "아직 아무것도 세지 않았습니다.",
   emptyMarriage: "목표 나이를 정하면 남은 기회가 계산됩니다.",
 };

@@ -4,7 +4,7 @@ import { useId } from "react";
 
 import { resolveAge } from "@/lib/calc";
 import { formatAge, formatYears } from "@/lib/format";
-import { COUNTRIES, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
+import { COUNTRIES, isEstimatedTable, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
 import type { LifeSpan, Sex } from "@/lib/types";
 
 const SEXES: { value: Sex; label: string }[] = [
@@ -30,12 +30,15 @@ export default function LifeSpanFields<T extends LifeSpan>({
   const ids = useId();
   const age = resolveAge(value);
   const remaining = age === null ? null : Math.max(0, value.lifeExpectancy - age);
-  const average = lookupLifeExpectancy(value.countryCode, value.sex);
+  // 예상 수명은 나이에 따라 달라진다. 이미 그 나이까지 살아온 사람은 일찍 떠난
+  // 사람들이 끌어내린 출생 시 평균보다 더 오래 산다.
+  const average = lookupLifeExpectancy(value.countryCode, value.sex, age);
+  const estimated = isEstimatedTable(value.countryCode);
 
   function patch(changes: Partial<LifeSpan>): void {
     const next = { ...value, ...changes } as T;
     if (!next.lifeExpectancyManual) {
-      next.lifeExpectancy = lookupLifeExpectancy(next.countryCode, next.sex);
+      next.lifeExpectancy = lookupLifeExpectancy(next.countryCode, next.sex, resolveAge(next));
     }
     onChange(next);
   }
@@ -151,15 +154,18 @@ export default function LifeSpanFields<T extends LifeSpan>({
                 } as T)
               }
             >
-              평균값({average}세)으로 되돌리기
+              통계값({average}세)으로 되돌리기
             </button>
           )}
         </div>
-        <p className="mt-1 text-[11px] text-ink-400">
+        <p className="mt-1 text-[11px] leading-relaxed text-ink-400">
           {value.lifeExpectancyManual
-            ? "직접 조정한 값입니다. 국가·성별을 바꿔도 유지됩니다."
-            : `국가·성별 평균값이 자동으로 적용됩니다. 언제든 직접 바꿀 수 있어요.`}
+            ? "직접 조정한 값입니다. 나이·국가·성별을 바꿔도 유지됩니다."
+            : age === null
+              ? "나이를 채우면 그 나이에 맞는 통계값이 적용됩니다. 언제든 직접 바꿀 수 있어요."
+              : "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요."}
           {remaining !== null && ` · 남은 기간 약 ${formatYears(remaining)}`}
+          {estimated && " · 이 나라는 이웃 나라 표를 조정한 근사치입니다."}
         </p>
       </div>
     </div>

@@ -147,7 +147,7 @@ export default function HomePage() {
         {people.length === 0 ? (
           <EmptyState
             title={copy.emptyPeople}
-            body="부모님부터 시작해 보세요. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 뵐 수 있는지 바로 나옵니다."
+            body="부모님, 친구, 아이 — 나와 이어진 사람이면 누구든. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 볼 수 있는지 바로 나옵니다."
             actionHref="/people/new"
             actionLabel="인연 추가"
           />
@@ -255,9 +255,9 @@ export default function HomePage() {
       </section>
 
       {/*
-        결혼 계획은 만든 사람에게만 카드로 보여준다. 세어 볼 생각이 없는 사람(이 앱의
-        주 사용자는 부모님을 세러 온다)에게 빈 카드를 늘 띄우면 그 자리는 영영 노이즈다.
-        안 만든 사람에게는 맨 아래 한 줄로만 남겨 둔다.
+        만든 것은 카드로, 안 만든 것은 한 줄로. 홈은 이 사람이 세기로 한 것들을
+        비추는 자리여야 한다. 결혼 계획을 세울 생각이 없는 사람에게 빈 카드를 늘
+        띄우면 그 자리는 영영 노이즈다.
       */}
       {marriage === null ? (
         <Link
