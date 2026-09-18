@@ -59,12 +59,31 @@ export interface Person extends LifeSpan {
   /** 한 번 만날 때 함께 보내는 시간(시간 단위). 총 체류 시간 환산에 쓴다. */
   hoursPerMeeting?: number;
   filters: CalcFilter[];
+  /**
+   * 언제까지 셀지. 없으면 기본값("life") — 둘 중 먼저 끝나는 남은 수명까지.
+   * 결혼처럼 목표 시점이 따로 있는 관계는 그 시점까지만 센다.
+   */
+  horizon?: PersonHorizon;
   /** 자녀에게만 켜는 성장 캘린더. 없으면 캘린더를 보여주지 않는다. */
   growth?: GrowthSetup;
   note?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * 인연을 언제까지 셀지.
+ * - life: 기본. 둘 중 먼저 끝나는 남은 수명까지.
+ * - untilMyAge: 내가 그 나이가 될 때까지. "결혼까지 이 사람과 몇 번 데이트할까".
+ * - years: 앞으로 n년 동안.
+ *
+ * life가 아니어도 수명 상한은 그대로 적용된다 — 목표 시점이 아무리 멀어도
+ * 둘 중 한 명이 먼저 떠나면 거기서 끝나기 때문이다.
+ */
+export type PersonHorizon =
+  | { kind: "life" }
+  | { kind: "untilMyAge"; age: number }
+  | { kind: "years"; years: number };
 
 /**
  * 자녀 성장 캘린더 설정.

@@ -8,6 +8,7 @@ import type {
   Moment,
   MomentHorizon,
   Person,
+  PersonHorizon,
   Profile,
 } from "./types";
 
@@ -146,25 +147,42 @@ export function countOccurrences(input: CountInput): CountResult {
   return { total, baselineTotal, years, slices, cappedAt };
 }
 
-export type LimitedBy = "me" | "them" | "both" | "unknown";
+export type LimitedBy = "me" | "them" | "both" | "horizon" | "unknown";
 
 export interface RelationshipResult extends CountResult {
   /** 나에게 남은 기간(년). */
   myYears: number | null;
   /** 상대에게 남은 기간(년). */
   theirYears: number | null;
-  /** 둘 중 먼저 끝나는 쪽 = 실제로 함께할 수 있는 기간. */
+  /** 실제로 센 기간 = 두 사람의 남은 시간과 목표 시점 중 가장 먼저 끝나는 것. */
   sharedYears: number;
   limitedBy: LimitedBy;
+  /** 목표 시점까지 남은 기간(년). horizon이 life가 아닐 때만. */
+  horizonYears: number | null;
   /** 만남 사이의 평균 간격(일). 빈도가 0이면 null. */
   intervalDays: number | null;
   /** 남은 만남을 다 합치면 며칠인지. hoursPerMeeting이 있을 때만. */
   togetherDays: number | null;
 }
 
+/** 목표 시점까지 남은 기간. horizon이 life면 상한이 없으므로 null. */
+function personHorizonYears(
+  horizon: PersonHorizon | undefined,
+  profile: Profile | null,
+  now: Date,
+): number | null {
+  if (!horizon || horizon.kind === "life") return null;
+  if (horizon.kind === "years") {
+    return Number.isFinite(horizon.years) ? Math.max(0, horizon.years) : null;
+  }
+  const myAge = profile ? resolveAge(profile, now) : null;
+  return myAge === null ? null : Math.max(0, horizon.age - myAge);
+}
+
 /**
  * 남은 만남 횟수는 "상대의 남은 시간"만으로 정해지지 않는다.
- * 내가 먼저 떠날 수도 있으므로 둘 중 짧은 쪽을 쓴다.
+ * 내가 먼저 떠날 수도 있으므로 둘 중 짧은 쪽을 쓰고, 결혼처럼 목표 시점이 따로
+ * 있으면 그것까지 포함해 가장 먼저 끝나는 것을 기준으로 삼는다.
  */
 export function computeRelationship(
   person: Person,
@@ -173,6 +191,7 @@ export function computeRelationship(
 ): RelationshipResult {
   const theirYears = remainingYears(person, now);
   const myYears = profile ? remainingYears(profile, now) : null;
+  const horizonYears = personHorizonYears(person.horizon, profile, now);
 
   let sharedYears: number;
   let limitedBy: LimitedBy;
@@ -191,6 +210,15 @@ export function computeRelationship(
     limitedBy = gap < 0.5 ? "both" : myYears < theirYears ? "me" : "them";
   }
 
+  // 목표 시점이 수명보다 먼저 오면 그쪽이 기준이 된다.
+  if (horizonYears !== null && horizonYears < sharedYears) {
+    sharedYears = horizonYears;
+    limitedBy = "horizon";
+  } else if (horizonYears !== null && limitedBy === "unknown") {
+    sharedYears = horizonYears;
+    limitedBy = "horizon";
+  }
+
   const perYear = toPerYear(person.frequency);
   const counted = countOccurrences({ years: sharedYears, perYear, filters: person.filters });
 
@@ -201,7 +229,16 @@ export function computeRelationship(
       ? (counted.total * hours) / 24
       : null;
 
-  return { ...counted, myYears, theirYears, sharedYears, limitedBy, intervalDays, togetherDays };
+  return {
+    ...counted,
+    myYears,
+    theirYears,
+    sharedYears,
+    limitedBy,
+    horizonYears,
+    intervalDays,
+    togetherDays,
+  };
 }
 
 export function horizonYears(

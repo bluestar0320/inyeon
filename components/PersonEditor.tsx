@@ -7,6 +7,7 @@ import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import GrowthCalendar from "@/components/GrowthCalendar";
 import LifeSpanFields from "@/components/LifeSpanFields";
+import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import { computeGrowth, computeRelationship, resolveAge } from "@/lib/calc";
 import { formatDays, formatInterval, formatYears } from "@/lib/format";
@@ -132,6 +133,15 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           label="얼마나 자주 만나나요"
           value={draft.frequency}
           onChange={(frequency) => setDraft({ ...draft, frequency })}
+        />
+        <PersonHorizonPicker
+          value={draft.horizon ?? { kind: "life" }}
+          myAge={resolveAge(state.profile ?? {})}
+          countedYears={result.sharedYears}
+          limitedByHorizon={result.limitedBy === "horizon"}
+          onChange={(horizon) =>
+            setDraft({ ...draft, horizon: horizon.kind === "life" ? undefined : horizon })
+          }
         />
         <div>
           <label className="label" htmlFor={`${ids}-hours`}>

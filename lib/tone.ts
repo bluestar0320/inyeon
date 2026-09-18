@@ -43,6 +43,7 @@ const CALM: ToneCopy = {
     if (limitedBy === "me") return "이 횟수는 내 남은 시간이 기준이에요.";
     if (limitedBy === "them") return `이 횟수는 ${name}의 남은 시간이 기준이에요.`;
     if (limitedBy === "both") return "두 사람의 남은 시간이 비슷해요.";
+    if (limitedBy === "horizon") return "이 횟수는 정해 둔 목표 시점이 기준이에요.";
     return "나이를 채우면 기준이 되는 쪽을 알려드려요.";
   },
   emptyPeople: "자주 만나는 사람부터 한 명 적어 보세요.",
@@ -65,6 +66,7 @@ const AWARE: ToneCopy = {
     if (limitedBy === "me") return "먼저 끝나는 쪽은 내 시간입니다.";
     if (limitedBy === "them") return `먼저 끝나는 쪽은 ${name}의 시간입니다.`;
     if (limitedBy === "both") return "두 사람의 시간이 거의 동시에 끝납니다.";
+    if (limitedBy === "horizon") return "수명보다 목표 시점이 먼저 옵니다.";
     return "나이를 채우면 어느 쪽이 먼저 끝나는지 계산됩니다.";
   },
   emptyPeople: "아직 아무도 세지 않았습니다.",

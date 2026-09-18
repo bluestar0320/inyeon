@@ -263,6 +263,86 @@ test("untilAge in the past does not go negative", () => {
   assert.equal(computeMoment(moment, profile(), NOW).total, 0);
 });
 
+test("by default a relationship is counted to the shorter of the two lifespans", () => {
+  const result = computeRelationship(person(), profile(), NOW);
+  assert.equal(result.horizonYears, null);
+  assert.equal(result.limitedBy, "them");
+  assert.equal(result.total, 240);
+});
+
+test("the concept example: dating until a target marriage age", () => {
+  // 나 30세, 목표 35세, 주 1회 데이트 -> 5년치
+  const partner = person({
+    name: "연인",
+    ageYears: 29,
+    frequency: { count: 1, unit: "week" },
+    horizon: { kind: "untilMyAge", age: 35 },
+  });
+  const result = computeRelationship(partner, profile(), NOW);
+  assert.equal(result.horizonYears, 5);
+  assert.equal(result.sharedYears, 5);
+  assert.equal(result.limitedBy, "horizon");
+  assert.ok(Math.abs(result.total - (5 * DAYS_PER_YEAR) / 7) < 1e-9);
+});
+
+test("a fixed number of years works as a horizon too", () => {
+  const result = computeRelationship(person({ horizon: { kind: "years", years: 3 } }), profile(), NOW);
+  assert.equal(result.sharedYears, 3);
+  assert.equal(result.limitedBy, "horizon");
+  assert.equal(result.total, 36);
+});
+
+test("a horizon past both lifespans does not extend the count", () => {
+  // 어머니는 20년 남았는데 목표는 40년 뒤 — 수명이 먼저 끝난다.
+  const result = computeRelationship(
+    person({ horizon: { kind: "years", years: 40 } }),
+    profile(),
+    NOW,
+  );
+  assert.equal(result.horizonYears, 40);
+  assert.equal(result.sharedYears, 20);
+  assert.equal(result.limitedBy, "them");
+  assert.equal(result.total, 240);
+});
+
+test("an explicit 'life' horizon behaves exactly like no horizon", () => {
+  const withLife = computeRelationship(person({ horizon: { kind: "life" } }), profile(), NOW);
+  const without = computeRelationship(person(), profile(), NOW);
+  assert.equal(withLife.total, without.total);
+  assert.equal(withLife.limitedBy, without.limitedBy);
+  assert.equal(withLife.horizonYears, null);
+});
+
+test("untilMyAge needs my age, and falls back to the horizon when ages are unknown", () => {
+  // 프로필이 없으면 내 나이를 몰라 목표 시점을 계산할 수 없다.
+  const noProfile = computeRelationship(
+    person({ horizon: { kind: "untilMyAge", age: 35 } }),
+    null,
+    NOW,
+  );
+  assert.equal(noProfile.horizonYears, null);
+  assert.equal(noProfile.limitedBy, "them");
+
+  // 나이를 하나도 모를 때는 연수 기반 목표가 유일한 기준이 된다.
+  const onlyHorizon = computeRelationship(
+    person({ ageYears: undefined, horizon: { kind: "years", years: 4 } }),
+    null,
+    NOW,
+  );
+  assert.equal(onlyHorizon.limitedBy, "horizon");
+  assert.equal(onlyHorizon.total, 48);
+});
+
+test("a target age already passed counts nothing", () => {
+  const result = computeRelationship(
+    person({ horizon: { kind: "untilMyAge", age: 25 } }),
+    profile(),
+    NOW,
+  );
+  assert.equal(result.sharedYears, 0);
+  assert.equal(result.total, 0);
+});
+
 function child(overrides = {}) {
   return person({
     name: "아이",
