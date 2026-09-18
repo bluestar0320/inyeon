@@ -41,9 +41,17 @@ npm run dev      # http://localhost:3000
 | `npm run build` / `npm start` | 프로덕션 빌드·실행 |
 | `npm run typecheck` | 타입 검사 |
 | `npm test` | 계산 엔진 단위 테스트 |
+| `npm run test:e2e` | 브라우저 시나리오 테스트 |
 
-테스트는 Node 내장 러너(`node --test`)와 내장 타입 스트리핑으로 `lib/calc.ts`를
-그대로 불러 돌립니다. 별도 테스트 의존성이 없고 Node 22.18 이상이면 됩니다.
+단위 테스트는 Node 내장 러너(`node --test`)와 내장 타입 스트리핑으로 `lib/calc.ts`를
+그대로 불러 돌립니다. 별도 의존성이 없고 Node 22.18 이상이면 됩니다.
+
+E2E는 Playwright로 **프로덕션 빌드**를 띄워 돌립니다(개발 서버는 서비스 워커를 등록하지
+않아 오프라인 테스트가 성립하지 않습니다). 처음 한 번은 브라우저를 받아야 합니다:
+
+```bash
+npx playwright install chromium
+```
 
 ## 구조
 
@@ -57,7 +65,9 @@ lib/
   store.ts          localStorage 저장소
   tone.ts           톤별 문구
   presets.ts        관계·순간·필터·만남빈도 프리셋
-tests/          계산 엔진 테스트
+tests/          계산 엔진 단위 테스트
+e2e/            브라우저 시나리오 테스트 (Playwright)
+public/         PWA 매니페스트 아이콘, 서비스 워커
 docs/PLAN.md    구현 계획
 ```
 
