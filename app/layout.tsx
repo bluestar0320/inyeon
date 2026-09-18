@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import Nav from "@/components/Nav";
+import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
 import UndoBar from "@/components/UndoBar";
 import { STORAGE_KEY } from "@/lib/storageKey";
@@ -10,11 +11,18 @@ export const metadata: Metadata = {
   title: "인연 계산기",
   description:
     "남은 시간과 남은 만남을 횟수로 계산합니다. 리마인딩이 아니라 플래닝을 위한 계산기.",
+  // iOS는 manifest의 display를 무시하므로 따로 알려 줘야 전체 화면으로 열린다.
+  appleWebApp: { capable: true, title: "인연", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // 주소창·상태바 색을 테마에 맞춘다. 안 맞추면 설치한 앱에서 위쪽만 흰 띠로 남는다.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfaf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#121317" },
+  ],
 };
 
 /**
@@ -40,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <ThemeApplier />
+        <ServiceWorker />
         <Nav />
         <main className="mx-auto max-w-3xl px-4 pb-24 pt-6">{children}</main>
         <UndoBar />
