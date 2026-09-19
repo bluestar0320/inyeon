@@ -3,7 +3,6 @@
 import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
-import YearBreakdown from "@/components/YearBreakdown";
 import type { CountResult } from "@/lib/calc";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import type { ShareSpec } from "@/lib/shareCard";
@@ -57,8 +56,10 @@ export default function ResultPanel({
         ))}
       </div>
 
-      {result.slices.length > 1 && <YearBreakdown slices={result.slices} />}
-
+      {/*
+        연도별 추이는 여기 두지 않는다. 결과 카드 안에 넣었더니 입력·메모 칸이
+        화면 한참 아래로 밀렸다. 필요한 화면이 원하는 자리에 <YearBreakdown>을 놓는다.
+      */}
       {share && <ShareButton spec={share} fileNameParts={shareFileName ?? [share.title]} />}
     </div>
   );

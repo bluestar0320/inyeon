@@ -6,6 +6,7 @@ import { useId, useMemo, useState } from "react";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
+import YearBreakdown from "@/components/YearBreakdown";
 import { computeMoment, resolveAge } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { MOMENT_PRESETS } from "@/lib/presets";
@@ -51,16 +52,20 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
     : draft.title.trim() !== "" || draft.filters.length > 0;
   useUnsavedGuard(dirty);
 
+  // 고치던 중이었다면 보던 화면으로 돌려보낸다. 목록으로 튕기면 방금 고친 것을
+  // 다시 찾아 들어가야 한다.
+  const backTo = isNew ? "/moments" : `/moments/detail?id=${draft.id}`;
+
   function leave(): void {
     if (!confirmLeave()) return;
     clearDirty();
-    router.push("/moments");
+    router.push(backTo);
   }
 
   function save(): void {
     saveMoment({ ...draft, title: draft.title.trim(), updatedAt: new Date().toISOString() });
     clearDirty();
-    router.push("/moments");
+    router.push(backTo);
   }
 
   return (
@@ -204,6 +209,12 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
 
       <div className="card">
         <FilterEditor filters={draft.filters} onChange={(filters) => setDraft({ ...draft, filters })} />
+      </div>
+
+      {/* 추이는 조건 바로 아래에 둔다. 위에 두면 입력 칸이 화면 밖으로 밀린다. */}
+      <div className="card space-y-2">
+        <p className="text-sm font-semibold text-ink-800">연도별 추이</p>
+        <YearBreakdown slices={result.slices} />
       </div>
 
       <div className="card space-y-2">

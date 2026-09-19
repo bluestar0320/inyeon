@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
-import PersonEditor from "@/components/PersonEditor";
+import PersonView from "@/components/PersonView";
 import { useAppState } from "@/lib/store";
 
 /*
@@ -40,7 +40,7 @@ function Detail() {
   return (
     <div className="space-y-5">
       <h1 className="pt-2 text-xl font-semibold tracking-tight text-ink-900">{person.name}</h1>
-      <PersonEditor key={person.id} initial={person} />
+      <PersonView key={person.id} person={person} />
     </div>
   );
 }

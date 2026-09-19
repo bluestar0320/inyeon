@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
+import YearBreakdown from "@/components/YearBreakdown";
 import { computeMarriage, resolveAge, toPerYear } from "@/lib/calc";
 import { formatAge, formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { MEETING_FREQUENCY_PRESETS } from "@/lib/presets";
@@ -159,6 +160,12 @@ export default function MarriageEditor() {
           filters={draft.filters}
           onChange={(filters) => setDraft({ ...draft, filters })}
         />
+      </div>
+
+      {/* 추이는 조건 바로 아래에 둔다. 위에 두면 입력 칸이 화면 밖으로 밀린다. */}
+      <div className="card space-y-2">
+        <p className="text-sm font-semibold text-ink-800">연도별 추이</p>
+        <YearBreakdown slices={result.slices} />
       </div>
 
       <div className="card space-y-2">

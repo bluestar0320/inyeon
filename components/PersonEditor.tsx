@@ -9,6 +9,7 @@ import GrowthCalendar from "@/components/GrowthCalendar";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
+import YearBreakdown from "@/components/YearBreakdown";
 import { computeGrowth, computeRelationship, resolveAge } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { RELATION_PRESETS } from "@/lib/presets";
@@ -52,16 +53,20 @@ export default function PersonEditor({ initial }: { initial: Person }) {
     : draft.name.trim() !== "" || draft.filters.length > 0;
   useUnsavedGuard(dirty);
 
-  function leave(to: string): void {
+  // 고치던 중이었다면 보던 화면으로 돌려보낸다. 목록으로 튕기면 방금 고친 것을
+  // 다시 찾아 들어가야 한다.
+  const backTo = isNew ? "/people" : `/people/detail?id=${draft.id}`;
+
+  function leave(): void {
     if (!confirmLeave()) return;
     clearDirty();
-    router.push(to);
+    router.push(backTo);
   }
 
   function save(): void {
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
     clearDirty();
-    router.push("/people");
+    router.push(isNew ? "/people" : `/people/detail?id=${draft.id}`);
   }
 
   return (
@@ -203,6 +208,12 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         />
       </div>
 
+      {/* 추이는 조건 바로 아래에 둔다. 위에 두면 입력 칸이 화면 밖으로 밀린다. */}
+      <div className="card space-y-2">
+        <p className="text-sm font-semibold text-ink-800">연도별 추이</p>
+        <YearBreakdown slices={result.slices} />
+      </div>
+
       {growth !== null && draft.growth ? (
         <GrowthCalendar
           name={nameForCopy}
@@ -245,7 +256,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         <button type="button" className="btn-primary" onClick={save} disabled={!draft.name.trim()}>
           {isNew ? "추가하기" : "저장하기"}
         </button>
-        <button type="button" className="btn-secondary" onClick={() => leave("/people")}>
+        <button type="button" className="btn-secondary" onClick={leave}>
           취소
         </button>
         {!isNew && (
