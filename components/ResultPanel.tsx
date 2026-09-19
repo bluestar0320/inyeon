@@ -31,25 +31,29 @@ export default function ResultPanel({
 
   if (unknownMessage) {
     return (
-      <div className="card">
+      <div className="hero">
         <BigNumber label={label} value="-" muted sub={unknownMessage} />
       </div>
     );
   }
 
   return (
-    <div className="card space-y-5">
+    <div className="hero space-y-6">
       <BigNumber label={label} value={formatCount(result.total)} unit="번" sub={sentence} />
 
+      {/*
+        줄어든 사실은 상자에 담지 않는다. 이 블록 안에 또 상자를 넣으면 숫자와
+        경쟁한다. 왼쪽에 선 하나만 긋는다.
+      */}
       {filtered && (
-        <p className="rounded-xl bg-accent-50 px-3 py-2 text-xs text-accent-600">
+        <p className="border-l-2 border-accent-400 pl-3 text-xs leading-relaxed text-ink-600">
           조건 필터를 적용해 {formatCount(result.baselineTotal)}번에서{" "}
           {formatPercent(cut)} 줄었습니다.
           {result.cappedAt !== null && ` (최대 ${formatCount(result.cappedAt)}번 상한 적용)`}
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-hero-line pt-5 sm:grid-cols-3">
         <StatCard label="계산 기간" value={formatYears(result.years)} />
         {stats?.map((stat) => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} sub={stat.sub} />

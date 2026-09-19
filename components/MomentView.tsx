@@ -73,10 +73,9 @@ export default function MomentView({ moment }: { moment: Moment }) {
       />
 
       <div className="card">
-        <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 text-sm font-semibold text-ink-800">
-            {moment.emoji} {moment.title}
-          </p>
+        {/* 제목과 히어로에 이미 나온 이름을 세 번째로 쓰지 않는다. */}
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold tracking-[0.1em] text-ink-400">정보</p>
           <Link href={`/moments/edit?id=${moment.id}`} className="btn-secondary shrink-0">
             수정하기
           </Link>

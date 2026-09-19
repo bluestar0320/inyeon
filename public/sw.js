@@ -73,8 +73,21 @@ self.addEventListener("fetch", (event) => {
       .catch(async () => {
         const cached = await caches.match(request);
         if (cached) return cached;
-        // 캐시에 없는 화면으로 이동한 경우, 최소한 홈이라도 띄운다.
+
         if (request.mode === "navigate") {
+          /*
+           * 주소 끝의 슬래시를 맞춰 한 번 더 찾는다.
+           * 이 앱은 trailingSlash로 내보내서 캐시에는 전부 "/people/" 꼴로 들어 있다.
+           * 슬래시 없이 들어오면(북마크, 링크, page.goto("/people")) 캐시가 어긋나
+           * 아래의 홈 대체로 떨어졌다 — 오프라인에서 다른 화면을 열면 조용히 홈이
+           * 떴다는 뜻이다. 온라인에서는 서버가 리다이렉트해 줘서 안 보였다.
+           */
+          const url = new URL(request.url);
+          if (!url.pathname.endsWith("/")) {
+            const slashed = await caches.match(`${url.pathname}/${url.search}`);
+            if (slashed) return slashed;
+          }
+          // 그래도 없으면 최소한 홈이라도 띄운다.
           const home = await caches.match(`${BASE}/`);
           if (home) return home;
         }

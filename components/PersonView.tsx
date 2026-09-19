@@ -104,13 +104,11 @@ export default function PersonView({ person }: { person: Person }) {
       </p>
 
       <div className="card">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-ink-800">
-              {person.emoji ?? "🫧"} {person.name}
-            </p>
-            {person.relation && <p className="mt-0.5 text-xs text-ink-400">{person.relation}</p>}
-          </div>
+        {/* 이름은 화면 제목과 히어로에 이미 두 번 나왔다. 여기서 또 쓰지 않는다. */}
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold tracking-[0.1em] text-ink-400">
+            {person.relation ?? "정보"}
+          </p>
           <Link href={`/people/edit?id=${person.id}`} className="btn-secondary shrink-0">
             수정하기
           </Link>

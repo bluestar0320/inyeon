@@ -87,7 +87,7 @@ export default function ShareButton({
   return (
     <button
       type="button"
-      className="btn-secondary w-full"
+      className="w-full rounded-xl border border-hero-line px-4 py-2.5 text-sm font-medium text-ink-600 transition hover:bg-hero-line/60 disabled:opacity-50"
       onClick={() => void run()}
       disabled={status === "working"}
       data-testid="share-card"

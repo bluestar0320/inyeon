@@ -40,8 +40,15 @@ export default function Nav() {
                 key={link.href}
                 href={link.href}
                 onClick={guard}
-                className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                  active ? "bg-ink-800 text-onInk" : "text-ink-400 hover:bg-ink-50 hover:text-ink-800"
+                /*
+                  현재 위치는 검은 알약이 아니라 밑줄로 알린다. 알약은 화면마다
+                  맨 위에 덩어리 하나를 얹어 두는 셈이라, 정작 주인공인 숫자가
+                  나오기도 전에 시선을 먼저 가져갔다.
+                */
+                className={`border-b-2 px-2.5 py-1.5 text-sm transition ${
+                  active
+                    ? "border-accent-500 font-semibold text-ink-900"
+                    : "border-transparent text-ink-400 hover:text-ink-800"
                 }`}
               >
                 {link.label}

@@ -35,6 +35,11 @@ const config: Config = {
         surface: rgb("--surface"),
         /** 페이지 바탕. */
         page: rgb("--page"),
+        /** 결과 블록 바닥. 이 앱에서 색이 깔리는 유일한 자리다. */
+        hero: {
+          DEFAULT: rgb("--hero-bg"),
+          line: rgb("--hero-line"),
+        },
         /** ink-800/900 배경 위에 얹는 글자색. */
         onInk: rgb("--on-ink"),
         /** 되돌리기 막대. 양쪽 테마에서 따로 정해 대비를 맞춘다. */

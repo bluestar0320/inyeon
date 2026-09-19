@@ -99,7 +99,7 @@ export default function HomePage() {
       {/* 홈의 h1. 큰 제목을 두지 않는 화면이라 이 문장이 페이지를 대표한다. */}
       <h1 className="pt-2 text-sm font-normal text-ink-400">{copy.greeting}</h1>
 
-      <section className="card space-y-4">
+      <section className="hero space-y-5">
         <BigNumber
           label={copy.lifeLabel}
           value={myRemaining === null ? "-" : formatYears(myRemaining)}
@@ -111,15 +111,15 @@ export default function HomePage() {
         />
         {progress !== null && (
           <div>
-            <div className="h-2 overflow-hidden rounded-full bg-ink-50">
+            <div className="h-2 overflow-hidden rounded-full bg-hero-line">
               <div className="h-full rounded-full bg-ink-800" style={{ width: `${progress * 100}%` }} />
             </div>
-            <p className="mt-2 text-xs text-ink-400">
+            <p className="mt-2 text-xs text-ink-600">
               지나온 {formatPercent(progress)} · 남은 {formatPercent(1 - progress)}
             </p>
           </div>
         )}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3 border-t border-hero-line pt-5">
           <StatCard
             label="남은 여름"
             value={myRemaining === null ? "-" : `${Math.floor(myRemaining)}번`}
@@ -140,7 +140,7 @@ export default function HomePage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ink-800">인연</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">인연</h2>
           <Link href="/people" className="btn-quiet">
             전체 보기
           </Link>
@@ -153,35 +153,47 @@ export default function HomePage() {
             actionLabel="인연 추가"
           />
         ) : (
-          <div className="space-y-2">
+          /*
+            카드 네 장을 쌓지 않는다. 같은 테두리를 두른 상자가 줄줄이 서면 어느
+            것이 더 급한지 안 보인다. 선으로만 나누고, 숫자를 키워 그 줄에서
+            제일 먼저 읽히게 한다.
+          */
+          <ul className="divide-y divide-ink-200/70 border-y border-ink-200/70">
             {people.slice(0, 4).map(({ person, result }) => (
-              <Link
-                key={person.id}
-                href={`/people/detail?id=${person.id}`}
-                className="card flex items-center justify-between py-4 transition hover:border-ink-400"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="text-xl">{person.emoji ?? "🫧"}</span>
-                  <span>
-                    <span className="block text-sm font-medium text-ink-800">{person.name}</span>
-                    <span className="block text-xs text-ink-400">{person.relation ?? "인연"}</span>
+              <li key={person.id}>
+                <Link
+                  href={`/people/detail?id=${person.id}`}
+                  className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-3.5 transition hover:bg-ink-50"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span aria-hidden="true" className="text-xl">
+                      {person.emoji ?? "🫧"}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-ink-800">
+                        {person.name}
+                      </span>
+                      <span className="block text-xs text-ink-400">
+                        {person.relation ?? "인연"}
+                      </span>
+                    </span>
                   </span>
-                </span>
-                <span className="text-right">
-                  <span className="numeral block text-2xl text-ink-900">
-                    {formatCount(result.total)}
+                  <span className="shrink-0 text-right">
+                    <span className="numeral text-3xl leading-none text-ink-900">
+                      {formatCount(result.total)}
+                    </span>
+                    <span className="ml-1 text-xs text-ink-400">번</span>
                   </span>
-                  <span className="block text-[11px] text-ink-400">번 남음</span>
-                </span>
-              </Link>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 
       {growing.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink-800">아이와 남은 것들</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">아이와 남은 것들</h2>
           {growing.map(({ person, growth }) => {
             const pick = (key: string) => growth.items.find((i) => i.key === key);
             return (
@@ -223,7 +235,7 @@ export default function HomePage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ink-800">순간</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">순간</h2>
           <Link href="/moments" className="btn-quiet">
             전체 보기
           </Link>
@@ -236,16 +248,18 @@ export default function HomePage() {
             actionLabel="순간 추가"
           />
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2">
             {moments.slice(0, 4).map(({ moment, result }) => (
               <Link
                 key={moment.id}
                 href={`/moments/detail?id=${moment.id}`}
                 className="card py-4 transition hover:border-ink-400"
               >
-                <span className="text-xl">{moment.emoji ?? "◦"}</span>
-                <p className="mt-2 text-sm font-medium text-ink-800">{moment.title}</p>
-                <p className="numeral mt-1 text-2xl text-ink-900">
+                <span aria-hidden="true" className="text-xl">
+                  {moment.emoji ?? "◦"}
+                </span>
+                <p className="mt-2 truncate text-sm font-medium text-ink-800">{moment.title}</p>
+                <p className="numeral mt-1 text-3xl leading-none text-ink-900">
                   {formatCount(result.total)}
                   <span className="ml-1 text-sm font-normal text-ink-400">번</span>
                 </p>
@@ -269,7 +283,7 @@ export default function HomePage() {
         </Link>
       ) : (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink-800">결혼 계획</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">결혼 계획</h2>
           <Link
             href="/marriage"
             className="card flex items-center justify-between py-4 transition hover:border-ink-400"
@@ -293,10 +307,10 @@ export default function HomePage() {
               </span>
             </span>
             <span className="shrink-0 pl-3 text-right">
-              <span className="numeral block text-2xl text-ink-900">
+              <span className="numeral block text-3xl leading-none text-ink-900">
                 {formatCount(marriage.result.total)}
               </span>
-              <span className="block text-[11px] text-ink-400">번 남음</span>
+              <span className="mt-1 block text-[11px] text-ink-400">번 남음</span>
             </span>
           </Link>
         </section>

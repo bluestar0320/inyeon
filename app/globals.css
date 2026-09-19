@@ -30,6 +30,14 @@
   --page: 251 250 248;
   --on-ink: 255 255 255;
 
+  /*
+   * 주인공 숫자가 앉는 바닥. 이 앱에서 색이 깔리는 자리는 여기 하나뿐이다.
+   * 색을 화면 전체에 옅게 퍼뜨리면 어디에도 시선이 안 간다. 눈이 가야 할 한 곳에만
+   * 모은다. 그 위의 글자는 ink-900과 ink-600만 쓴다(양쪽 테마 모두 7:1 이상).
+   */
+  --hero-bg: 252 241 235;
+  --hero-line: 240 219 208;
+
   --toast-bg: 21 22 27;
   --toast-fg: 255 255 255;
   --toast-accent: 240 178 148;
@@ -57,6 +65,9 @@
   --page: 18 19 23;
   --on-ink: 18 19 23;
 
+  --hero-bg: 42 32 28;
+  --hero-line: 66 50 42;
+
   --toast-bg: 240 240 243;
   --toast-fg: 21 22 27;
   --toast-accent: 154 71 38;
@@ -71,6 +82,15 @@
   body {
     background-color: rgb(var(--page));
     color: rgb(var(--ink-800));
+    /*
+     * 웹폰트를 쓰지 않는다. 이 앱은 설치해서(PWA·APK) 오프라인으로도 도는데,
+     * CDN 글꼴을 물리면 숫자가 뜨기 전에 빈칸이 한 번 보이고 비행기 안에서는
+     * 아예 안 온다. 한국어 시스템 글꼴은 이미 각 OS가 잘 고른 것들이라,
+     * 이름만 제대로 불러 주면 된다. Pretendard는 깔려 있으면 쓰고 없으면 넘어간다.
+     */
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+      "Apple SD Gothic Neo", "Segoe UI", "Noto Sans KR", "Malgun Gothic", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
   }
 
   /* 브라우저 기본 위젯(날짜 선택기, 스크롤바)도 테마를 따라가게 한다. */
@@ -124,8 +144,12 @@
     @apply inline-flex items-center justify-center rounded-xl border border-ink-200 bg-surface px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50;
   }
 
+  /*
+   * 조용한 단추지만 안 보이면 안 된다. ink-400은 히어로 바닥 위에서 4.63:1로
+   * 기준(4.5)에 아슬아슬해서 한 단계 진하게 뒀다.
+   */
   .btn-quiet {
-    @apply inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium text-ink-400 transition hover:bg-ink-50 hover:text-ink-600;
+    @apply inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900;
   }
 
   .btn-danger {
@@ -151,5 +175,32 @@
   /* 큰 숫자는 이 앱의 주인공이다. 자간을 좁혀 한 덩어리로 읽히게 한다. */
   .numeral {
     @apply font-bold tabular-nums tracking-tight;
+  }
+
+  /*
+   * 결과 블록. 카드가 아니다.
+   * .card로 두면 회색 상자 대여섯 개 중 하나가 되어 위계가 사라진다 — 화면에서
+   * 제일 중요한 것과 제일 안 중요한 것이 같은 테두리를 두르고 있었다.
+   * 테두리를 걷고 색이 깔린 바닥으로만 구분한다.
+   */
+  .hero {
+    @apply rounded-3xl bg-hero px-6 py-7 sm:px-8;
+  }
+
+  /*
+   * 숫자가 바뀌면 바뀐 티를 낸다. 조건을 걸었을 때 화면 어딘가가 조용히 달라지는
+   * 것보다 숫자 자체가 다시 떠오르는 편이 인과가 읽힌다. React가 key로 다시
+   * 그릴 때마다 재생된다. 움직임을 줄인 사람에게는 위의 규칙이 꺼 준다.
+   */
+  .numeral-hero {
+    @apply leading-none text-ink-900;
+    animation: number-in 320ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @keyframes number-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.3rem);
+    }
   }
 }
