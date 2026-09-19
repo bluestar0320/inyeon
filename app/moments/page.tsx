@@ -84,7 +84,7 @@ export default function MomentsPage() {
           {rows.sorted.map(({ moment, result }) => (
             <Link
               key={moment.id}
-              href={`/moments/${moment.id}`}
+              href={`/moments/detail?id=${moment.id}`}
               className="card transition hover:border-ink-400"
             >
               <span className="text-2xl">{moment.emoji ?? "◦"}</span>

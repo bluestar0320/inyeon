@@ -62,6 +62,38 @@ npx playwright install chromium
 돕니다(`.github/workflows/relationship-countdown.yml`). E2E가 실패하면 Playwright
 리포트가 아티팩트로 남습니다.
 
+## 배포
+
+**서버가 없습니다.** 계산은 브라우저에서 하고 데이터는 `localStorage`에만 있으므로,
+정적 파일로 내보내 아무 정적 호스팅에나 올립니다.
+
+```bash
+npm run build        # out/ 에 정적 파일이 떨어진다
+npm start            # out/ 을 로컬에서 서빙 (기본 3123)
+```
+
+### GitHub Pages (설정해 둔 경로)
+
+`relationship-countdown/` 이 바뀌면 GitHub Actions가 빌드해서 Pages에 올립니다
+(`.github/workflows/deploy-relationship-countdown.yml`). 저장소에 이미 있는
+`GITHUB_TOKEN`으로 돌아가니 따로 넣을 비밀값이 없습니다.
+
+**처음 한 번은 저장소 설정에서 켜야 합니다**: Settings → Pages → Source를
+**GitHub Actions**로. 그 뒤로는 푸시할 때마다 자동으로 올라갑니다.
+
+주소는 `https://<사용자>.github.io/<저장소>/` 이고, 하위 경로에 놓이므로 빌드할 때
+`BASE_PATH`를 넘깁니다. 워크플로가 저장소 이름에서 자동으로 채웁니다.
+
+### 다른 곳에 올릴 때
+
+Vercel·Netlify·Cloudflare Pages 모두 그대로 됩니다. 저장소를 연결하고
+빌드 명령 `npm run build`, 출력 폴더 `out`, 루트 디렉터리 `relationship-countdown`만
+지정하면 됩니다. 최상위 도메인에 놓는다면 `BASE_PATH`는 비워 두세요.
+
+> 배포하면 **주소를 아는 사람은 누구나 앱을 열 수 있습니다.** 다만 데이터는 각자
+> 브라우저에만 저장되므로, 다른 사람이 내 기록을 보는 일은 없습니다. 방문자마다
+> 빈 앱에서 시작합니다.
+
 ## 구조
 
 ```
@@ -75,8 +107,9 @@ lib/
   tone.ts           톤별 문구
   presets.ts        관계·순간·필터·만남빈도 프리셋
 tests/          계산 엔진 단위 테스트
-e2e/            브라우저 시나리오 테스트 (Playwright)
-public/         PWA 매니페스트 아이콘, 서비스 워커
+e2e/            브라우저 시나리오 + 접근성 테스트 (Playwright)
+public/         PWA 아이콘, 서비스 워커
+scripts/        정적 서버, 빌드 후처리
 docs/PLAN.md    구현 계획
 ```
 

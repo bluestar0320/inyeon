@@ -8,24 +8,31 @@
  * 이 앱은 데이터를 전부 localStorage에 두므로, 화면 파일만 받아둘 수 있으면
  * 비행기 안에서도 그대로 동작한다.
  */
-const CACHE = "rc-v1";
+const CACHE = "rc-v2";
+
+/*
+ * 앱이 놓인 자리. 하위 경로에 올릴 수 있으므로(GitHub Pages의 /저장소이름 등)
+ * 서비스 워커가 등록된 범위에서 직접 읽는다. 경로를 박아 두면 그런 배포에서 전부 어긋난다.
+ */
+const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, "");
 
 /*
  * 첫 방문에 미리 받아 두는 화면들. 실패해도 설치는 진행한다.
  * 고정 경로는 전부 넣는다 — 한 번도 안 가본 화면을 오프라인에서 열면 빈 화면이 된다.
- * 인연/순간 상세(/people/<id>)는 경로가 정해져 있지 않아 미리 못 받지만, 목록을 거쳐야만
- * 갈 수 있는 화면이라 실제로는 방문 시점에 캐시된다.
+ * 상세 화면은 목록을 거쳐야만 갈 수 있어 방문 시점에 캐시된다.
  */
 const PRECACHE = [
   "/",
-  "/people",
-  "/people/new",
-  "/moments",
-  "/moments/new",
-  "/marriage",
-  "/settings",
-  "/setup",
-];
+  "/people/",
+  "/people/new/",
+  "/people/detail/",
+  "/moments/",
+  "/moments/new/",
+  "/moments/detail/",
+  "/marriage/",
+  "/settings/",
+  "/setup/",
+].map((path) => `${BASE}${path}`);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -66,7 +73,7 @@ self.addEventListener("fetch", (event) => {
         if (cached) return cached;
         // 캐시에 없는 화면으로 이동한 경우, 최소한 홈이라도 띄운다.
         if (request.mode === "navigate") {
-          const home = await caches.match("/");
+          const home = await caches.match(`${BASE}/`);
           if (home) return home;
         }
         return Response.error();

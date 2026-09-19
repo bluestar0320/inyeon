@@ -27,13 +27,13 @@ async function seed(page: import("@playwright/test").Page) {
   await page.getByLabel("나이", { exact: true }).fill("7");
   await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
   await page.getByRole("button", { name: "추가하기" }).click();
-  await page.waitForURL("**/people");
+  await page.waitForURL(/\/people\/?$/);
   await page.goto("/moments/new");
   await page.getByRole("button", { name: "🌸 벚꽃 보기" }).click();
   // 조건을 하나 걸어야 목록의 "조건 N개 적용됨"(강조색 글자)까지 검사 대상이 된다.
   await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
   await page.getByRole("button", { name: "추가하기" }).click();
-  await page.waitForURL("**/moments");
+  await page.waitForURL(/\/moments\/?$/);
 }
 
 for (const scheme of ["light", "dark"] as const) {
@@ -103,7 +103,7 @@ test.describe("키보드", () => {
     await page.getByRole("button", { name: "추가하기" }).focus();
     await page.keyboard.press("Enter");
 
-    await page.waitForURL("**/people");
+    await page.waitForURL(/\/people\/?$/);
     await expect(page.locator("a.card").first()).toContainText("키보드");
   });
 

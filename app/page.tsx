@@ -157,7 +157,7 @@ export default function HomePage() {
             {people.slice(0, 4).map(({ person, result }) => (
               <Link
                 key={person.id}
-                href={`/people/${person.id}`}
+                href={`/people/detail?id=${person.id}`}
                 className="card flex items-center justify-between py-4 transition hover:border-ink-400"
               >
                 <span className="flex items-center gap-3">
@@ -187,7 +187,7 @@ export default function HomePage() {
             return (
               <Link
                 key={person.id}
-                href={`/people/${person.id}`}
+                href={`/people/detail?id=${person.id}`}
                 className="card block transition hover:border-ink-400"
               >
                 <div className="flex items-baseline justify-between">
@@ -240,7 +240,7 @@ export default function HomePage() {
             {moments.slice(0, 4).map(({ moment, result }) => (
               <Link
                 key={moment.id}
-                href={`/moments/${moment.id}`}
+                href={`/moments/detail?id=${moment.id}`}
                 className="card py-4 transition hover:border-ink-400"
               >
                 <span className="text-xl">{moment.emoji ?? "◦"}</span>

@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && node scripts/flatten-rsc.mjs",
+    "start": "node scripts/serve-static.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "node --test \"tests/*.test.mjs\"",

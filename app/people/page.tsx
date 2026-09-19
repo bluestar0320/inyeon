@@ -115,7 +115,7 @@ export default function PeoplePage() {
           {rows.sorted.map(({ person, result }) => (
             <Link
               key={person.id}
-              href={`/people/${person.id}`}
+              href={`/people/detail?id=${person.id}`}
               className="card flex items-center justify-between transition hover:border-ink-400"
             >
               <span className="flex min-w-0 items-center gap-3">

@@ -100,7 +100,7 @@ test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ pag
   await page.getByLabel("나이", { exact: true }).fill("60");
   await page.getByLabel("예상 수명").fill("80");
   await page.getByRole("button", { name: "추가하기" }).click();
-  await page.waitForURL("**/people");
+  await page.waitForURL(/\/people\/?$/);
 
   await expect(page.locator("a.card").first()).toContainText("240");
 

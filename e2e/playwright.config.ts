@@ -23,7 +23,7 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 5"] } },
   ],
   webServer: {
-    command: "npm run build && npm run start -- -p 3123",
+    command: "npm run build && npm run start 3123",
     url: "http://localhost:3123",
     cwd: "..",
     reuseExistingServer: !process.env.CI,

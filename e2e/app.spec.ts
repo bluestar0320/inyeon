@@ -11,7 +11,7 @@ async function addPerson(page: import("@playwright/test").Page, name: string, ag
   await page.getByLabel("이름").fill(name);
   await page.getByLabel("나이", { exact: true }).fill(String(age));
   await page.getByRole("button", { name: "추가하기" }).click();
-  await page.waitForURL("**/people");
+  await page.waitForURL(/\/people\/?$/);
 }
 
 test.describe("저장과 되돌리기", () => {
@@ -31,7 +31,7 @@ test.describe("저장과 되돌리기", () => {
 
     await page.locator("a.card").first().click();
     await page.getByRole("button", { name: "삭제" }).click();
-    await page.waitForURL("**/people");
+    await page.waitForURL(/\/people\/?$/);
     await expect(page.locator("a.card")).toHaveCount(0);
 
     await expect(page.getByRole("status")).toContainText("어머니을(를) 지웠습니다");
@@ -64,7 +64,7 @@ test.describe("저장하지 않고 나가기", () => {
 
     await page.goto("/people/new");
     await page.getByRole("link", { name: "순간" }).click();
-    await page.waitForURL("**/moments");
+    await page.waitForURL(/\/moments\/?$/);
     expect(asked).toBe(false);
   });
 
@@ -84,7 +84,7 @@ test.describe("저장하지 않고 나가기", () => {
     await setUpProfile(page, 30);
     await page.goto("/people");
     await page.getByRole("link", { name: "추가", exact: true }).click();
-    await page.waitForURL("**/people/new");
+    await page.waitForURL(/\/people\/new\/?$/);
     await page.getByLabel("이름").fill("테스트");
 
     page.once("dialog", (d) => void d.dismiss());
@@ -99,12 +99,12 @@ test.describe("저장하지 않고 나가기", () => {
     await setUpProfile(page, 30);
     await page.goto("/people");
     await page.getByRole("link", { name: "추가", exact: true }).click();
-    await page.waitForURL("**/people/new");
+    await page.waitForURL(/\/people\/new\/?$/);
     await page.getByLabel("이름").fill("테스트");
 
     page.once("dialog", (d) => void d.accept());
     await page.goBack();
-    await page.waitForURL("**/people", { timeout: 10_000 });
+    await page.waitForURL(/\/people\/?$/, { timeout: 10_000 });
     await expect(page.getByRole("heading", { name: "인연" })).toBeVisible();
   });
 
@@ -113,11 +113,11 @@ test.describe("저장하지 않고 나가기", () => {
     await setUpProfile(page, 30);
     await page.goto("/people");
     await page.getByRole("link", { name: "추가", exact: true }).click();
-    await page.waitForURL("**/people/new");
+    await page.waitForURL(/\/people\/new\/?$/);
     await page.getByLabel("이름").fill("어머니");
     await page.getByLabel("나이", { exact: true }).fill("60");
     await page.getByRole("button", { name: "추가하기" }).click();
-    await page.waitForURL("**/people");
+    await page.waitForURL(/\/people\/?$/);
 
     let asked = false;
     page.on("dialog", (d) => { asked = true; void d.accept(); });
@@ -132,7 +132,7 @@ test.describe("저장하지 않고 나가기", () => {
     await setUpProfile(page, 30);
     await page.goto("/people");
     await page.getByRole("link", { name: "추가", exact: true }).click();
-    await page.waitForURL("**/people/new");
+    await page.waitForURL(/\/people\/new\/?$/);
     await page.getByLabel("이름").fill("테스트");
     await page.getByLabel("이름").fill(""); // 다시 깨끗한 상태
     await page.waitForTimeout(300);
@@ -140,7 +140,7 @@ test.describe("저장하지 않고 나가기", () => {
     let asked = false;
     page.on("dialog", (d) => { asked = true; void d.accept(); });
     await page.goBack();
-    await page.waitForURL("**/people", { timeout: 10_000 });
+    await page.waitForURL(/\/people\/?$/, { timeout: 10_000 });
     expect(asked).toBe(false);
   });
 
@@ -153,7 +153,7 @@ test.describe("저장하지 않고 나가기", () => {
     await page.getByLabel("이름").fill("어머니");
     await page.getByLabel("나이", { exact: true }).fill("60");
     await page.getByRole("button", { name: "추가하기" }).click();
-    await page.waitForURL("**/people");
+    await page.waitForURL(/\/people\/?$/);
     expect(asked).toBe(false);
   });
 });

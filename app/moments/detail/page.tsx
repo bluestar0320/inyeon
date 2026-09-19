@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import MomentEditor from "@/components/MomentEditor";
 import { useAppState } from "@/lib/store";
 
-export default function MomentDetailPage() {
-  const params = useParams<{ id: string }>();
+/** 주소를 조회 문자열로 두는 이유는 app/people/detail/page.tsx의 설명과 같다. */
+function Detail() {
+  const id = useSearchParams().get("id");
   const { state, hydrated } = useAppState();
-  const moment = state.moments.find((m) => m.id === params.id);
+  const moment = state.moments.find((m) => m.id === id);
 
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
@@ -33,5 +35,13 @@ export default function MomentDetailPage() {
       </h1>
       <MomentEditor key={moment.id} initial={moment} />
     </div>
+  );
+}
+
+export default function MomentDetailPage() {
+  return (
+    <Suspense fallback={<p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>}>
+      <Detail />
+    </Suspense>
   );
 }

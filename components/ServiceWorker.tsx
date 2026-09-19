@@ -12,7 +12,9 @@ export default function ServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("/sw.js").catch(() => {
+    // 하위 경로 배포에서도 맞도록 base를 붙인다.
+    const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+    navigator.serviceWorker.register(`${base}/sw.js`).catch(() => {
       // 등록에 실패해도 앱은 온라인에서 그대로 동작한다.
     });
   }, []);
