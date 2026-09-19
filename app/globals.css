@@ -9,7 +9,12 @@
 :root {
   --ink-50: 246 246 247;
   --ink-200: 217 218 222;
-  --ink-400: 139 141 151;
+  /*
+   * 보조 텍스트에 두루 쓰는 색이라 대비가 중요하다. 원래 #8b8d97이었는데 흰 바탕에서
+   * 3.3:1밖에 안 나와 WCAG AA(4.5)에 미달했다 — axe로 197곳이 걸렸다.
+   * 지금 값은 흰 바탕 5.2, 페이지 바탕 5.0, ink-50 위 4.9다.
+   */
+  --ink-400: 106 108 118;
   --ink-600: 75 77 89;
   --ink-800: 36 37 45;
   --ink-900: 21 22 27;
@@ -17,7 +22,8 @@
   --accent-50: 253 243 239;
   --accent-100: 249 226 216;
   --accent-400: 217 128 90;
-  --accent-500: 196 101 62;
+  /* 글자에 쓰는 색이라 흰 바탕 기준 4.5:1을 넘겨야 한다. 원래 #c4653e는 3.98이었다. */
+  --accent-500: 176 86 50;
   --accent-600: 165 80 47;
 
   --surface: 255 255 255;
@@ -74,6 +80,29 @@
 
   .dark {
     color-scheme: dark;
+  }
+
+  /* 움직임을 줄이도록 설정한 사람에게는 전환 효과를 끈다. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /*
+   * 키보드로 이동할 때만 초점 테두리를 보인다. 마우스로 누를 때까지 테두리가 남으면
+   * 디자인이 지저분해지고, 그 이유로 outline을 아예 꺼 버리면 키보드 사용자가 길을
+   * 잃는다. :focus-visible이 그 사이를 갈라 준다.
+   */
+  :focus-visible {
+    outline: 2px solid rgb(var(--ink-800));
+    outline-offset: 2px;
+    border-radius: 0.5rem;
   }
 }
 

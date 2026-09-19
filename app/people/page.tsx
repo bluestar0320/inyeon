@@ -9,6 +9,7 @@ import { computeRelationship } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval } from "@/lib/format";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+import type { Person } from "@/lib/types";
 
 type Sort = "fewest" | "soonest" | "name" | "added";
 
@@ -18,6 +19,13 @@ const SORTS: SortOption<Sort>[] = [
   { key: "name", label: "이름순" },
   { key: "added", label: "최근 추가순" },
 ];
+
+/** 기본값("남은 평생")이면 굳이 적지 않는다. 다른 값일 때만 짧게 알린다. */
+function horizonLabel(horizon: Person["horizon"]): string | null {
+  if (!horizon || horizon.kind === "life") return null;
+  if (horizon.kind === "untilMyAge") return `내 ${horizon.age}세까지`;
+  return `${horizon.years}년간`;
+}
 
 const SORT_HINT: Record<Sort, string> = {
   fewest: "남은 만남이 적은 순서입니다.",
@@ -113,10 +121,20 @@ export default function PeoplePage() {
               <span className="flex min-w-0 items-center gap-3">
                 <span className="text-2xl">{person.emoji ?? "🫧"}</span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium text-ink-800">{person.name}</span>
+                  <span className="block text-sm font-medium text-ink-800">
+                    {person.name}
+                    {/* 기본값이 아닌 설정은 목록에서도 보여야 한다. 상세로 들어가야만
+                        알 수 있으면 켜 둔 사실 자체를 잊는다. */}
+                    {person.growth && (
+                      <span className="ml-1.5 align-middle text-[11px] font-normal text-accent-500">
+                        성장 캘린더
+                      </span>
+                    )}
+                  </span>
                   <span className="block text-xs text-ink-400">
                     {formatFrequency(person.frequency)}
                     {result.intervalDays !== null && ` · ${formatInterval(result.intervalDays)}`}
+                    {horizonLabel(person.horizon) && ` · ${horizonLabel(person.horizon)}`}
                   </span>
                   {person.note && (
                     <span className="mt-0.5 block truncate text-xs text-ink-400">{person.note}</span>

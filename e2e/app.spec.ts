@@ -80,6 +80,70 @@ test.describe("저장하지 않고 나가기", () => {
     await expect(page.getByLabel("이름")).toHaveValue("테스트");
   });
 
+  test("뒤로 가기도 받아낸다 — 취소하면 제자리", async ({ page }) => {
+    await setUpProfile(page, 30);
+    await page.goto("/people");
+    await page.getByRole("link", { name: "추가", exact: true }).click();
+    await page.waitForURL("**/people/new");
+    await page.getByLabel("이름").fill("테스트");
+
+    page.once("dialog", (d) => void d.dismiss());
+    await page.goBack();
+    await page.waitForTimeout(400);
+
+    await expect(page).toHaveURL(/\/people\/new/);
+    await expect(page.getByLabel("이름")).toHaveValue("테스트");
+  });
+
+  test("뒤로 가기를 확인하면 실제로 이전 화면으로 간다", async ({ page }) => {
+    await setUpProfile(page, 30);
+    await page.goto("/people");
+    await page.getByRole("link", { name: "추가", exact: true }).click();
+    await page.waitForURL("**/people/new");
+    await page.getByLabel("이름").fill("테스트");
+
+    page.once("dialog", (d) => void d.accept());
+    await page.goBack();
+    await page.waitForURL("**/people", { timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "인연" })).toBeVisible();
+  });
+
+  test("저장하고 나간 뒤의 뒤로 가기가 먹통이 되지 않는다", async ({ page }) => {
+    // 심어 둔 히스토리 항목을 치우지 않으면 여기서 한 번 헛돈다.
+    await setUpProfile(page, 30);
+    await page.goto("/people");
+    await page.getByRole("link", { name: "추가", exact: true }).click();
+    await page.waitForURL("**/people/new");
+    await page.getByLabel("이름").fill("어머니");
+    await page.getByLabel("나이", { exact: true }).fill("60");
+    await page.getByRole("button", { name: "추가하기" }).click();
+    await page.waitForURL("**/people");
+
+    let asked = false;
+    page.on("dialog", (d) => { asked = true; void d.accept(); });
+    await page.goBack();
+    await page.waitForTimeout(500);
+    expect(asked).toBe(false);
+    // 저장이 끝났으니 폼으로 돌아가든 목록에 남든, 최소한 멈춰 있으면 안 된다.
+    await expect(page.locator("h1")).toBeVisible();
+  });
+
+  test("편집을 되돌려 원래대로 만들면 뒤로 가기가 그냥 동작한다", async ({ page }) => {
+    await setUpProfile(page, 30);
+    await page.goto("/people");
+    await page.getByRole("link", { name: "추가", exact: true }).click();
+    await page.waitForURL("**/people/new");
+    await page.getByLabel("이름").fill("테스트");
+    await page.getByLabel("이름").fill(""); // 다시 깨끗한 상태
+    await page.waitForTimeout(300);
+
+    let asked = false;
+    page.on("dialog", (d) => { asked = true; void d.accept(); });
+    await page.goBack();
+    await page.waitForURL("**/people", { timeout: 10_000 });
+    expect(asked).toBe(false);
+  });
+
   test("저장하고 나갈 때는 묻지 않는다", async ({ page }) => {
     await setUpProfile(page, 30);
     let asked = false;

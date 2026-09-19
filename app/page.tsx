@@ -96,7 +96,8 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      <p className="pt-2 text-sm text-ink-400">{copy.greeting}</p>
+      {/* 홈의 h1. 큰 제목을 두지 않는 화면이라 이 문장이 페이지를 대표한다. */}
+      <h1 className="pt-2 text-sm font-normal text-ink-400">{copy.greeting}</h1>
 
       <section className="card space-y-4">
         <BigNumber
