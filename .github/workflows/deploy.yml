@@ -1,0 +1,60 @@
+name: 배포
+
+# 서버가 없는 앱이라 정적 파일만 올리면 된다.
+# 저장소에 이미 들어 있는 GITHUB_TOKEN으로 돌아가므로 따로 넣을 비밀값이 없다.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포가 겹치면 나중 것만 살린다. 다만 진행 중인 배포를 중간에 끊지는 않는다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 정적 파일 만들기
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/configure-pages@v5
+
+      # GitHub Pages는 https://<사용자>.github.io/<저장소>/ 아래에 놓이므로
+      # 저장소 이름을 기준 경로로 넣는다. 이름을 박아 두면 저장소를 옮길 때 깨진다.
+      - name: 빌드
+        run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+
+      # Jekyll은 _로 시작하는 폴더를 무시한다. Next의 _next가 그 대상이 되면 안 된다.
+      - name: Jekyll 처리 막기
+        run: touch out/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    name: 배포
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

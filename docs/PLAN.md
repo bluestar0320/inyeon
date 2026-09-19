@@ -3,7 +3,7 @@
 컨셉을 구현 가능한 단위로 옮긴 문서입니다. 데이터 모델 · 계산 로직 · 화면 구성 ·
 MVP 범위 순서로 정리했고, 마지막에 확장 기능과 미결 사항을 남겼습니다.
 
-이 저장소의 `relationship-countdown/`에 아래 MVP 범위가 실제로 구현되어 있습니다.
+아래 MVP 범위가 이 저장소에 실제로 구현되어 있습니다.
 
 ---
 
@@ -474,7 +474,7 @@ Next 16.3.2의 정적 내보내기는 화면 전환용 RSC 데이터를 디렉�
 
 ### 켜는 일은 사람이 해야 한다
 
-워크플로(`.github/workflows/deploy-relationship-countdown.yml`)는 저장소에 이미 있는
+워크플로(`.github/workflows/deploy.yml`)는 저장소에 이미 있는
 `GITHUB_TOKEN`으로 돌아가 따로 넣을 비밀값이 없다. 다만 **Settings → Pages → Source를
 GitHub Actions로 한 번 바꿔 주어야** 첫 배포가 나간다.
 

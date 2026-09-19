@@ -58,9 +58,8 @@ E2E는 Playwright로 **프로덕션 빌드**를 띄워 돌립니다(개발 서�
 npx playwright install chromium
 ```
 
-위 네 가지는 `relationship-countdown/` 안이 바뀔 때마다 GitHub Actions에서 자동으로
-돕니다(`.github/workflows/relationship-countdown.yml`). E2E가 실패하면 Playwright
-리포트가 아티팩트로 남습니다.
+밀어 넣을 때마다 GitHub Actions가 같은 검사를 돕니다(`.github/workflows/ci.yml`).
+E2E가 실패하면 Playwright 리포트가 아티팩트로 남습니다.
 
 ## 배포
 
@@ -74,9 +73,12 @@ npm start            # out/ 을 로컬에서 서빙 (기본 3123)
 
 ### GitHub Pages (설정해 둔 경로)
 
-`relationship-countdown/` 이 바뀌면 GitHub Actions가 빌드해서 Pages에 올립니다
-(`.github/workflows/deploy-relationship-countdown.yml`). 저장소에 이미 있는
-`GITHUB_TOKEN`으로 돌아가니 따로 넣을 비밀값이 없습니다.
+`main`에 밀어 넣으면 GitHub Actions가 빌드해서 Pages에 올립니다
+(`.github/workflows/deploy.yml`). 저장소에 이미 있는 `GITHUB_TOKEN`으로 돌아가니
+따로 넣을 비밀값이 없습니다.
+
+> **Pages는 공개 저장소에서만 무료입니다.** 비공개 저장소에서 쓰려면 유료 플랜이
+> 필요합니다. 비공개로 두고 싶다면 아래 Vercel 쪽을 보세요.
 
 **처음 한 번은 저장소 설정에서 켜야 합니다**: Settings → Pages → Source를
 **GitHub Actions**로. 그 뒤로는 푸시할 때마다 자동으로 올라갑니다.
@@ -87,8 +89,8 @@ npm start            # out/ 을 로컬에서 서빙 (기본 3123)
 ### 다른 곳에 올릴 때
 
 Vercel·Netlify·Cloudflare Pages 모두 그대로 됩니다. 저장소를 연결하고
-빌드 명령 `npm run build`, 출력 폴더 `out`, 루트 디렉터리 `relationship-countdown`만
-지정하면 됩니다. 최상위 도메인에 놓는다면 `BASE_PATH`는 비워 두세요.
+빌드 명령 `npm run build`, 출력 폴더 `out`만 지정하면 됩니다. 최상위 도메인에
+놓이므로 `BASE_PATH`는 비워 두세요. **비공개 저장소도 무료 플랜에서 됩니다.**
 
 > 배포하면 **주소를 아는 사람은 누구나 앱을 열 수 있습니다.** 다만 데이터는 각자
 > 브라우저에만 저장되므로, 다른 사람이 내 기록을 보는 일은 없습니다. 방문자마다
