@@ -7,7 +7,7 @@ import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
 import { computeMarriage, resolveAge, toPerYear } from "@/lib/calc";
-import { formatAge, formatInterval, formatYears } from "@/lib/format";
+import { formatAge, formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { MEETING_FREQUENCY_PRESETS } from "@/lib/presets";
 import { emptyMarriage, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -79,6 +79,15 @@ export default function MarriageEditor() {
           Math.round(result.total).toLocaleString("ko-KR"),
         )}
         unknownMessage={unknownMessage}
+        share={{
+          emoji: "💍",
+          title: `만 ${draft.targetAge}세까지`,
+          subtitle: copy.marriageLabel,
+          value: formatCount(result.total),
+          unit: "번",
+          caption: `${formatFrequency(draft.frequency)} · ${formatYears(result.yearsLeft)}`,
+        }}
+        shareFileName={["결혼계획", `${formatCount(result.total)}번`]}
         stats={[
           { label: "기회 간격", value: formatInterval(result.intervalDays) },
           { label: "현재 나이", value: formatAge(myAge) },

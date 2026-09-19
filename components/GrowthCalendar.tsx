@@ -3,6 +3,7 @@
 import { useId } from "react";
 
 import FrequencyInput from "@/components/FrequencyInput";
+import ShareButton from "@/components/ShareButton";
 import type { GrowthResult } from "@/lib/calc";
 import { formatCount, formatYears } from "@/lib/format";
 import { DINNER_PRESETS } from "@/lib/presets";
@@ -28,6 +29,7 @@ export default function GrowthCalendar({
   onDisable: () => void;
 }) {
   const ids = useId();
+  const summer = result.items.find((item) => item.key === "summer");
 
   return (
     <div className="card space-y-5">
@@ -73,6 +75,24 @@ export default function GrowthCalendar({
               </div>
             ))}
           </div>
+
+          {/*
+            "아이와 남은 여름 13번"은 이 앱에서 가장 내보이고 싶어지는 숫자다.
+            항목이 열 개라 카드 한 장에 다 넣으면 아무것도 읽히지 않으므로 하나만 고른다.
+          */}
+          {summer && (
+            <ShareButton
+              spec={{
+                emoji: summer.emoji,
+                title: name,
+                subtitle: `남은 ${summer.label}`,
+                value: formatCount(summer.count),
+                unit: "번",
+                caption: `만 ${setup.adultAge}세까지 ${formatYears(result.yearsLeft)}`,
+              }}
+              fileNameParts={[name, `남은${summer.label}`, `${formatCount(summer.count)}번`]}
+            />
+          )}
         </>
       )}
 

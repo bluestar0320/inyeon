@@ -1,10 +1,12 @@
 "use client";
 
 import BigNumber from "@/components/BigNumber";
+import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
 import YearBreakdown from "@/components/YearBreakdown";
 import type { CountResult } from "@/lib/calc";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
+import type { ShareSpec } from "@/lib/shareCard";
 
 /** 계산 결과 한 덩어리: 큰 숫자 + 보조 지표 + 연도별 추이. */
 export default function ResultPanel({
@@ -13,12 +15,17 @@ export default function ResultPanel({
   sentence,
   stats,
   unknownMessage,
+  share,
+  shareFileName,
 }: {
   label: string;
   result: CountResult;
   sentence?: string;
   stats?: { label: string; value: string; sub?: string }[];
   unknownMessage?: string;
+  /** 주면 "이미지로 저장" 단추가 붙는다. 계산이 안 될 때는 붙지 않는다. */
+  share?: ShareSpec;
+  shareFileName?: string[];
 }) {
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
@@ -51,6 +58,8 @@ export default function ResultPanel({
       </div>
 
       {result.slices.length > 1 && <YearBreakdown slices={result.slices} />}
+
+      {share && <ShareButton spec={share} fileNameParts={shareFileName ?? [share.title]} />}
     </div>
   );
 }

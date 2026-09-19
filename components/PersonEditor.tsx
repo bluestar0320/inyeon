@@ -10,7 +10,7 @@ import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import { computeGrowth, computeRelationship, resolveAge } from "@/lib/calc";
-import { formatDays, formatInterval, formatYears } from "@/lib/format";
+import { formatCount, formatDays, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { RELATION_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -73,6 +73,16 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         unknownMessage={
           ageMissing ? "나이나 생년월일을 채우면 남은 만남이 계산됩니다." : undefined
         }
+        share={{
+          emoji: draft.emoji ?? "🫧",
+          title: nameForCopy,
+          subtitle: copy.meetingLabel,
+          value: formatCount(result.total),
+          unit: "번",
+          // 나이와 예상 수명은 넣지 않는다. 남에게 보낼 정보가 아니다.
+          caption: `${formatFrequency(draft.frequency)} · ${formatYears(result.sharedYears)}`,
+        }}
+        shareFileName={[nameForCopy, `${formatCount(result.total)}번`]}
         stats={[
           { label: "만남 간격", value: formatInterval(result.intervalDays) },
           {

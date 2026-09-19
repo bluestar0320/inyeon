@@ -7,7 +7,7 @@ import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
 import { computeMoment, resolveAge } from "@/lib/calc";
-import { formatInterval, formatYears } from "@/lib/format";
+import { formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { MOMENT_PRESETS } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -74,6 +74,17 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
             ? "내 정보를 먼저 채우면 남은 기간이 계산됩니다."
             : undefined
         }
+        share={{
+          // 목록에서는 "◦"로 자리를 채우지만 카드에서는 비워 둔다. 빈 동그라미가
+          // 크게 찍히면 뜻 없는 자국이 된다.
+          emoji: draft.emoji,
+          title,
+          subtitle: copy.momentLabel,
+          value: formatCount(result.total),
+          unit: "번",
+          caption: `${formatFrequency(draft.frequency)} · ${formatYears(result.horizonYears)}`,
+        }}
+        shareFileName={[title, `${formatCount(result.total)}번`]}
         stats={[{ label: "간격", value: formatInterval(perYear > 0 ? DAYS_PER_YEAR / perYear : null) }]}
       />
 
