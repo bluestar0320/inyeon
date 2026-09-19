@@ -31,3 +31,8 @@ playwright-report/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Capacitor가 설정에서 만들어 내는 네이티브 프로젝트 (CI에서 생성)
+android/
+ios/
+

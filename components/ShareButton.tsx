@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
 import {
   currentTheme,
   drawCard,
@@ -44,9 +45,18 @@ export default function ShareButton({
       if (!blob) throw new Error("이미지를 만들지 못했습니다.");
 
       const name = safeFileName(fileNameParts);
+
+      // APK로 감싼 경우. WebView에는 navigator.share도 <a download>도 없어서
+      // 그냥 두면 눌러도 아무 일이 없는 것처럼 보인다.
+      if (isNativeApp()) {
+        await shareFileNatively(blob, name);
+        setStatus("shared");
+        return;
+      }
+
       const file = new File([blob], name, { type: "image/png" });
 
-      // 휴대폰에서는 공유 시트가 바로 뜨는 편이 자연스럽다. 안 되면 내려받는다.
+      // 휴대폰 브라우저에서는 공유 시트가 바로 뜨는 편이 자연스럽다. 안 되면 내려받는다.
       if (navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({ files: [file] });
