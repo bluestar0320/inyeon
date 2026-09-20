@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { AFTER_ADD_PERSON, clearState, readState, setUpProfile } from "./helpers";
+import { AFTER_ADD_PERSON, clearState, headline, readState, setUpProfile } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await clearState(page);
@@ -207,6 +207,58 @@ test.describe("테마", () => {
 });
 
 test.describe("오프라인", () => {
+  test("한 번도 안 가 본 화면도 인터넷 없이 계산까지 된다", async ({ page, context }) => {
+    /*
+     * 예전 테스트는 "열리는가"만 봤다. 그래서 진짜 문제를 놓쳤다 —
+     * 서비스 워커가 화면 경로만 미리 받고 그 화면이 쓰는 JS 청크는 안 받아서,
+     * 온라인일 때 가 본 적 있는 화면만 제대로 돌았다. 처음 여는 화면은 껍데기만
+     * 뜨고 버튼이 잠겼다. 비행기에서 여는 게 이 앱의 존재 이유라 거기까지 민다.
+     *
+     * 그래서 여기서는 홈만 한 번 열고, 나머지는 전부 오프라인에서 처음 연다.
+     */
+    await page.goto("/");
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
+      timeout: 20_000,
+    });
+    // 설치 때 전부 받아 둘 시간을 준다.
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(async () => {
+            const names = await caches.keys();
+            if (names.length === 0) return 0;
+            return (await (await caches.open(names[0])).keys()).length;
+          }),
+        { timeout: 20_000 },
+      )
+      .toBeGreaterThan(80);
+
+    await context.setOffline(true);
+    try {
+      await page.goto("/setup", { waitUntil: "domcontentloaded" });
+      await page.getByLabel("내 나이").fill("38");
+      await page.getByRole("button", { name: "저장하기" }).click();
+      await page.waitForURL(/\/people\/new\/?$/);
+
+      // 입력이 먹고 계산이 도는지 — 청크가 빠지면 여기서 버튼이 잠긴 채 멈춘다.
+      await page.getByRole("button", { name: "🌷 어머니" }).click();
+      await page.getByLabel("나이", { exact: true }).fill("68");
+      await page.getByRole("button", { name: "추가하기" }).click();
+
+      // 쿼리가 붙은 상세 주소도 캐시에서 찾아야 한다(못 찾으면 조용히 홈이 떴었다).
+      await page.waitForURL(/\/people\/detail/);
+      await expect(page.locator("p.numeral").first()).toContainText("번");
+
+      // 오프라인에서 조건을 걸어 다시 계산한다.
+      const before = await headline(page);
+      await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
+      await expect.poll(() => headline(page)).not.toBe(before);
+    } finally {
+      await context.setOffline(false);
+    }
+  });
+
+
   test("연결이 끊겨도 앱이 뜨고 기록이 보인다", async ({ page, context }) => {
     await setUpProfile(page, 30);
     await addPerson(page, "어머니", 60);
