@@ -54,6 +54,23 @@ for (const scheme of ["light", "dark"] as const) {
       });
     }
 
+    test("설치 단추가 뜬 상태에도 위반이 없다", async ({ page }) => {
+      // 이 단추는 브라우저가 "설치해도 된다"고 알려올 때만 나타난다. 그 상태를
+      // 흉내내지 않으면 검사에서 영영 빠진다.
+      await page.goto("/settings");
+      await page.evaluate(() => {
+        const e = new Event("beforeinstallprompt");
+        (e as unknown as { prompt: () => Promise<void> }).prompt = async () => {};
+        (e as unknown as { userChoice: Promise<unknown> }).userChoice = Promise.resolve({
+          outcome: "dismissed",
+        });
+        window.dispatchEvent(e);
+      });
+      await expect(page.getByRole("button", { name: "홈 화면에 설치" })).toBeVisible();
+      const { violations } = await new AxeBuilder({ page }).withTags(RULES).analyze();
+      expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    });
+
     test("생활 습관을 펼친 상태에도 위반이 없다", async ({ page }) => {
       // <details>는 접혀 있으면 검사에서 빠진다. 펴 놓고 재야 의미가 있다.
       await page.goto("/setup");

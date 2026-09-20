@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import InstallButton from "@/components/InstallButton";
 import { exportState, useActions, useAppState } from "@/lib/store";
 import { offerUndo } from "@/lib/undo";
 import { TONES } from "@/lib/tone";
@@ -140,6 +141,17 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="card space-y-3">
+        <div>
+          <p className="text-sm font-semibold text-ink-800">홈 화면에 두기</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-400">
+            설치하면 앱 서랍에 자기 아이콘으로 들어가고, 받아 둔 화면으로 인터넷 없이도
+            열립니다. 기록은 그대로 이어집니다.
+          </p>
+        </div>
+        <InstallButton />
       </section>
 
       <section className="card space-y-3">
