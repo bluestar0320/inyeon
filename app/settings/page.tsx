@@ -13,6 +13,34 @@ const THEMES: { value: Theme; label: string }[] = [
   { value: "dark", label: "어둡게" },
 ];
 
+/*
+ * 의견이 도착할 곳. 바꾸려면 여기 한 줄만 고치면 된다.
+ * 구글 폼 같은 걸 쓰고 싶으면 "https://..." 주소를 그대로 넣으면 된다 — <a>라서
+ * mailto든 https든 그대로 동작한다.
+ *
+ * 주의: 이 값은 앱을 여는 누구에게나 보인다(공개 배포이므로 수집 대상이 된다).
+ */
+const FEEDBACK_TO = "bluekkyu@gmail.com";
+
+const NEWLINE = String.fromCharCode(10);
+
+/** 물어볼 것을 미리 채워 둔다. 빈 메일 창을 주면 "잘 썼어요"만 온다. */
+const FEEDBACK_HREF =
+  `mailto:${FEEDBACK_TO}` +
+  `?subject=${encodeURIComponent("[몇 번 더] 의견")}` +
+  `&body=${encodeURIComponent(
+    [
+      "1. 숫자를 보고 무슨 생각이 들었나요?",
+      "",
+      "2. 누군가에게 보여주고 싶었나요? 누구에게?",
+      "",
+      "3. 쓰다가 막히거나 헷갈린 곳이 있었나요?",
+      "",
+      "4. 그 밖에 하고 싶은 말",
+      "",
+    ].join(NEWLINE),
+  )}`;
+
 export default function SettingsPage() {
   const { state, hydrated } = useAppState();
   const { saveSettings, replaceAll, clearAll } = useActions();
@@ -141,6 +169,23 @@ export default function SettingsPage() {
         {message && <p className="text-xs text-ink-600">{message}</p>}
       </section>
 
+      {/*
+        테스트를 돌리면 카톡으로 "좋던데?"가 온다. 그걸로는 아무것도 못 배운다.
+        물어볼 것을 미리 채워 두면 답이 구체적으로 온다.
+        서버도 계정도 쓰지 않는다 — 기기의 메일 앱이 열릴 뿐이다.
+      */}
+      <section className="card space-y-3">
+        <div>
+          <p className="text-sm font-semibold text-ink-800">의견 보내기</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-400">
+            쓰다가 막힌 곳, 이상한 숫자, 있었으면 하는 것 — 뭐든 좋습니다. 메일 앱이
+            열리고, 보내기 전에 지우거나 고칠 수 있습니다.
+          </p>
+        </div>
+        <a className="btn-secondary w-fit" href={FEEDBACK_HREF}>
+          의견 보내기
+        </a>
+      </section>
       <section className="card space-y-3">
         <div>
           <p className="text-sm font-semibold text-ink-800">전체 삭제</p>

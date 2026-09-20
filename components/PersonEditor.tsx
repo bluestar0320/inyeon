@@ -57,6 +57,14 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   // 다시 찾아 들어가야 한다.
   const backTo = isNew ? "/people" : `/people/detail?id=${draft.id}`;
 
+  /*
+   * 첫 인연만 목록이 아니라 상세로 보낸다.
+   * 목록에서는 숫자가 한 줄짜리 작은 글자라, 방금 만든 "232번"이 이 앱의 한 방이라는
+   * 게 전달되지 않는다. 상세로 보내면 큰 숫자로 맞는다.
+   * 둘째부터는 목록이 낫다 — 여러 명을 이어서 넣을 때 매번 뒤로 가야 하면 번거롭다.
+   */
+  const afterAdd = state.people.length === 0 ? "/people/detail?id=" + draft.id : "/people";
+
   function leave(): void {
     if (!confirmLeave()) return;
     clearDirty();
@@ -66,7 +74,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   function save(): void {
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
     clearDirty();
-    router.push(isNew ? "/people" : `/people/detail?id=${draft.id}`);
+    router.push(isNew ? afterAdd : `/people/detail?id=${draft.id}`);
   }
 
   return (

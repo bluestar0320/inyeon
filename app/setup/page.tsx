@@ -63,7 +63,15 @@ export default function SetupPage() {
           onClick={() => {
             saveProfile(draft);
             clearDirty();
-            router.push("/");
+            /*
+             * 사람을 때리는 건 "47년"이 아니라 "엄마 232번"이다.
+             * 그런데 저장하고 빈 홈으로 보내면 약한 숫자를 먼저 보여주고, 센 숫자는
+             * 사용자가 알아서 두 화면을 더 거쳐야 나온다. 처음 들어온 사람은
+             * 거기서 멈춘다. 그래서 첫 설정일 때만 바로 첫 인연을 세우러 보낸다.
+             * 나중에 내 정보를 고치러 다시 온 경우는 그대로 홈으로 돌아간다.
+             */
+            const first = state.profile === null && state.people.length === 0;
+            router.push(first ? "/people/new" : "/");
           }}
         >
           저장하기

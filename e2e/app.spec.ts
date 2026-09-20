@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { clearState, readState, setUpProfile } from "./helpers";
+import { AFTER_ADD_PERSON, clearState, readState, setUpProfile } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await clearState(page);
@@ -11,7 +11,9 @@ async function addPerson(page: import("@playwright/test").Page, name: string, ag
   await page.getByLabel("이름").fill(name);
   await page.getByLabel("나이", { exact: true }).fill(String(age));
   await page.getByRole("button", { name: "추가하기" }).click();
-  await page.waitForURL(/\/people\/?$/);
+  // 첫 인연은 상세로 떨어진다. 이 헬퍼를 쓰는 시나리오들은 목록을 전제하므로 맞춰 둔다.
+  await page.waitForURL(AFTER_ADD_PERSON);
+  await page.goto("/people");
 }
 
 test.describe("저장과 되돌리기", () => {
@@ -111,6 +113,9 @@ test.describe("저장하지 않고 나가기", () => {
   test("저장하고 나간 뒤의 뒤로 가기가 먹통이 되지 않는다", async ({ page }) => {
     // 심어 둔 히스토리 항목을 치우지 않으면 여기서 한 번 헛돈다.
     await setUpProfile(page, 30);
+    // 이 시나리오는 "저장하고 목록으로 나간" 경우를 본다. 첫 인연은 상세로 가서
+    // 히스토리 모양이 달라지므로 한 명 먼저 심어 둔다.
+    await addPerson(page, "먼저", 50);
     await page.goto("/people");
     await page.getByRole("link", { name: "추가", exact: true }).click();
     await page.waitForURL(/\/people\/new\/?$/);
@@ -153,7 +158,7 @@ test.describe("저장하지 않고 나가기", () => {
     await page.getByLabel("이름").fill("어머니");
     await page.getByLabel("나이", { exact: true }).fill("60");
     await page.getByRole("button", { name: "추가하기" }).click();
-    await page.waitForURL(/\/people\/?$/);
+    await page.waitForURL(AFTER_ADD_PERSON);
     expect(asked).toBe(false);
   });
 });
