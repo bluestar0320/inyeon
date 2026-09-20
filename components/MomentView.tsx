@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import FilterEditor from "@/components/FilterEditor";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
-import { DAYS_PER_YEAR, computeMoment, toPerYear } from "@/lib/calc";
+import { DAYS_PER_YEAR, computeMoment, computePast, toPerYear } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -67,6 +67,7 @@ export default function MomentView({ moment }: { moment: Moment }) {
           caption: `${formatFrequency(moment.frequency)} · ${formatYears(result.horizonYears)}`,
         }}
         shareFileName={[moment.title, `${formatCount(result.total)}번`]}
+        past={state.settings.showPast ? computePast(moment.frequency, moment.since) : null}
         stats={[
           { label: "간격", value: formatInterval(perYear > 0 ? DAYS_PER_YEAR / perYear : null) },
         ]}
@@ -90,6 +91,7 @@ export default function MomentView({ moment }: { moment: Moment }) {
 
         <div className="mt-3 divide-y divide-ink-200/60 border-t border-ink-200/60 pt-1">
           <Row label="빈도" value={formatFrequency(moment.frequency)} />
+          {moment.since && <Row label="언제부터" value={moment.since} />}
           <Row label="언제까지" value={horizonText} />
         </div>
 

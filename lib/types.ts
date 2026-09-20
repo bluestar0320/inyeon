@@ -86,6 +86,14 @@ export interface Person extends LifeSpan {
   horizon?: PersonHorizon;
   /** 자녀에게만 켜는 성장 캘린더. 없으면 캘린더를 보여주지 않는다. */
   growth?: GrowthSetup;
+  /**
+   * 지금 빈도로 만나기 시작한 때(YYYY-MM-DD). 없으면 "지금까지"를 세지 않는다.
+   *
+   * 태어난 날이 아니라 **지금 빈도가 유지된 시작점**이다. 어머니를 38년 알았어도
+   * 스무 해는 같이 살았다면 "월 1회 × 38년"은 틀린 숫자다. 독립한 해처럼 지금의
+   * 리듬이 시작된 때를 넣어야 맞는다.
+   */
+  since?: string;
   note?: string;
   createdAt: string;
   updatedAt: string;
@@ -132,6 +140,8 @@ export interface Moment {
   frequency: Frequency;
   horizon: MomentHorizon;
   filters: CalcFilter[];
+  /** 지금 빈도로 해 온 시작점(YYYY-MM-DD). Person.since와 같은 뜻이다. */
+  since?: string;
   note?: string;
   createdAt: string;
   updatedAt: string;
@@ -160,6 +170,8 @@ export type Theme = "system" | "light" | "dark";
 export interface Settings {
   tone: Tone;
   theme: Theme;
+  /** "지금까지 몇 번"을 같이 보여줄지. 시작점(since)을 넣은 항목에만 나온다. */
+  showPast: boolean;
 }
 
 export interface AppState {

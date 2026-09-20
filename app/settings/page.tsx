@@ -124,6 +124,32 @@ export default function SettingsPage() {
 
       <section className="card space-y-3">
         <div>
+          <p className="text-sm font-semibold text-ink-800">지금까지도 함께 보기</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-400">
+            &ldquo;언제부터&rdquo;를 넣은 인연과 순간에 지나온 횟수를 같이 보여줍니다.
+            실제로 만난 기록이 아니라, 그동안 빈도가 유지됐다고 봤을 때의 어림값입니다.
+          </p>
+        </div>
+        <div className="flex gap-1.5" role="group" aria-label="지금까지도 함께 보기">
+          {[
+            { on: true, label: "보기" },
+            { on: false, label: "숨기기" },
+          ].map((option) => (
+            <button
+              key={String(option.on)}
+              type="button"
+              aria-pressed={state.settings.showPast === option.on}
+              className={`chip ${state.settings.showPast === option.on ? "chip-active" : ""}`}
+              onClick={() => saveSettings({ showPast: option.on })}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="card space-y-3">
+        <div>
           <p className="text-sm font-semibold text-ink-800">화면</p>
           <p className="mt-1 text-xs text-ink-400">
             시스템을 고르면 기기 설정을 따라갑니다.

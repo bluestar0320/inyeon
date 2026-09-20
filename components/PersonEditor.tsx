@@ -5,6 +5,7 @@ import { useId, useMemo, useState } from "react";
 
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
+import SinceField from "@/components/SinceField";
 import GrowthCalendar from "@/components/GrowthCalendar";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
@@ -174,6 +175,11 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           label="얼마나 자주 만나나요"
           value={draft.frequency}
           onChange={(frequency) => setDraft({ ...draft, frequency })}
+        />
+        <SinceField
+          value={draft.since}
+          frequency={draft.frequency}
+          onChange={(since) => setDraft({ ...draft, since })}
         />
         <PersonHorizonPicker
           value={draft.horizon ?? { kind: "life" }}

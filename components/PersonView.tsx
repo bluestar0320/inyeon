@@ -8,7 +8,7 @@ import FilterEditor from "@/components/FilterEditor";
 import GrowthCalendar from "@/components/GrowthCalendar";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
-import { computeGrowth, computeRelationship, resolveAge } from "@/lib/calc";
+import { computeGrowth, computePast, computeRelationship, resolveAge } from "@/lib/calc";
 import {
   formatAge,
   formatCount,
@@ -64,6 +64,11 @@ export default function PersonView({ person }: { person: Person }) {
     [person, state.profile],
   );
   const growth = useMemo(() => computeGrowth(person), [person]);
+  // 설정을 끄면 시작점이 있어도 안 보인다. 어림값이라 끌 수 있어야 한다.
+  const past = useMemo(
+    () => (state.settings.showPast ? computePast(person.frequency, person.since) : null),
+    [person.frequency, person.since, state.settings.showPast],
+  );
 
   const age = resolveAge(person);
   const horizonText =
@@ -88,6 +93,7 @@ export default function PersonView({ person }: { person: Person }) {
           caption: `${formatFrequency(person.frequency)} · ${formatYears(result.sharedYears)}`,
         }}
         shareFileName={[person.name, `${formatCount(result.total)}번`]}
+        past={past}
         stats={[
           { label: "만남 간격", value: formatInterval(result.intervalDays) },
           {
@@ -119,6 +125,7 @@ export default function PersonView({ person }: { person: Person }) {
           <Row label="예상 수명" value={`만 ${person.lifeExpectancy}세`} />
           <Row label="만나는 빈도" value={formatFrequency(person.frequency)} />
           <Row label="세는 기간" value={horizonText} />
+          {person.since && <Row label="언제부터" value={person.since} />}
           {person.hoursPerMeeting !== undefined && (
             <Row label="한 번에" value={`${person.hoursPerMeeting}시간`} />
           )}

@@ -6,6 +6,7 @@ import { useId, useMemo, useState } from "react";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
+import SinceField from "@/components/SinceField";
 import YearBreakdown from "@/components/YearBreakdown";
 import { computeMoment, resolveAge } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
@@ -195,6 +196,12 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
           label="얼마나 자주"
           value={draft.frequency}
           onChange={(frequency) => setDraft({ ...draft, frequency })}
+        />
+
+        <SinceField
+          value={draft.since}
+          frequency={draft.frequency}
+          onChange={(since) => setDraft({ ...draft, since })}
         />
 
         <div>

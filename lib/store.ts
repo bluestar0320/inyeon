@@ -10,6 +10,7 @@ import type { AppState, MarriagePlan, Moment, Person, Profile, Settings } from "
 export const DEFAULT_SETTINGS: Settings = {
   tone: "calm",
   theme: "system",
+  showPast: true,
 };
 
 /**

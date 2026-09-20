@@ -3,7 +3,7 @@
 import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
-import type { CountResult } from "@/lib/calc";
+import type { CountResult, PastResult } from "@/lib/calc";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import type { ShareSpec } from "@/lib/shareCard";
 
@@ -16,6 +16,7 @@ export default function ResultPanel({
   unknownMessage,
   share,
   shareFileName,
+  past,
 }: {
   label: string;
   result: CountResult;
@@ -25,6 +26,8 @@ export default function ResultPanel({
   /** 주면 "이미지로 저장" 단추가 붙는다. 계산이 안 될 때는 붙지 않는다. */
   share?: ShareSpec;
   shareFileName?: string[];
+  /** 시작점을 넣었고 설정이 켜져 있을 때만 온다. 없으면 막대를 그리지 않는다. */
+  past?: PastResult | null;
 }) {
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
@@ -51,6 +54,28 @@ export default function ResultPanel({
           {formatPercent(cut)} 줄었습니다.
           {result.cappedAt !== null && ` (최대 ${formatCount(result.cappedAt)}번 상한 적용)`}
         </p>
+      )}
+
+      {/*
+        지나온 쪽과 남은 쪽을 나란히 놓는다. 홈의 인생 막대와 같은 모양이다 —
+        이 앱이 처음부터 하던 말("얼마나 지나왔고 얼마나 남았는가")을 인연과
+        순간에도 그대로 적용하는 것이라, 다른 그림을 쓸 이유가 없다.
+      */}
+      {past && past.count >= 1 && (
+        <div className="border-t border-hero-line pt-5">
+          <div className="flex h-2 overflow-hidden rounded-full bg-hero-line">
+            <div
+              className="h-full bg-ink-800"
+              style={{ width: `${(past.count / (past.count + result.total)) * 100}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-ink-600">
+            지금까지 {formatCount(past.count)}번 · 앞으로 {formatCount(result.total)}번
+          </p>
+          <p className="mt-0.5 text-[11px] text-ink-400">
+            {formatYears(past.years)} 동안 지금 빈도로 이어졌다고 봤을 때의 어림값입니다.
+          </p>
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-hero-line pt-5 sm:grid-cols-3">

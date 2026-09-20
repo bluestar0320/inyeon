@@ -190,3 +190,34 @@ test("내 정보를 다시 고치면 홈으로 돌아간다", async ({ page }) =
   await page.getByRole("button", { name: "저장하기" }).click();
   await page.waitForURL(/\/$/);
 });
+
+test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으로 끌 수 있다", async ({ page }) => {
+  await setUpProfile(page, 38);
+  await page.goto("/people/new");
+  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByLabel("나이", { exact: true }).fill("68");
+
+  // 시작점이 없으면 아예 세지 않는다 — 모르는 것을 지어내지 않는다.
+  await expect(page.getByText("지금까지", { exact: false })).toBeHidden();
+
+  await page.getByLabel("언제부터 (선택)").fill("2010-03-01");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/\/people\/detail/);
+
+  // 지나온 쪽과 남은 쪽이 한 줄에 같이 나온다.
+  const bar = page.getByText(/지금까지 \d+번 · 앞으로 \d+번/);
+  await expect(bar).toBeVisible();
+  // 어림값이라는 사실을 숨기지 않는다.
+  await expect(page.getByText(/어림값입니다/)).toBeVisible();
+
+  const headlineBefore = await headline(page);
+
+  // 끄면 막대만 사라지고 주인공 숫자는 그대로여야 한다.
+  await page.goto("/settings");
+  await page.getByRole("button", { name: "숨기기" }).click();
+  await page.goto("/people");
+  await page.locator("a.card").first().click();
+  await page.waitForURL(/\/people\/detail/);
+  await expect(page.getByText(/지금까지 \d+번/)).toBeHidden();
+  expect(await headline(page)).toBe(headlineBefore);
+});

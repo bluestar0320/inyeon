@@ -60,6 +60,39 @@ export function resolveAge(source: AgeSource, now: Date = new Date()): number | 
 }
 
 /** 예상 수명에서 현재 나이를 뺀 남은 기간(년). 이미 넘겼으면 0. */
+/** 지금까지 몇 번 했는지. 시작점을 모르면 세지 않는다. */
+export interface PastResult {
+  count: number;
+  /** 시작점부터 지금까지의 햇수. */
+  years: number;
+}
+
+/*
+ * 지금까지 몇 번.
+ *
+ * 앞으로를 세는 것과 같은 방식이다 — 흐른 시간 × 빈도. 실제로 몇 번 만났는지
+ * 적어 두는 게 아니라 어림하는 것이다. 이 앱은 처음부터 기록장이 아니라 계산기였고,
+ * 뒤를 볼 때만 기록장이 되면 앞뒤가 안 맞는다.
+ *
+ * 조건 필터는 걸지 않는다. 필터는 "앞으로 이렇게 될 것이다"라는 가정이라 이미
+ * 지나간 시간에 소급할 근거가 없다(벚꽃이 30년 뒤 사라진다는 가정을 과거에
+ * 적용할 수는 없다).
+ */
+export function computePast(
+  frequency: Frequency,
+  since: string | undefined,
+  now: Date = new Date(),
+): PastResult | null {
+  if (!since) return null;
+  const start = new Date(`${since}T00:00:00`);
+  if (Number.isNaN(start.getTime())) return null;
+  // 하루 단위로 끊는다. resolveAge와 같은 이유다 — 시작한 날 당일은 0번이어야 한다.
+  const days = Math.floor((now.getTime() - start.getTime()) / 86_400_000);
+  if (days < 0) return null;
+  const years = days / DAYS_PER_YEAR;
+  return { count: Math.max(0, toPerYear(frequency) * years), years };
+}
+
 export function remainingYears(span: LifeSpan, now: Date = new Date()): number | null {
   const age = resolveAge(span, now);
   if (age === null) return null;
