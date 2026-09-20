@@ -17,6 +17,18 @@ const config: CapacitorConfig = {
     // localStorage가 스킴별로 나뉘므로 이 값을 바꾸면 기존 기록이 안 보인다.
     allowMixedContent: false,
   },
+  plugins: {
+    /*
+     * 앱이 뜨는 첫 순간은 아직 자바스크립트가 돌기 전이라 상태바를 못 고친다.
+     * 그 잠깐을 어두운 쪽으로 둔다 — 어두운 앱에 흰 띠가 번쩍이는 것보다,
+     * 밝은 앱에 어두운 띠가 잠깐 있는 편이 덜 튄다. 뜨자마자 ThemeApplier가
+     * 실제 테마에 맞춰 고친다(lib/nativeStatusBar.ts).
+     */
+    StatusBar: {
+      style: "DARK",
+      backgroundColor: "#121317",
+    },
+  },
 };
 
 export default config;

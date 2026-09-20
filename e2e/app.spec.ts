@@ -206,6 +206,34 @@ test.describe("테마", () => {
   });
 });
 
+test("웹은 네이티브 전용 코드를 내려받지 않는다", async ({ page }) => {
+  /*
+   * APK에서만 쓰는 플러그인이 첫 화면에 딸려 오면, 웹 사용자는 평생 쓰지 않을
+   * 20KB를 매번 받는다. 실제로 한 번 그렇게 됐다 — lib/nativeStatusBar를 최상위
+   * 레이아웃에서 그냥 import 했더니 번들러가 청크를 초기 로딩에 넣었다.
+   * 눈으로는 안 보이는 종류의 회귀라 재서 막는다.
+   */
+  const loaded: string[] = [];
+  page.on("response", (res) => {
+    const path = new URL(res.url()).pathname;
+    if (path.endsWith(".js")) loaded.push(path);
+  });
+
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  expect(loaded.length).toBeGreaterThan(0);
+
+  const { readFileSync, existsSync } = await import("node:fs");
+  const guilty = loaded.filter((path) => {
+    const file = `out${path}`;
+    if (!existsSync(file)) return false;
+    const source = readFileSync(file, "utf8");
+    // 플러그인 본체에만 있는 표식. 얇은 감지 함수(isNativePlatform)는 들어와도 괜찮다.
+    return source.includes("setBackgroundColor") || source.includes("@capacitor/filesystem");
+  });
+  expect(guilty).toEqual([]);
+});
+
 test.describe("상태바 색", () => {
   // 기기는 밝은 쪽인데 앱에서 어둡게를 고른 경우가 핵심이다. 예전에는 메타 태그가
   // prefers-color-scheme(=기기 설정)을 봐서, 위쪽만 흰 띠로 남았다.
