@@ -10,7 +10,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  */
 const config: CapacitorConfig = {
   appId: "app.inyeon.counter",
-  appName: "인연 계산기",
+  appName: "몇 번 더",
   webDir: "out",
   android: {
     // 파일을 APK 안에서 읽으므로 http가 아닌 https 스킴으로 띄운다.

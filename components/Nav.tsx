@@ -29,7 +29,7 @@ export default function Nav() {
           onClick={guard}
           className="text-sm font-semibold tracking-tight text-ink-900"
         >
-          인연 계산기
+          몇번더?
         </Link>
         <nav className="flex items-center gap-1">
           {LINKS.map((link) => {

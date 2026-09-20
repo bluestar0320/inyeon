@@ -8,11 +8,11 @@ import UndoBar from "@/components/UndoBar";
 import { STORAGE_KEY } from "@/lib/storageKey";
 
 export const metadata: Metadata = {
-  title: "인연 계산기",
+  title: "몇 번 더",
   description:
     "남은 시간과 남은 만남을 횟수로 계산합니다. 리마인딩이 아니라 플래닝을 위한 계산기.",
   // iOS는 manifest의 display를 무시하므로 따로 알려 줘야 전체 화면으로 열린다.
-  appleWebApp: { capable: true, title: "인연", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "몇번더", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

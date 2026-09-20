@@ -1,4 +1,4 @@
-# 인연 계산기 (작업용 이름)
+# 몇 번 더
 
 **https://bluestar0320.github.io/inyeon/**
 
