@@ -10,7 +10,7 @@ import YearBreakdown from "@/components/YearBreakdown";
 import { computeMoment, resolveAge } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears } from "@/lib/format";
 import { MOMENT_PRESETS } from "@/lib/presets";
-import { useActions, useAppState } from "@/lib/store";
+import { momentFrom, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
@@ -35,6 +35,14 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
   const copy = copyFor(state.settings.tone);
   const result = useMemo(() => computeMoment(draft, state.profile), [draft, state.profile]);
   const isNew = !state.moments.some((m) => m.id === draft.id);
+  // 최근에 넣은 것부터. 너무 많으면 칩이 벽이 되므로 여덟 개까지만 보여준다.
+  const mine = useMemo(
+    () =>
+      isNew
+        ? [...state.moments].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 8)
+        : [],
+    [state.moments, isNew],
+  );
   const title = draft.title.trim() || "이 일";
   const myAge = state.profile ? resolveAge(state.profile) : null;
   const perYear = toPerYear(draft.frequency);
@@ -143,6 +151,41 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
             </button>
           ))}
         </div>
+
+        {/*
+          내가 이미 넣은 것들이 곧 내 프리셋이다.
+          강아지별로, 장소별로, 공방별로 — 같은 것의 변주를 반복해서 넣게 되는데
+          매번 빈도와 기간을 다시 고르는 건 같은 일을 두 번 하는 것이다.
+          따로 저장해 두고 관리하는 목록을 만들지 않는 이유는, 그러면 지우고
+          이름 고치는 화면이 또 필요해지기 때문이다. 쓰던 것이 저절로 프리셋이 된다.
+        */}
+        {isNew && mine.length > 0 && (
+          <div className="border-t border-ink-200/60 pt-3">
+            <p className="label">내가 넣은 것에서 시작하기</p>
+            <div className="flex flex-wrap gap-1.5">
+              {mine.map((moment) => (
+                <button
+                  key={moment.id}
+                  type="button"
+                  className="chip"
+                  onClick={() => {
+                    setHint(null);
+                    setDraft({
+                      ...momentFrom(moment),
+                      id: draft.id,
+                      note: draft.note,
+                    });
+                  }}
+                >
+                  {moment.emoji ?? "◦"} {moment.title}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] text-ink-400">
+              빈도·기간·조건을 그대로 가져옵니다. 이름만 고쳐서 쓰세요.
+            </p>
+          </div>
+        )}
 
         {hint && <p className="text-xs text-accent-600">{hint}</p>}
       </div>

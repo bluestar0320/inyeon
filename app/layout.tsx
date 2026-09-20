@@ -6,6 +6,7 @@ import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
 import UndoBar from "@/components/UndoBar";
 import { STORAGE_KEY } from "@/lib/storageKey";
+import { THEME_COLOR } from "@/lib/themeColor";
 
 export const metadata: Metadata = {
   title: "몇 번 더",
@@ -18,11 +19,15 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  // 주소창·상태바 색을 테마에 맞춘다. 안 맞추면 설치한 앱에서 위쪽만 흰 띠로 남는다.
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbfaf8" },
-    { media: "(prefers-color-scheme: dark)", color: "#121317" },
-  ],
+  /*
+   * 상태바 색.
+   *
+   * 예전에는 prefers-color-scheme으로 두 개를 깔았다. 그런데 그건 **기기 설정**이라,
+   * 앱 안에서 어둡게를 골라도 폰이 밝은 쪽이면 상태바만 흰 띠로 남았다.
+   * 이 앱은 자기 테마 설정을 따로 가지고 있으므로, 태그 하나만 두고 실제로 칠해진
+   * 테마에 맞춰 자바스크립트가 고친다(lib/themeColor.ts).
+   */
+  themeColor: THEME_COLOR.light,
 };
 
 /**
@@ -38,6 +43,9 @@ const THEME_SCRIPT = `
       ((theme === "system" || !theme) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (dark) document.documentElement.classList.add("dark");
+    // 화면이 그려지기 전에 상태바 색까지 맞춘다. 나중에 고치면 흰 띠가 한 번 번쩍인다.
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", dark ? ${JSON.stringify(THEME_COLOR.dark)} : ${JSON.stringify(THEME_COLOR.light)});
   } catch (e) {}
 })();
 `;

@@ -160,6 +160,15 @@ export const MOMENT_PRESETS: MomentPreset[] = [
   },
   { title: "좋아하는 밴드 공연", emoji: "🎸", frequency: { count: 1, unit: "year" }, horizon: { kind: "years", years: 15 } },
   { title: "눈 내리는 날", emoji: "❄️", frequency: { count: 5, unit: "year" }, horizon: { kind: "life" } },
+  { title: "강아지 산책", emoji: "🐕", frequency: { count: 7, unit: "week" }, horizon: { kind: "years", years: 12 } },
+  { title: "수영", emoji: "🏊", frequency: { count: 2, unit: "week" }, horizon: { kind: "untilAge", age: 80 } },
+  {
+    title: "만들기",
+    emoji: "🪚",
+    frequency: { count: 2, unit: "month" },
+    horizon: { kind: "untilAge", age: 75 },
+    hint: "공방·작업실처럼 몸을 쓰는 일은 언제까지 할 수 있을지도 같이 정해 보세요.",
+  },
 ];
 
 export interface RelationPreset {

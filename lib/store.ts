@@ -235,6 +235,25 @@ export function emptyMarriage(currentAge: number | null): MarriagePlan {
   };
 }
 
+/*
+ * 있는 순간을 본떠 새 순간을 만든다.
+ *
+ * "강아지 산책"을 강아지별로, "수영"을 장소별로, "만들기"를 공방별로 — 같은 것의
+ * 변주를 반복해서 넣게 된다. 매번 빈도와 기간을 다시 고르는 건 같은 일을 두 번 하는
+ * 것이다. 조건 필터까지 가져오되, 필터 id는 새로 뽑는다(배열 안에서만 유일하면
+ * 되지만, 같은 id가 여기저기 흩어져 있으면 나중에 헷갈린다).
+ */
+export function momentFrom(source: Moment): Moment {
+  const now = new Date().toISOString();
+  return {
+    ...source,
+    id: newId(),
+    filters: source.filters.map((filter) => ({ ...filter, id: newId() })),
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export function emptyMoment(): Moment {
   const now = new Date().toISOString();
   return {

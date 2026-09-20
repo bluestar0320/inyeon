@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { useAppState } from "@/lib/store";
+import { applyThemeColor } from "@/lib/themeColor";
 
 /**
  * 설정값과 기기 설정을 보고 <html>에 dark 클래스를 붙였다 뗀다.
@@ -20,6 +21,8 @@ export default function ThemeApplier() {
     const apply = () => {
       const dark = theme === "dark" || (theme === "system" && media.matches);
       document.documentElement.classList.toggle("dark", dark);
+      // 상태바도 같이 따라가야 한다. 안 그러면 위쪽만 흰 띠로 남는다.
+      applyThemeColor(dark);
     };
 
     apply();

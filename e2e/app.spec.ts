@@ -206,6 +206,73 @@ test.describe("테마", () => {
   });
 });
 
+test.describe("상태바 색", () => {
+  // 기기는 밝은 쪽인데 앱에서 어둡게를 고른 경우가 핵심이다. 예전에는 메타 태그가
+  // prefers-color-scheme(=기기 설정)을 봐서, 위쪽만 흰 띠로 남았다.
+  test.use({ colorScheme: "light" });
+
+  const bar = (page: import("@playwright/test").Page) =>
+    page.evaluate(() => document.querySelector('meta[name="theme-color"]')?.getAttribute("content"));
+
+  test("기기가 밝아도 앱을 어둡게 하면 상태바가 따라온다", async ({ page }) => {
+    await page.goto("/settings");
+    expect(await bar(page)).toBe("#fbfaf8");
+
+    await page.getByRole("button", { name: "어둡게" }).click();
+    await expect.poll(() => bar(page)).toBe("#121317");
+
+    // 새로고침해도 흰 띠가 한 번 번쩍이지 않아야 한다(인라인 스크립트가 맡는다).
+    await page.reload();
+    expect(await bar(page)).toBe("#121317");
+
+    await page.getByRole("button", { name: "밝게" }).click();
+    await expect.poll(() => bar(page)).toBe("#fbfaf8");
+  });
+});
+
+test.describe("순간 반복 추가", () => {
+  test("이미 넣은 것을 그대로 가져와 변주를 만든다", async ({ page }) => {
+    await setUpProfile(page, 38);
+
+    // 아직 아무것도 없으면 그 칸을 띄우지 않는다.
+    await page.goto("/moments/new");
+    await expect(page.getByText("내가 넣은 것에서 시작하기")).toBeHidden();
+
+    await page.getByRole("button", { name: "🪚 만들기" }).click();
+    await page.getByLabel("무엇을 세나요").fill("목공방에서 가구 만들기");
+    await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
+    await page.getByRole("button", { name: "추가하기" }).click();
+    await page.waitForURL(/\/moments\/?$/);
+
+    // 넣은 것이 곧 내 프리셋이 된다. 빈도·기간·조건까지 따라와야 의미가 있다.
+    await page.goto("/moments/new");
+    await page.getByRole("button", { name: "🪚 목공방에서 가구 만들기" }).click();
+    await expect(page.getByLabel("무엇을 세나요")).toHaveValue("목공방에서 가구 만들기");
+    expect(await page.locator("input[type=checkbox]").count()).toBeGreaterThan(0);
+
+    await page.getByLabel("무엇을 세나요").fill("목공방에서 의자 만들기");
+    await page.getByRole("button", { name: "추가하기" }).click();
+    await page.waitForURL(/\/moments\/?$/);
+    // 원본을 덮어쓰지 않고 둘 다 남아야 한다.
+    await expect(page.locator("a.card")).toHaveCount(2);
+  });
+
+  test("보던 것에서 바로 비슷한 것을 만든다", async ({ page }) => {
+    await setUpProfile(page, 38);
+    await page.goto("/moments/new");
+    await page.getByRole("button", { name: "🏊 수영" }).click();
+    await page.getByRole("button", { name: "추가하기" }).click();
+    await page.waitForURL(/\/moments\/?$/);
+
+    await page.locator("a.card").first().click();
+    await page.waitForURL(/\/moments\/detail/);
+    await page.getByRole("link", { name: "비슷한 것 추가" }).click();
+    await page.waitForURL(/\/moments\/new/);
+    await expect(page.getByRole("heading", { name: "비슷한 것 추가" })).toBeVisible();
+    await expect(page.getByLabel("무엇을 세나요")).toHaveValue("수영");
+  });
+});
+
 test.describe("오프라인", () => {
   test("한 번도 안 가 본 화면도 인터넷 없이 계산까지 된다", async ({ page, context }) => {
     /*
