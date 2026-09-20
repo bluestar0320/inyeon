@@ -242,6 +242,32 @@ test.describe("상태바 색", () => {
   const bar = (page: import("@playwright/test").Page) =>
     page.evaluate(() => document.querySelector('meta[name="theme-color"]')?.getAttribute("content"));
 
+  test("상태바 자리를 페이지가 직접 칠할 준비가 되어 있다", async ({ page }) => {
+    /*
+     * 안드로이드 15는 상태바 배경색을 앱이 못 정하게 한다(시스템 바가 강제 투명).
+     * 그래서 색을 맞추는 대신 웹뷰를 상태바 밑까지 넓히고, 그 자리를 머리글이
+     * 페이지 배경으로 칠한다. 그러려면 두 가지가 필요하다.
+     */
+    await page.goto("/");
+
+    // 1) 화면 구석까지 써야 env(safe-area-inset-*)가 실제 값을 낸다.
+    const viewport = await page
+      .locator('meta[name="viewport"]')
+      .getAttribute("content");
+    expect(viewport).toContain("viewport-fit=cover");
+
+    // 2) 머리글이 인셋만큼 밀려나고, 그 자리를 페이지 배경으로 칠해야 한다.
+    const header = page.locator("header");
+    const style = await header.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { top: cs.paddingTop, bg: cs.backgroundColor, position: cs.position };
+    });
+    expect(style.position).toBe("sticky");
+    // 인셋이 없는 환경이라 0px로 풀린다. 규칙이 빠지면 계산 자체가 안 된다.
+    expect(style.top).toBe("0px");
+    expect(style.bg).not.toBe("rgba(0, 0, 0, 0)");
+  });
+
   test("설치된 앱의 상태바 색은 매니페스트에 어둡게 박혀 있다", async ({ page }) => {
     /*
      * 안드로이드에 설치된 PWA는 상태바 색을 매니페스트에서만 가져오고 실행 중의

@@ -22,7 +22,12 @@ export default function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-10 border-b border-ink-200/70 bg-page/90 backdrop-blur">
+    /*
+      위쪽 여백은 상태바 높이만큼이다. APK에서 웹뷰가 상태바 밑까지 올라오므로,
+      이 머리글이 그 영역까지 칠해서 상태바 배경이 되고 메뉴는 시계 아래로 내려간다.
+      브라우저에서는 인셋이 0이라 지금과 똑같다.
+    */
+    <header className="sticky top-0 z-10 border-b border-ink-200/70 bg-page/90 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
         <Link
           href="/"

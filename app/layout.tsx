@@ -20,6 +20,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   /*
+   * 화면 구석까지 쓴다. 이게 있어야 env(safe-area-inset-*)가 실제 값을 낸다.
+   * APK에서 웹뷰를 상태바 밑까지 넓히기 때문에(lib/nativeStatusBar.ts), 그 영역을
+   * 페이지가 직접 칠하고 내용은 안전 영역 안으로 밀어야 한다.
+   * 인셋이 없는 기기에서는 전부 0이라 아무것도 달라지지 않는다.
+   */
+  viewportFit: "cover",
+  /*
    * 상태바 색.
    *
    * 예전에는 prefers-color-scheme으로 두 개를 깔았다. 그런데 그건 **기기 설정**이라,
@@ -65,7 +72,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           본문으로 건너뛰기
         </a>
         <Nav />
-        <main id="main" className="mx-auto max-w-3xl px-4 pb-24 pt-6">
+        {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}
+        <main
+          id="main"
+          className="mx-auto max-w-3xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"
+        >
           {children}
         </main>
         <UndoBar />
