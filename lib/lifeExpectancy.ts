@@ -1,6 +1,7 @@
+import { resolveAge } from "./calc.ts";
 import { healthAgeOffset } from "./health.ts";
 import { ESTIMATED_TABLE_COUNTRIES, LIFE_TABLE, LIFE_TABLE_AGES } from "./lifeTable.ts";
-import type { HealthProfile, Sex } from "./types";
+import type { HealthProfile, LifeSpan, Sex } from "./types";
 
 export interface Country {
   code: string;
@@ -126,4 +127,25 @@ export function isEstimatedTable(code: string | undefined): boolean {
 
 function round1(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+/**
+ * 저장된 예상 수명을 지금 나이에 맞게 다시 구한다.
+ *
+ * lifeExpectancy는 계산값이 아니라 **입력 시점에 한 번 구워진 저장값**이다.
+ * 그대로 두면 나이만 늙고 수명은 안 늙어서, 68세가 되면 앱이 13.6년이라고 말한다
+ * (맞는 값은 17.1년 — 26% 적다). 정작 설정 화면에서 "이미 68세까지 살아온 분은
+ * 평균에 해당하지 않아 더 오래 사신다"고 설명해 놓고, 저장 방식 때문에 그 생명표가
+ * 시간이 지나면 무력해지는 셈이었다.
+ *
+ * 사용자가 직접 고친 값(lifeExpectancyManual)은 건드리지 않는다. 그쪽이 항상 이긴다.
+ * 바뀔 게 없으면 같은 객체를 그대로 돌려준다 — 불필요한 다시 그리기를 만들지 않는다.
+ */
+export function refreshLifeSpan<T extends LifeSpan>(span: T, now?: Date): T {
+  if (span.lifeExpectancyManual) return span;
+  const age = resolveAge(span, now);
+  if (age === null) return span;
+  const fresh = lookupLifeExpectancy(span.countryCode, span.sex, age, span.health);
+  if (fresh === span.lifeExpectancy) return span;
+  return { ...span, lifeExpectancy: fresh };
 }

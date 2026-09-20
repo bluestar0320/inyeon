@@ -38,7 +38,23 @@ export function resolveAge(source: AgeSource, now: Date = new Date()): number | 
     }
   }
   if (typeof source.ageYears === "number" && Number.isFinite(source.ageYears)) {
-    return Math.max(0, source.ageYears);
+    const base = Math.max(0, source.ageYears);
+    if (!source.ageAsOf) return base;
+    const asOf = new Date(`${source.ageAsOf}T00:00:00`);
+    if (Number.isNaN(asOf.getTime())) return base;
+    /*
+     * 적어 넣은 날로부터 흐른 만큼 나이를 굴린다.
+     *
+     * 하루 단위로 끊는 게 중요하다. ageAsOf는 그날 자정인데 실제로 적어 넣은 건
+     * 오후일 수 있어서, 시간까지 그대로 쓰면 "30세"가 즉시 30.0014세가 된다.
+     * 의미상 틀렸고(적어 넣은 날 하루는 30세여야 한다) 실제로 사고도 났다 —
+     * 그 소수점이 결혼 계획 기본 목표 나이의 올림 경계를 넘겨 35세가 40세로,
+     * 60번이 120번이 됐다.
+     *
+     * 음수는 버린다 — 기기 시계가 틀어졌거나 미래 날짜가 들어와도 젊어지면 안 된다.
+     */
+    const days = Math.floor((now.getTime() - asOf.getTime()) / 86_400_000);
+    return base + Math.max(0, days) / DAYS_PER_YEAR;
   }
   return null;
 }

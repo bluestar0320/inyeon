@@ -33,6 +33,14 @@ export interface CalcFilter {
 export interface AgeSource {
   birthDate?: string;
   ageYears?: number;
+  /**
+   * ageYears를 적어 넣은 날짜(YYYY-MM-DD).
+   *
+   * 이게 없으면 나이가 영영 안 늙는다. 남은 날을 세는 앱인데 남은 날이 안 줄어드는
+   * 셈이라, 저장된 "38"을 그 시점에 묶어 두고 흐른 시간만큼 앞으로 굴린다.
+   * 없는 기존 기록은 예전처럼 동작한다(불러올 때 오늘 날짜로 채워 준다).
+   */
+  ageAsOf?: string;
 }
 
 /**

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "./lifeExpectancy";
+import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
 import type { AppState, MarriagePlan, Moment, Person, Profile, Settings } from "./types";
@@ -33,13 +33,34 @@ function emit(): void {
   for (const listener of listeners) listener();
 }
 
+/** 오늘(YYYY-MM-DD). 기기 시간대 기준이라 toISOString을 쓰면 하루가 밀릴 수 있다. */
+function today(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/*
+ * 저장된 기록을 지금 시점에 맞춘다. 두 가지를 손본다.
+ *
+ * 1) ageAsOf가 없는 옛 기록은 오늘로 채운다. 언제 적어 넣었는지 알 길이 없으니
+ *    지금부터 세기 시작한다 — 과거를 지어내는 것보다 낫다. 이 값은 불러온 직후
+ *    한 번 저장돼서, 다음부터는 제대로 굴러간다.
+ * 2) 직접 고치지 않은 예상 수명은 지금 나이로 다시 구한다.
+ */
+function refresh<T extends { ageYears?: number; ageAsOf?: string }>(span: T): T {
+  const withDate =
+    span.ageYears !== undefined && !span.ageAsOf ? { ...span, ageAsOf: today() } : span;
+  return refreshLifeSpan(withDate as T & Parameters<typeof refreshLifeSpan>[0]) as T;
+}
+
 function normalise(raw: unknown): AppState {
   if (!raw || typeof raw !== "object") return EMPTY_STATE;
   const value = raw as Partial<AppState>;
   return {
     version: 1,
-    profile: value.profile ?? null,
-    people: Array.isArray(value.people) ? value.people : [],
+    profile: value.profile ? refresh(value.profile) : null,
+    people: Array.isArray(value.people) ? value.people.map(refresh) : [],
     moments: Array.isArray(value.moments) ? value.moments : [],
     // 결혼 계획이 생기기 전에 저장된 데이터에는 이 키가 없다. null로 떨어뜨린다.
     marriage: value.marriage ?? null,
@@ -56,7 +77,12 @@ function boot(): void {
   booted = true;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) state = normalise(JSON.parse(raw));
+    if (raw) {
+      state = normalise(JSON.parse(raw));
+      // 채워 넣은 ageAsOf를 바로 저장해 둔다. 안 그러면 다음에 열 때 또 오늘로
+      // 채워져서 나이가 영영 제자리를 맴돈다.
+      persist();
+    }
   } catch {
     // 저장된 값이 깨졌거나 저장소를 못 쓰는 환경이면 빈 상태로 시작한다.
     state = EMPTY_STATE;

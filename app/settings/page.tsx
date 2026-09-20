@@ -62,12 +62,25 @@ export default function SettingsPage() {
     URL.revokeObjectURL(url);
   }
 
+  /*
+   * 불러오기는 지금 기록을 통째로 덮어쓴다. 그런데 "전체 삭제"에는 확인과
+   * 되돌리기가 있는데 여기에는 없었다 — 더 위험한 쪽에 안전장치가 없는 꼴이었다.
+   * 파일을 잘못 고르면 그대로 끝난다. 덮어쓰기 전의 상태를 쥐고 되돌릴 길을 남긴다.
+   */
   async function importFile(file: File): Promise<void> {
+    let parsed: unknown;
     try {
-      replaceAll(JSON.parse(await file.text()));
-      setMessage("불러왔습니다.");
+      parsed = JSON.parse(await file.text());
     } catch {
       setMessage("파일을 읽지 못했습니다. 내보내기로 만든 JSON인지 확인해 주세요.");
+      return;
+    }
+    const before = JSON.parse(exportState());
+    const had = state.people.length + state.moments.length;
+    replaceAll(parsed);
+    setMessage("불러왔습니다.");
+    if (had > 0) {
+      offerUndo(`${had}개를 덮어썼습니다.`, () => replaceAll(before));
     }
   }
 

@@ -9,6 +9,13 @@ import { formatAge, formatYears } from "@/lib/format";
 import { COUNTRIES, isEstimatedTable, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
 import type { LifeSpan, Sex } from "@/lib/types";
 
+/** 기기 시간대 기준 오늘. toISOString은 UTC라 하루가 밀릴 수 있다. */
+function todayISO(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 const SEXES: { value: Sex; label: string }[] = [
   { value: "all", label: "구분 없음" },
   { value: "female", label: "여성" },
@@ -89,12 +96,19 @@ export default function LifeSpanFields<T extends LifeSpan>({
             value={value.ageYears ?? ""}
             disabled={Boolean(value.birthDate)}
             placeholder="예: 60"
-            onChange={(e) =>
-              patch({ ageYears: e.target.value === "" ? undefined : Number(e.target.value) })
-            }
+            onChange={(e) => {
+              // 적어 넣은 날짜를 같이 남겨야 나이가 시간과 함께 늙는다.
+              const next = e.target.value === "" ? undefined : Number(e.target.value);
+              patch({
+                ageYears: next,
+                ageAsOf: next === undefined ? undefined : todayISO(),
+              });
+            }}
           />
           <p className="mt-1 text-[11px] text-ink-400">
-            {value.birthDate ? "생년월일이 있으면 자동으로 계산됩니다." : "만 나이 기준"}
+            {value.birthDate
+              ? "생년월일이 있으면 자동으로 계산됩니다."
+              : "만 나이 기준 · 시간이 지나면 저절로 올라갑니다"}
           </p>
         </div>
       </div>
