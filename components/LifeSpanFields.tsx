@@ -2,6 +2,8 @@
 
 import { useId } from "react";
 
+import HealthFields from "@/components/HealthFields";
+import { healthAgeOffset } from "@/lib/health";
 import { resolveAge } from "@/lib/calc";
 import { formatAge, formatYears } from "@/lib/format";
 import { COUNTRIES, isEstimatedTable, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
@@ -22,23 +24,35 @@ export default function LifeSpanFields<T extends LifeSpan>({
   value,
   onChange,
   ageLabel = "나이",
+  showHealth = false,
 }: {
   value: T;
   onChange: (next: T) => void;
   ageLabel?: string;
+  /*
+   * 생활 습관 칸을 띄울지. 지금은 내 프로필에서만 켠다 — 남의 흡연 여부를 물어
+   * 채우게 하는 건 번거롭고 주제넘다. 여기 두는 이유는 습관을 바꾸면 예상 수명을
+   * 다시 계산해야 하는데, 그 재계산이 이 컴포넌트의 patch()에 있기 때문이다.
+   */
+  showHealth?: boolean;
 }) {
   const ids = useId();
   const age = resolveAge(value);
   const remaining = age === null ? null : Math.max(0, value.lifeExpectancy - age);
   // 예상 수명은 나이에 따라 달라진다. 이미 그 나이까지 살아온 사람은 일찍 떠난
   // 사람들이 끌어내린 출생 시 평균보다 더 오래 산다.
-  const average = lookupLifeExpectancy(value.countryCode, value.sex, age);
+  const average = lookupLifeExpectancy(value.countryCode, value.sex, age, value.health);
   const estimated = isEstimatedTable(value.countryCode);
 
   function patch(changes: Partial<LifeSpan>): void {
     const next = { ...value, ...changes } as T;
     if (!next.lifeExpectancyManual) {
-      next.lifeExpectancy = lookupLifeExpectancy(next.countryCode, next.sex, resolveAge(next));
+      next.lifeExpectancy = lookupLifeExpectancy(
+        next.countryCode,
+        next.sex,
+        resolveAge(next),
+        next.health,
+      );
     }
     onChange(next);
   }
@@ -120,6 +134,14 @@ export default function LifeSpanFields<T extends LifeSpan>({
         </div>
       </div>
 
+      {showHealth && (
+        <HealthFields
+          value={value.health}
+          age={age}
+          onChange={(health) => patch({ health })}
+        />
+      )}
+
       <div>
         <label className="label" htmlFor={`${ids}-expectancy`}>
           예상 수명
@@ -163,7 +185,9 @@ export default function LifeSpanFields<T extends LifeSpan>({
             ? "직접 조정한 값입니다. 나이·국가·성별을 바꿔도 유지됩니다."
             : age === null
               ? "나이를 채우면 그 나이에 맞는 통계값이 적용됩니다. 언제든 직접 바꿀 수 있어요."
-              : "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요."}
+              : showHealth && healthAgeOffset(value.health) !== 0
+                ? "생명표에서 이 나이·국가·성별에 맞는 값을 가져오고, 위에서 고른 생활 습관을 반영했습니다. 언제든 직접 바꿀 수 있어요."
+                : "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요."}
           {remaining !== null && ` · 남은 기간 약 ${formatYears(remaining)}`}
           {estimated && " · 이 나라는 이웃 나라 표를 조정한 근사치입니다."}
         </p>

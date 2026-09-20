@@ -1,5 +1,6 @@
+import { healthAgeOffset } from "./health.ts";
 import { ESTIMATED_TABLE_COUNTRIES, LIFE_TABLE, LIFE_TABLE_AGES } from "./lifeTable.ts";
-import type { Sex } from "./types";
+import type { HealthProfile, Sex } from "./types";
 
 export interface Country {
   code: string;
@@ -99,16 +100,23 @@ export function remainingLifeAt(
  * 나이를 알면 그 나이의 기대여명을 더해 구한다. 출생 시 기대수명 하나로 모두를
  * 계산하면 나이 든 사람일수록 남은 시간이 실제보다 짧게 나온다.
  * 나이를 모르면 출생 시 기대수명(표의 첫 칸)으로 떨어진다.
+ *
+ * 생활 습관(health)은 **표를 조회하는 나이만** 밀어 준다. 실제 나이는 그대로 두고
+ * "위험이 n세 더 많은 사람과 비슷하다"로 본다. 그래서 같은 흡연자라도 젊을수록
+ * 많이 깎이고 고령일수록 덜 깎인다 — 이미 살아낸 몫까지 다시 빼지 않는다.
+ * 나이를 모르면 보정할 기준이 없으므로 적용하지 않는다.
  */
 export function lookupLifeExpectancy(
   code: string | undefined,
   sex: Sex | undefined,
   age?: number | null,
+  health?: HealthProfile,
 ): number {
   if (age === undefined || age === null || !Number.isFinite(age)) {
     return round1(tableFor(code, sex)[0]);
   }
-  return round1(age + remainingLifeAt(code, sex, age));
+  const lookupAge = Math.max(0, age + healthAgeOffset(health));
+  return round1(age + remainingLifeAt(code, sex, lookupAge));
 }
 
 /** 생명표를 빌려 쓴 국가인지(화면에서 근사치라고 밝힌다). */

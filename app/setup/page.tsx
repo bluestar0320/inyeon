@@ -40,7 +40,7 @@ export default function SetupPage() {
       </div>
 
       <div className="card">
-        <LifeSpanFields value={draft} onChange={setDraft} ageLabel="내 나이" />
+        <LifeSpanFields value={draft} onChange={setDraft} ageLabel="내 나이" showHealth />
       </div>
 
       <div className="card">

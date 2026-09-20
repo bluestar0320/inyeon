@@ -54,6 +54,16 @@ for (const scheme of ["light", "dark"] as const) {
       });
     }
 
+    test("생활 습관을 펼친 상태에도 위반이 없다", async ({ page }) => {
+      // <details>는 접혀 있으면 검사에서 빠진다. 펴 놓고 재야 의미가 있다.
+      await page.goto("/setup");
+      await page.getByText("생활 습관 반영하기").click();
+      await page.getByRole("button", { name: "피움", exact: true }).click();
+      await page.waitForTimeout(300);
+      const { violations } = await new AxeBuilder({ page }).withTags(RULES).analyze();
+      expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+    });
+
     test("인연 상세와 되돌리기 막대에 위반이 없다", async ({ page }) => {
       await page.goto("/people");
       await page.locator("a.card").first().click();

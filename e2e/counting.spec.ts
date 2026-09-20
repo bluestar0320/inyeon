@@ -112,3 +112,41 @@ test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ pag
   await expect(page.getByText("남은 만남", { exact: true })).toBeVisible();
   await expect.poll(() => headline(page)).toBe("240번");
 });
+
+test("생활 습관을 고르면 남은 시간이 줄고, 해제하면 그대로 돌아온다", async ({ page }) => {
+  await setUpProfile(page, 38);
+  await page.goto("/setup");
+  const expectancy = page.locator('input[type=number][step="0.1"]');
+  const before = await expectancy.inputValue();
+
+  await page.getByText("생활 습관 반영하기").click();
+  await page.getByRole("button", { name: "피움", exact: true }).click();
+  await expect.poll(() => expectancy.inputValue()).not.toBe(before);
+  const smoking = Number(await expectancy.inputValue());
+  expect(smoking).toBeLessThan(Number(before));
+
+  // 10년을 통째로 빼는 게 아니라 생명표를 10세 위로 조회한다. 그래서 손실이 더 작다.
+  expect(Number(before) - smoking).toBeLessThan(10);
+  // 요약에도, 항목별 내역에도 몇 년이 붙었는지 드러나야 한다. 총합만으로는
+  // 어느 항목이 얼마나 보탰는지 알 수 없다.
+  await expect(page.getByText("+10세로 조회")).toBeVisible();
+  await expect(page.getByText("+10세", { exact: true })).toBeVisible();
+  await expect(page.getByText("담배 · 피움")).toBeVisible();
+
+  // 같은 칩을 다시 누르면 해제되고 원래 값으로 돌아온다.
+  await page.getByRole("button", { name: "피움", exact: true }).click();
+  await expect.poll(() => expectancy.inputValue()).toBe(before);
+});
+
+test("예상 수명을 직접 고쳤으면 생활 습관이 그 값을 덮어쓰지 않는다", async ({ page }) => {
+  await setUpProfile(page, 38);
+  await page.goto("/setup");
+  const expectancy = page.locator('input[type=number][step="0.1"]');
+  await expectancy.fill("95");
+
+  await page.getByText("생활 습관 반영하기").click();
+  await page.getByRole("button", { name: "피움", exact: true }).click();
+  await page.waitForTimeout(300);
+  // 사용자가 직접 넣은 값이 항상 이긴다.
+  expect(await expectancy.inputValue()).toBe("95");
+});

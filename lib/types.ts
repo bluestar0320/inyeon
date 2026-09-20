@@ -35,7 +35,19 @@ export interface AgeSource {
   ageYears?: number;
 }
 
+/**
+ * 생활 습관. 값은 생명표를 조회할 나이 보정으로 바뀐다(lib/health.ts).
+ *
+ * LifeSpan에 두지만 지금은 내 프로필에서만 입력받는다. 남의 흡연 여부를 물어
+ * 채우게 하는 건 번거롭고 주제넘다. 나중에 인연에도 열고 싶으면 화면만 붙이면 된다.
+ */
+export type HealthKey = "smoking" | "drinking" | "exercise";
+export type HealthLevel = "good" | "mid" | "bad";
+export type HealthProfile = Partial<Record<HealthKey, HealthLevel>>;
+
 export interface LifeSpan extends AgeSource {
+  /** 없으면 보정 없음. 기능이 생겼다고 기존 기록의 숫자가 달라지면 안 된다. */
+  health?: HealthProfile;
   /** 예상 수명(년). 국가 평균에서 자동으로 채우고, 사용자가 덮어쓸 수 있다. */
   lifeExpectancy: number;
   /** true면 사용자가 직접 조정한 값이라 국가/성별을 바꿔도 따라가지 않는다. */
