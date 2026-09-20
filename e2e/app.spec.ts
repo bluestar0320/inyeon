@@ -214,7 +214,21 @@ test.describe("상태바 색", () => {
   const bar = (page: import("@playwright/test").Page) =>
     page.evaluate(() => document.querySelector('meta[name="theme-color"]')?.getAttribute("content"));
 
-  test("기기가 밝아도 앱을 어둡게 하면 상태바가 따라온다", async ({ page }) => {
+  test("설치된 앱의 상태바 색은 매니페스트에 어둡게 박혀 있다", async ({ page }) => {
+    /*
+     * 안드로이드에 설치된 PWA는 상태바 색을 매니페스트에서만 가져오고 실행 중의
+     * meta[theme-color]는 무시한다. 그래서 이 값이 실제로 보이는 색이다.
+     * 밝은 값으로 되돌리면 어두운 화면 위에 흰 띠가 남는다 — 그걸 막는다.
+     */
+    const res = await page.request.get("/manifest.webmanifest");
+    expect(res.ok()).toBe(true);
+    const manifest = (await res.json()) as { theme_color: string; background_color: string };
+    expect(manifest.theme_color).toBe("#121317");
+    expect(manifest.background_color).toBe("#121317");
+  });
+
+  // 브라우저 탭에서는 meta가 살아 있어 테마를 따라간다. 설치된 앱과는 다른 경로다.
+  test("브라우저에서는 기기가 밝아도 앱을 어둡게 하면 상태바가 따라온다", async ({ page }) => {
     await page.goto("/settings");
     expect(await bar(page)).toBe("#fbfaf8");
 

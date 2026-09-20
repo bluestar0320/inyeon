@@ -13,9 +13,26 @@ export default function manifest(): MetadataRoute.Manifest {
       "남은 시간과 남은 만남을 횟수로 계산합니다. 리마인딩이 아니라 플래닝을 위한 계산기.",
     start_url: `${base}/`,
     display: "standalone",
-    // 설치 직후 첫 화면이 번쩍이지 않도록 페이지 배경과 같은 값을 쓴다.
-    background_color: "#fbfaf8",
-    theme_color: "#fbfaf8",
+    /*
+     * 상태바와 시작 화면 색. 어두운 쪽으로 고정한다.
+     *
+     * 안드로이드에 설치된 PWA(WebAPK)는 상태바 색을 **매니페스트에서만** 가져온다.
+     * 실행 중에 <meta name="theme-color">를 바꿔도 무시한다. 그래서 앱 안의 테마
+     * 설정(시스템/밝게/어둡게)을 따라가게 만들 방법이 없고, 하나를 골라야 한다.
+     *
+     * 양쪽이 비대칭이라 어두운 쪽을 고른다.
+     *   어두운 앱 + 흰 상태바   → 위쪽만 흰 띠로 남아 고장 난 것처럼 보인다
+     *   밝은 앱 + 어두운 상태바 → 제목 표시줄처럼 보여 어색하지 않다
+     *
+     * 이 값은 설치 시점에 굳는다. 이미 설치한 사람은 크롬이 제 주기에 매니페스트를
+     * 다시 읽을 때까지(하루 이상 걸릴 수 있다) 옛 색을 쓰고, 지웠다 다시 설치하면
+     * 바로 바뀐다.
+     *
+     * 브라우저 탭에서는 <meta name="theme-color">가 살아 있어서 테마를 따라간다
+     * (lib/themeColor.ts). 그쪽은 이 값과 무관하다.
+     */
+    background_color: "#121317",
+    theme_color: "#121317",
     lang: "ko",
     orientation: "portrait",
     icons: [
