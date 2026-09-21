@@ -85,8 +85,7 @@ export default function MomentsPage() {
             <Link
               key={moment.id}
               href={`/moments/detail?id=${moment.id}`}
-              className="card transition hover:border-ink-400"
-            >
+              className="card transition hover:border-ink-400" prefetch={false}>
               <span className="text-2xl">{moment.emoji ?? "◦"}</span>
               <p className="mt-2 text-sm font-medium text-ink-800">{moment.title}</p>
               <p className="text-xs text-ink-400">{formatFrequency(moment.frequency)}</p>

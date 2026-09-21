@@ -32,6 +32,7 @@ export default function Nav() {
         <Link
           href="/"
           onClick={guard}
+          prefetch={false}
           className="text-sm font-semibold tracking-tight text-ink-900"
         >
           몇번더?
@@ -45,6 +46,7 @@ export default function Nav() {
                 key={link.href}
                 href={link.href}
                 onClick={guard}
+                prefetch={false}
                 /*
                   현재 위치는 검은 알약이 아니라 밑줄로 알린다. 알약은 화면마다
                   맨 위에 덩어리 하나를 얹어 두는 셈이라, 정작 주인공인 숫자가

@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { AFTER_ADD_PERSON, clearState, headline, readState, setUpProfile } from "./helpers";
+import {
+  AFTER_ADD_PERSON,
+  STORAGE_KEY,
+  clearState,
+  headline,
+  readState,
+  setUpProfile,
+} from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await clearState(page);
@@ -204,6 +211,56 @@ test.describe("테마", () => {
       await page.evaluate(() => document.documentElement.classList.contains("dark")),
     ).toBe(true);
   });
+});
+
+test("기록은 이 기기 밖으로 나가지 않는다", async ({ page, context }) => {
+  /*
+   * 이 앱의 가장 중요한 약속이다. 주소를 뿌려도 각자 자기 저장소를 갖고,
+   * 남의 기록이 보이지 않아야 한다. 말로만 두면 언제 깨졌는지 모른다.
+   */
+  const posted: string[] = [];
+  const idsInUrl: string[] = [];
+  page.on("request", (req) => {
+    const url = new URL(req.url());
+    // 몸통을 실어 보낼 수 있는 것만 본다. GET/HEAD는 정적 파일을 받아 오는 길이다.
+    if (!["GET", "HEAD"].includes(req.method())) {
+      posted.push(`${req.method()} ${url.pathname}`);
+    }
+    if (url.searchParams.has("id") || url.searchParams.has("from")) {
+      idsInUrl.push(`${req.method()} ${url.pathname}`);
+    }
+  });
+
+  await setUpProfile(page, 38);
+  await page.goto("/people/new");
+  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByLabel("이름").fill("우리엄마정순임");
+  await page.getByLabel("나이", { exact: true }).fill("68");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/\/people\/detail/);
+
+  // 1) 보내는 요청 자체가 없어야 한다. 정적 파일을 받아 오는 GET뿐이다.
+  expect(posted).toEqual([]);
+
+  // 2) 목록을 훑어도 항목 id가 미리받기로 새어 나가지 않아야 한다.
+  //    서비스 워커가 이미 전부 받아 두므로 미리받기는 쓸모도 없다.
+  idsInUrl.length = 0;
+  await page.goto("/people");
+  await page.waitForLoadState("networkidle");
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  expect(idsInUrl).toEqual([]);
+
+  // 3) 다른 사람이 같은 주소를 열면 빈 화면이어야 한다.
+  const other = await context.browser()!.newContext();
+  const stranger = await other.newPage();
+  await stranger.goto(page.url().replace(/\/people\/detail.*/, "/"));
+  await stranger.waitForLoadState("networkidle");
+  expect(await stranger.content()).not.toContain("우리엄마정순임");
+  expect(
+    await stranger.evaluate((k) => localStorage.getItem(k), STORAGE_KEY),
+  ).toBeNull();
+  await other.close();
 });
 
 test("웹은 네이티브 전용 코드를 내려받지 않는다", async ({ page }) => {

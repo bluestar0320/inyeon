@@ -116,8 +116,7 @@ export default function PeoplePage() {
             <Link
               key={person.id}
               href={`/people/detail?id=${person.id}`}
-              className="card flex items-center justify-between transition hover:border-ink-400"
-            >
+              className="card flex items-center justify-between transition hover:border-ink-400" prefetch={false}>
               <span className="flex min-w-0 items-center gap-3">
                 <span className="text-2xl">{person.emoji ?? "🫧"}</span>
                 <span className="min-w-0">

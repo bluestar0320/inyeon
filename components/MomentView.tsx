@@ -80,10 +80,10 @@ export default function MomentView({ moment }: { moment: Moment }) {
           <div className="flex shrink-0 gap-2">
             {/* 보던 것의 변주를 바로 만들 수 있어야 한다. 목록으로 나갔다가 처음부터
                 다시 고르게 하면 같은 일을 두 번 시키는 것이다. */}
-            <Link href={`/moments/new?from=${moment.id}`} className="btn-secondary">
+            <Link href={`/moments/new?from=${moment.id}`} className="btn-secondary" prefetch={false}>
               비슷한 것 추가
             </Link>
-            <Link href={`/moments/edit?id=${moment.id}`} className="btn-secondary">
+            <Link href={`/moments/edit?id=${moment.id}`} className="btn-secondary" prefetch={false}>
               수정하기
             </Link>
           </div>

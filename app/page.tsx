@@ -163,8 +163,7 @@ export default function HomePage() {
               <li key={person.id}>
                 <Link
                   href={`/people/detail?id=${person.id}`}
-                  className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-3.5 transition hover:bg-ink-50"
-                >
+                  className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-3.5 transition hover:bg-ink-50" prefetch={false}>
                   <span className="flex min-w-0 items-center gap-3">
                     <span aria-hidden="true" className="text-xl">
                       {person.emoji ?? "🫧"}
@@ -200,8 +199,7 @@ export default function HomePage() {
               <Link
                 key={person.id}
                 href={`/people/detail?id=${person.id}`}
-                className="card block transition hover:border-ink-400"
-              >
+                className="card block transition hover:border-ink-400" prefetch={false}>
                 <div className="flex items-baseline justify-between">
                   <p className="text-sm font-medium text-ink-800">
                     {person.emoji ?? "🧸"} {person.name}
@@ -253,8 +251,7 @@ export default function HomePage() {
               <Link
                 key={moment.id}
                 href={`/moments/detail?id=${moment.id}`}
-                className="card py-4 transition hover:border-ink-400"
-              >
+                className="card py-4 transition hover:border-ink-400" prefetch={false}>
                 <span aria-hidden="true" className="text-xl">
                   {moment.emoji ?? "◦"}
                 </span>

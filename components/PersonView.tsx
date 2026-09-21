@@ -115,7 +115,7 @@ export default function PersonView({ person }: { person: Person }) {
           <p className="text-xs font-semibold tracking-[0.1em] text-ink-400">
             {person.relation ?? "정보"}
           </p>
-          <Link href={`/people/edit?id=${person.id}`} className="btn-secondary shrink-0">
+          <Link href={`/people/edit?id=${person.id}`} className="btn-secondary shrink-0" prefetch={false}>
             수정하기
           </Link>
         </div>
