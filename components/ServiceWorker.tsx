@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { isNativeApp } from "@/lib/nativeShare";
+
 /**
  * 서비스 워커를 등록해 오프라인에서도 앱이 뜨게 한다.
  *
@@ -12,6 +14,14 @@ export default function ServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
     if (!("serviceWorker" in navigator)) return;
+    // APK는 화면 파일을 이미 기기 안에 들고 있다. 워커가 끼면 앱을 업데이트한 뒤에도
+    // 옛 캐시의 화면이 뜰 수 있다. 예전 버전이 등록해 둔 워커도 걷어 낸다.
+    if (isNativeApp()) {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((all) => all.forEach((registration) => void registration.unregister()));
+      return;
+    }
     // 하위 경로 배포에서도 맞도록 base를 붙인다.
     const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
     navigator.serviceWorker.register(`${base}/sw.js`).catch(() => {

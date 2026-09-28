@@ -14,11 +14,13 @@
  * 목록은 배포 위치(BASE_PATH)를 뺀 경로로 적는다. 서비스 워커가 자기 등록 범위에서
  * BASE를 읽어 앞에 붙이므로, /inyeon 같은 하위 경로 배포에서도 그대로 맞는다.
  */
+import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, posix, relative, sep } from "node:path";
 
 const OUT = "out";
 const MARKER = "/* __PRECACHE__ */";
+const VERSION_MARKER = "/* __VERSION__ */";
 
 function walk(dir) {
   const found = [];
@@ -31,10 +33,13 @@ function walk(dir) {
 }
 
 const routes = new Set();
-for (const file of walk(OUT)) {
+// 캐시 이름. 내용이 하나라도 바뀌면 달라진다.
+const hash = createHash("sha256");
+for (const file of walk(OUT).sort()) {
   const rel = relative(OUT, file).split(sep).join(posix.sep);
   // 서비스 워커 자신은 캐시하지 않는다. 자기를 캐시하면 새 버전이 안 깔린다.
   if (rel === "sw.js") continue;
+  hash.update(rel).update(readFileSync(file));
   // index.html은 경로 자체로 요청된다(trailingSlash: true).
   if (rel === "index.html") routes.add("/");
   else if (rel.endsWith("/index.html")) routes.add(`/${rel.slice(0, -"index.html".length)}`);
@@ -47,5 +52,10 @@ const source = readFileSync(swPath, "utf8");
 if (!source.includes(MARKER)) {
   throw new Error(`${swPath}에 ${MARKER} 자리표시자가 없다. public/sw.js를 확인할 것.`);
 }
-writeFileSync(swPath, source.replace(MARKER, JSON.stringify(list, null, 2)), "utf8");
+const version = JSON.stringify(hash.digest("hex").slice(0, 12));
+writeFileSync(
+  swPath,
+  source.replace(MARKER, JSON.stringify(list, null, 2)).replace(VERSION_MARKER, version),
+  "utf8",
+);
 console.log(`서비스 워커 미리받기 목록: ${list.length}개`);

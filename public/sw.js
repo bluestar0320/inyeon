@@ -12,7 +12,14 @@
  *
  * 데이터는 전부 localStorage에 있으므로, 화면 파일만 있으면 계산도 저장도 그대로 된다.
  */
-const CACHE = "rc-v3";
+/*
+ * 빌드마다 바뀌는 이름(scripts/precache-manifest.mjs가 파일 내용의 해시로 채운다).
+ *
+ * 예전에는 "rc-v3"로 고정이었다. activate는 이름이 다른 캐시만 지우니, 배포할 때마다
+ * 해시가 붙은 옛 청크(한 번에 약 1.7MB)가 영영 쌓였고, 새 워커가 옛 워커가 아직 쓰는
+ * 캐시에 새 화면을 덮어썼다. 빌드마다 새 캐시에 받고 옛 것은 통째로 지운다.
+ */
+const CACHE = "rc-" + /* __VERSION__ */;
 
 /*
  * 앱이 놓인 자리. 하위 경로에 올릴 수 있으므로(GitHub Pages의 /저장소이름 등)
@@ -35,7 +42,10 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE)
       // 하나가 실패해도 설치는 진행한다. 반쯤이라도 받아 두는 편이 낫다.
-      .then((cache) => Promise.allSettled(PRECACHE.map((url) => cache.add(url))))
+      // cache: "reload" — 브라우저 HTTP 캐시에 남은 옛 화면을 새 캐시에 담지 않도록.
+      .then((cache) =>
+        Promise.allSettled(PRECACHE.map((url) => cache.add(new Request(url, { cache: "reload" })))),
+      )
       .then(() => self.skipWaiting()),
   );
 });
@@ -86,6 +96,14 @@ self.addEventListener("fetch", (event) => {
    * 보인다. 한 번 늦게 보이는 것과 매번 느린 것 중에서는 전자가 낫다.
    */
   const navigating = request.mode === "navigate";
+  /*
+   * RSC 페이로드(.txt)도 쿼리를 빼고 찾는다. Next는 /people/detail/index.txt?id=..&_rsc=..
+   * 꼴로 요청하는데 미리 받아 둔 건 쿼리 없는 파일이다. 정적 내보내기라 내용은 쿼리와
+   * 상관없이 같다. 쿼리까지 맞춰 찾던 때는 오프라인에서 화면을 옮길 때마다 캐시를 못 찾아
+   * 콘솔에 ERR_FAILED가 찍히고 화면 전체를 다시 불러왔다. 캐시에 정말 없는 파일은 여전히
+   * 오류로 떨어지므로 진짜 오류를 가리지는 않는다.
+   */
+  const bare = navigating || url.pathname.endsWith(".txt");
 
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
@@ -97,9 +115,10 @@ self.addEventListener("fetch", (event) => {
        * 없는 것으로 보고 아래의 홈 대체로 떨어졌다 — 오프라인에서 인연 상세를 열면
        * 조용히 홈이 떴다. 보관까지 쿼리를 빼야 인연 수만큼 같은 파일이 쌓이지 않는다.
        */
-      const key = navigating ? `${url.origin}${url.pathname}` : request;
-      const cached = await cache.match(request, { ignoreSearch: navigating });
-      const fresh = fetch(request)
+      const key = bare ? `${url.origin}${url.pathname}` : request;
+      const cached = await cache.match(request, { ignoreSearch: bare });
+      // 오프라인이 확실하면 뒤에서 새로 받으려 하지 않는다. 실패할 요청으로 콘솔만 더럽힌다.
+      const fresh = (self.navigator.onLine === false ? Promise.reject() : fetch(request))
         .then((response) => {
           // 정상 응답만 보관한다. 리다이렉트나 오류를 캐시하면 오프라인에서 더 나쁘다.
           if (response.ok && response.type === "basic") cache.put(key, response.clone());
