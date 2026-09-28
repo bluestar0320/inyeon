@@ -6,7 +6,18 @@ import { todayISO } from "./format";
 import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
-import type { AppState, MarriagePlan, Moment, Person, Profile, Settings } from "./types";
+import { LANGS } from "./i18n";
+import type {
+  AppState,
+  CalcFilter,
+  Frequency,
+  MarriagePlan,
+  Moment,
+  Person,
+  Profile,
+  Scenario,
+  Settings,
+} from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
   tone: "calm",
@@ -50,26 +61,169 @@ function refresh<T extends { ageYears?: number; ageAsOf?: string }>(span: T): T 
 }
 
 const UNITS = ["day", "week", "month", "quarter", "year"];
+const FILTER_KINDS = ["multiplier", "decay", "window", "cap"];
+const TONES = ["calm", "warm", "aware"];
+const THEMES = ["system", "light", "dark"];
 
 /*
- * 계산이 기대는 최소한의 모양. 이게 없는 항목은 화면을 그리다 터진다(빈도가 없으면
- * toPerYear에서). 그리고 그 상태가 저장되면 열 때마다 오류 화면이 뜬다. 그래서 읽을 때
- * 걸러 낸다. 조건 필터가 빠진 것은 빈 배열로 채워 살린다.
+ * 저장소와 불러온 파일에서 온 기록을 믿지 않는다.
+ *
+ * 앱이 쓴 기록이라도 옛 버전이 쓴 것일 수 있고, 불러오기는 사람이 고친 파일일 수 있다.
+ * 모양이 어긋난 값 하나가 화면을 그리다 터지면(빈도가 없으면 toPerYear에서, 제목이
+ * 글자가 아니면 trim에서, 모르는 언어면 문구를 못 찾아서) 그 상태가 저장된 채 열 때마다
+ * 오류 화면이 뜬다. 무작위 점검(e2e/fuzz.spec.ts)으로 실제로 찾은 것들이다.
+ * 그래서 여기 한 곳에서 걸러 낸다. 고칠 수 있는 건 고치고, 없으면 빼거나 기본값을 쓴다.
  */
-function repairItem<T extends { id?: unknown; frequency?: unknown; filters?: unknown }>(
-  item: T,
-): T | null {
-  if (!item || typeof item !== "object" || typeof item.id !== "string") return null;
-  const f = item.frequency as { count?: unknown; unit?: unknown } | undefined;
-  if (!f || typeof f.count !== "number" || !UNITS.includes(f.unit as string)) return null;
-  return Array.isArray(item.filters) ? item : { ...item, filters: [] };
+type Loose = Record<string, unknown>;
+
+const isObject = (value: unknown): value is Loose =>
+  !!value && typeof value === "object" && !Array.isArray(value);
+const text = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
+const oneOf = <T,>(value: unknown, allowed: readonly string[], fallback: T): T =>
+  allowed.includes(value as string) ? (value as T) : fallback;
+
+const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+const SEXES = ["male", "female", "all"];
+const LEVELS = ["good", "mid", "bad"];
+const FILTER_NUMBERS = ["factor", "ratePerYear", "fromYear", "toYear", "maxTotal"] as const;
+
+function frequencyOk(value: unknown): boolean {
+  return isObject(value) && finite(value.count) && UNITS.includes(value.unit as string);
 }
 
-function repairAll<T extends { id?: unknown; frequency?: unknown; filters?: unknown }>(
-  items: unknown,
-): T[] {
+/** 빈도는 음수일 수 없다. 계산은 0으로 보지만 화면에 "주에 -5번"이 찍힌다. */
+function fixFrequency(value: unknown): Frequency {
+  const f = value as Frequency;
+  return { unit: f.unit, count: Math.max(0, f.count) };
+}
+
+/** 나이·수명처럼 사람마다 있는 칸. 숫자가 아니면 비우고, 수명은 표에서 다시 채운다. */
+function repairSpan<T extends Loose>(item: T): T {
+  const health = isObject(item.health)
+    ? Object.fromEntries(
+        Object.entries(item.health).filter(
+          ([key, level]) => ["smoking", "drinking", "exercise"].includes(key) && LEVELS.includes(level as string),
+        ),
+      )
+    : undefined;
+  const countryCode = text(item.countryCode);
+  const sex = oneOf(item.sex, SEXES, "all" as const);
+  const expectancyOk = finite(item.lifeExpectancy) && item.lifeExpectancy > 0 && item.lifeExpectancy <= 150;
+  return {
+    ...item,
+    ageYears: finite(item.ageYears) ? Math.max(0, item.ageYears) : undefined,
+    ageAsOf: text(item.ageAsOf),
+    birthDate: text(item.birthDate),
+    countryCode,
+    sex,
+    health,
+    lifeExpectancy: expectancyOk ? item.lifeExpectancy : lookupLifeExpectancy(countryCode, sex),
+    lifeExpectancyManual: expectancyOk && item.lifeExpectancyManual === true,
+  };
+}
+
+function repairFilters(value: unknown): CalcFilter[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((f): f is Loose => isObject(f) && FILTER_KINDS.includes(f.kind as string))
+    .map((f) => ({
+      ...(f as unknown as CalcFilter),
+      ...Object.fromEntries(FILTER_NUMBERS.map((key) => [key, finite(f[key]) ? f[key] : undefined])),
+      mode: oneOf(f.mode, ["only", "except"], undefined),
+      id: text(f.id) ?? newId(),
+      label: text(f.label) ?? "",
+      enabled: f.enabled !== false,
+    }));
+}
+
+function repairScenarios(value: unknown): Scenario[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .filter((s): s is Loose => isObject(s) && frequencyOk(s.frequency))
+    .map((s) => ({
+      id: text(s.id) ?? newId(),
+      label: text(s.label) ?? "",
+      frequency: fixFrequency(s.frequency),
+      filters: repairFilters(s.filters),
+    }));
+}
+
+/** 인연과 순간이 함께 가진 부분을 고친다. 빈도가 없으면 셀 수가 없으니 뺀다. */
+function repairCommon(item: unknown): Loose | null {
+  if (!isObject(item) || typeof item.id !== "string" || !frequencyOk(item.frequency)) return null;
+  return {
+    ...item,
+    frequency: fixFrequency(item.frequency),
+    filters: repairFilters(item.filters),
+    scenarios: repairScenarios(item.scenarios),
+    emoji: text(item.emoji),
+    note: text(item.note),
+    since: text(item.since),
+    createdAt: text(item.createdAt) ?? "",
+    updatedAt: text(item.updatedAt) ?? "",
+  };
+}
+
+function repairPerson(raw: unknown): Person | null {
+  const item = repairCommon(raw);
+  if (!item) return null;
+  const h = item.horizon;
+  const horizon =
+    isObject(h) &&
+    (h.kind === "life" || (h.kind === "untilMyAge" && finite(h.age)) || (h.kind === "years" && finite(h.years)))
+      ? h
+      : undefined;
+  const g = item.growth;
+  const growth =
+    isObject(g) && finite(g.adultAge) && frequencyOk(g.dinners)
+      ? { adultAge: g.adultAge, dinners: fixFrequency(g.dinners) }
+      : undefined;
+  return {
+    ...repairSpan(item),
+    name: text(item.name) ?? "",
+    relation: text(item.relation),
+    horizon,
+    growth,
+  } as unknown as Person;
+}
+
+function repairMoment(raw: unknown): Moment | null {
+  const item = repairCommon(raw);
+  if (!item) return null;
+  const h = item.horizon;
+  const horizon =
+    isObject(h) &&
+    (h.kind === "life" || (h.kind === "untilAge" && finite(h.age)) || (h.kind === "years" && finite(h.years)))
+      ? h
+      : { kind: "life" };
+  return { ...item, title: text(item.title) ?? "", horizon } as unknown as Moment;
+}
+
+function repairMarriage(raw: unknown): MarriagePlan | null {
+  if (!isObject(raw) || !finite(raw.targetAge) || !frequencyOk(raw.frequency)) return null;
+  return {
+    ...(raw as unknown as MarriagePlan),
+    frequency: fixFrequency(raw.frequency),
+    filters: repairFilters(raw.filters),
+    note: text(raw.note),
+    updatedAt: text(raw.updatedAt) ?? "",
+  };
+}
+
+function repairSettings(raw: unknown): Settings {
+  const value = isObject(raw) ? raw : {};
+  return {
+    tone: oneOf(value.tone, TONES, DEFAULT_SETTINGS.tone),
+    theme: oneOf(value.theme, THEMES, DEFAULT_SETTINGS.theme),
+    showPast: typeof value.showPast === "boolean" ? value.showPast : DEFAULT_SETTINGS.showPast,
+    language: oneOf(value.language, LANGS.map((lang) => lang.value), undefined),
+    lastBackupAt: text(value.lastBackupAt),
+  };
+}
+
+function keep<T>(items: unknown, repair: (raw: unknown) => T | null): T[] {
   if (!Array.isArray(items)) return [];
-  return items.map((item) => repairItem(item as T)).filter((item): item is T => item !== null);
+  return items.map(repair).filter((item): item is T => item !== null);
 }
 
 /** 불러오기 파일이 이 앱의 내보내기처럼 생겼는지. 아무 JSON이나 받아 기록을 비우지 않도록. */
@@ -80,16 +234,15 @@ export function looksLikeBackup(raw: unknown): boolean {
 }
 
 function normalise(raw: unknown): AppState {
-  if (!raw || typeof raw !== "object") return EMPTY_STATE;
-  const value = raw as Partial<AppState>;
+  if (!isObject(raw)) return EMPTY_STATE;
   return {
     version: 1,
-    profile: value.profile ? refresh(value.profile) : null,
-    people: repairAll<Person>(value.people).map(refresh),
-    moments: repairAll<Moment>(value.moments),
+    profile: isObject(raw.profile) ? refresh(repairSpan(raw.profile) as unknown as Profile) : null,
+    people: keep(raw.people, repairPerson).map(refresh),
+    moments: keep(raw.moments, repairMoment),
     // 결혼 계획이 생기기 전에 저장된 데이터에는 이 키가 없다. null로 떨어뜨린다.
-    marriage: value.marriage ?? null,
-    settings: { ...DEFAULT_SETTINGS, ...(value.settings ?? {}) },
+    marriage: repairMarriage(raw.marriage),
+    settings: repairSettings(raw.settings),
   };
 }
 

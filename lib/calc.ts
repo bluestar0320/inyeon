@@ -162,6 +162,15 @@ function overlapFraction(sliceStart: number, sliceSpan: number, from: number, to
  */
 export const MAX_YEARS = 150;
 
+/**
+ * 필터 값은 입력 칸과 불러온 파일에서 온다. "1e999"를 치면 Infinity, 망가진 파일이면
+ * NaN이 들어오는데, 하나만 섞여도 합계 전체가 NaN이 되어 화면에 "-"만 남았다.
+ * 유한하지 않은 값은 그 필터가 없는 것처럼(기본값으로) 다룬다.
+ */
+function finite(value: number | undefined, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
 export function countOccurrences(input: CountInput): CountResult {
   const years = Math.min(MAX_YEARS, Math.max(0, Number.isFinite(input.years) ? input.years : 0));
   const perYear = Math.max(0, Number.isFinite(input.perYear) ? input.perYear : 0);
@@ -180,17 +189,18 @@ export function countOccurrences(input: CountInput): CountResult {
 
     for (const filter of filters) {
       if (filter.kind === "multiplier") {
-        factor *= Math.max(0, filter.factor ?? 1);
+        factor *= Math.max(0, finite(filter.factor, 1));
       } else if (filter.kind === "decay") {
         // 100%를 넘기면 음수의 소수 거듭제곱이 되어 NaN이 된다. 100%면 이듬해부터 0이다.
-        const rate = Math.min(1, filter.ratePerYear ?? 0);
+        // 증가 쪽도 매년 두 배(-100%)에서 막는다. 그 너머는 150년 동안 Infinity로 넘친다.
+        const rate = Math.min(1, Math.max(-1, finite(filter.ratePerYear, 0)));
         // 그 해의 한가운데를 기준으로 감쇠시킨다(연초/연말 중 어디를 잡아도
         // 생기는 치우침을 줄이려고).
         const t = i + span / 2;
         factor *= Math.max(0, (1 - rate) ** t);
       } else if (filter.kind === "window") {
-        const from = filter.fromYear ?? 0;
-        const to = filter.toYear ?? Number.POSITIVE_INFINITY;
+        const from = finite(filter.fromYear, 0);
+        const to = finite(filter.toYear, Number.POSITIVE_INFINITY);
         const inside = overlapFraction(i, span, from, to);
         factor *= filter.mode === "except" ? 1 - inside : inside;
       }
