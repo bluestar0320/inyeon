@@ -10,7 +10,7 @@ import { useSyncExternalStore } from "react";
  * 지저분해진다. 그래서 메모리에만 두고 시간이 지나면 스스로 사라진다.
  */
 export interface UndoEntry {
-  /** 화면에 띄울 문구. 예: "어머니을(를) 지웠습니다." */
+  /** 화면에 띄울 문구. 예: "어머니를 지웠습니다." */
   message: string;
   /** 되돌리기를 눌렀을 때 실제로 복구하는 일. */
   restore: () => void;

@@ -5,7 +5,51 @@ import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
 import type { CountResult, PastResult } from "@/lib/calc";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
+import { defineCopy, tr } from "@/lib/i18n";
 import type { ShareSpec } from "@/lib/shareCard";
+
+const COPY = defineCopy({
+  ko: {
+    unit: "번",
+    filtered: (from: string, cut: string) => `조건 필터를 적용해 ${from}번에서 ${cut} 줄었습니다.`,
+    capped: (n: string) => ` (최대 ${n}번 상한 적용)`,
+    pastFuture: (past: string, future: string) => `지금까지 ${past}번 · 앞으로 ${future}번`,
+    pastNote: (years: string) => `${years} 동안 지금 빈도로 이어졌다고 봤을 때의 어림값입니다.`,
+    span: "계산 기간",
+  },
+  en: {
+    unit: "times",
+    filtered: (from, cut) => `Your conditions brought this down ${cut} from ${from}.`,
+    capped: (n) => ` (capped at ${n})`,
+    pastFuture: (past, future) => `${past} so far · ${future} to go`,
+    pastNote: (years) => `A rough estimate, assuming the same frequency over ${years}.`,
+    span: "Time span",
+  },
+  ja: {
+    unit: "回",
+    filtered: (from, cut) => `条件フィルターで${from}回から${cut}減りました。`,
+    capped: (n) => `(上限${n}回を適用)`,
+    pastFuture: (past, future) => `これまで${past}回 · これから${future}回`,
+    pastNote: (years) => `${years}のあいだ今の頻度で続いたと考えたときの目安です。`,
+    span: "計算期間",
+  },
+  es: {
+    unit: "veces",
+    filtered: (from, cut) => `Con tus condiciones bajó un ${cut} desde ${from}.`,
+    capped: (n) => ` (con un máximo de ${n})`,
+    pastFuture: (past, future) => `${past} hasta ahora · ${future} por delante`,
+    pastNote: (years) => `Estimación aproximada, suponiendo la misma frecuencia durante ${years}.`,
+    span: "Periodo",
+  },
+  zh: {
+    unit: "次",
+    filtered: (from, cut) => `应用条件筛选后，从${from}次减少了${cut}。`,
+    capped: (n) => `（已设上限${n}次）`,
+    pastFuture: (past, future) => `至今${past}次 · 往后${future}次`,
+    pastNote: (years) => `按照过去${years}一直保持现在的频率估算，仅供参考。`,
+    span: "计算期间",
+  },
+});
 
 /** 계산 결과 한 덩어리: 큰 숫자 + 보조 지표 + 연도별 추이. */
 export default function ResultPanel({
@@ -29,6 +73,7 @@ export default function ResultPanel({
   /** 시작점을 넣었고 설정이 켜져 있을 때만 온다. 없으면 막대를 그리지 않는다. */
   past?: PastResult | null;
 }) {
+  const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
 
@@ -42,7 +87,7 @@ export default function ResultPanel({
 
   return (
     <div className="hero space-y-6">
-      <BigNumber label={label} value={formatCount(result.total)} unit="번" sub={sentence} />
+      <BigNumber label={label} value={formatCount(result.total)} unit={t.unit} sub={sentence} />
 
       {/*
         줄어든 사실은 상자에 담지 않는다. 이 블록 안에 또 상자를 넣으면 숫자와
@@ -50,9 +95,8 @@ export default function ResultPanel({
       */}
       {filtered && (
         <p className="border-l-2 border-accent-400 pl-3 text-xs leading-relaxed text-ink-600">
-          조건 필터를 적용해 {formatCount(result.baselineTotal)}번에서{" "}
-          {formatPercent(cut)} 줄었습니다.
-          {result.cappedAt !== null && ` (최대 ${formatCount(result.cappedAt)}번 상한 적용)`}
+          {t.filtered(formatCount(result.baselineTotal), formatPercent(cut))}
+          {result.cappedAt !== null && t.capped(formatCount(result.cappedAt))}
         </p>
       )}
 
@@ -70,16 +114,16 @@ export default function ResultPanel({
             />
           </div>
           <p className="mt-2 text-xs text-ink-600">
-            지금까지 {formatCount(past.count)}번 · 앞으로 {formatCount(result.total)}번
+            {t.pastFuture(formatCount(past.count), formatCount(result.total))}
           </p>
           <p className="mt-0.5 text-[11px] text-ink-400">
-            {formatYears(past.years)} 동안 지금 빈도로 이어졌다고 봤을 때의 어림값입니다.
+            {t.pastNote(formatYears(past.years))}
           </p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-hero-line pt-5 sm:grid-cols-3">
-        <StatCard label="계산 기간" value={formatYears(result.years)} />
+        <StatCard label={t.span} value={formatYears(result.years)} />
         {stats?.map((stat) => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} sub={stat.sub} />
         ))}

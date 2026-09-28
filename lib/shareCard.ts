@@ -9,6 +9,11 @@
  * "어머니 68세, 예상 수명 87.3세"는 남에게 보낼 정보가 아니다.
  */
 
+import { defineCopy, tr } from "./i18n.ts";
+
+/** 이름이 비었을 때 쓰는 파일 이름. */
+const FALLBACK_NAME = defineCopy({ ko: "카드", en: "card", ja: "カード", es: "tarjeta", zh: "卡片" });
+
 /** 인스타그램 세로 비율(4:5). 피드에서 가장 크게 잡힌다. */
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1350;
@@ -43,7 +48,7 @@ export interface CardTheme {
 }
 
 const FONT_STACK =
-  'Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif';
+  'Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Hiragino Sans", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
 
 /** `--ink-900` 같은 "r g b" 변수를 canvas가 아는 색 문자열로 바꾼다. */
 function readColor(styles: CSSStyleDeclaration, name: string, fallback: string): string {
@@ -222,5 +227,5 @@ export function safeFileName(parts: string[]): string {
     .join("-")
     .replace(/[\\/:*?"<>|]+/g, "")
     .replace(/\s+/g, "-");
-  return `${joined || "카드"}.png`;
+  return `${joined || tr(FALLBACK_NAME)}.png`;
 }

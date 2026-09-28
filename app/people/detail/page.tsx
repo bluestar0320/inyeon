@@ -5,7 +5,36 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 import PersonView from "@/components/PersonView";
+import { defineCopy, tr } from "@/lib/i18n";
 import { useAppState } from "@/lib/store";
+
+const COPY = defineCopy({
+  ko: {
+    loading: "불러오는 중…",
+    back: "목록으로",
+    notFound: "찾을 수 없는 인연입니다.",
+  },
+  en: {
+    loading: "Loading…",
+    back: "Back to list",
+    notFound: "We couldn't find this person.",
+  },
+  ja: {
+    loading: "読み込み中…",
+    back: "一覧へ戻る",
+    notFound: "この人が見つかりません。",
+  },
+  es: {
+    loading: "Cargando…",
+    back: "Volver a la lista",
+    notFound: "No encontramos a esta persona.",
+  },
+  zh: {
+    loading: "加载中…",
+    back: "返回列表",
+    notFound: "找不到这位亲友。",
+  },
+});
 
 /*
  * 주소가 /people/<id>가 아니라 /people/detail?id=<id>인 이유.
@@ -18,20 +47,21 @@ import { useAppState } from "@/lib/store";
  * 기기에서는 아무 의미가 없다. 애초에 공유될 주소가 아니다.
  */
 function Detail() {
+  const t = tr(COPY);
   const id = useSearchParams().get("id");
   const { state, hydrated } = useAppState();
   const person = state.people.find((p) => p.id === id);
 
   if (!hydrated) {
-    return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
   }
 
   if (!person) {
     return (
       <div className="card mt-6 space-y-3">
-        <p className="text-sm text-ink-600">찾을 수 없는 인연입니다.</p>
+        <p className="text-sm text-ink-600">{t.notFound}</p>
         <Link href="/people" className="btn-secondary">
-          목록으로
+          {t.back}
         </Link>
       </div>
     );
@@ -47,8 +77,9 @@ function Detail() {
 
 export default function PersonDetailPage() {
   // useSearchParams는 정적 내보내기에서 Suspense 안에 있어야 한다.
+  const t = tr(COPY);
   return (
-    <Suspense fallback={<p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>}>
+    <Suspense fallback={<p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>}>
       <Detail />
     </Suspense>
   );

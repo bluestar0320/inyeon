@@ -62,13 +62,13 @@ test("생년월일이 있으면 그쪽이 이긴다", () => {
 });
 
 test("예상 수명이 나이를 따라 다시 구해진다", () => {
-  // 저장값 81.6을 그대로 두면 68세에 13.6년이라고 말한다. 맞는 값은 17년대다.
+  // 저장값 81.6을 그대로 두면 68세에 13.6년이라고 말한다. 생명표로는 16년대다.
   const stale = span({ ageYears: 68, ageAsOf: "2026-09-20", lifeExpectancy: 81.6 });
   const fixed = refreshLifeSpan(stale, NOW);
   assert.ok(fixed.lifeExpectancy > 84, `68세 예상 수명이 ${fixed.lifeExpectancy}세`);
   const before = remainingYears(stale, NOW);
   const after = remainingYears(fixed, NOW);
-  assert.ok(after - before > 3, `${before.toFixed(1)}년 → ${after.toFixed(1)}년`);
+  assert.ok(after - before > 2, `${before.toFixed(1)}년 → ${after.toFixed(1)}년`);
 });
 
 test("직접 고친 예상 수명은 덮어쓰지 않는다", () => {

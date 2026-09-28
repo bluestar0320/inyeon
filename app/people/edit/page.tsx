@@ -5,7 +5,41 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 import PersonEditor from "@/components/PersonEditor";
+import { defineCopy, tr } from "@/lib/i18n";
 import { useAppState } from "@/lib/store";
+
+const COPY = defineCopy({
+  ko: {
+    loading: "불러오는 중…",
+    back: "목록으로",
+    notFound: "찾을 수 없는 인연입니다.",
+    editTitle: (name: string) => `${name} 수정`,
+  },
+  en: {
+    loading: "Loading…",
+    back: "Back to list",
+    notFound: "We couldn't find this person.",
+    editTitle: (name) => `Edit ${name}`,
+  },
+  ja: {
+    loading: "読み込み中…",
+    back: "一覧へ戻る",
+    notFound: "この人が見つかりません。",
+    editTitle: (name) => `${name}を編集`,
+  },
+  es: {
+    loading: "Cargando…",
+    back: "Volver a la lista",
+    notFound: "No encontramos a esta persona.",
+    editTitle: (name) => `Editar ${name}`,
+  },
+  zh: {
+    loading: "加载中…",
+    back: "返回列表",
+    notFound: "找不到这位亲友。",
+    editTitle: (name) => `编辑${name}`,
+  },
+});
 
 /**
  * 고치는 화면. 보는 화면(/people/detail)과 일부러 나눠 두었다.
@@ -15,20 +49,21 @@ import { useAppState } from "@/lib/store";
  * 저장하지 않고 나가려 할 때의 경고도 고치는 화면에만 붙는다.
  */
 function Edit() {
+  const t = tr(COPY);
   const id = useSearchParams().get("id");
   const { state, hydrated } = useAppState();
   const person = state.people.find((p) => p.id === id);
 
   if (!hydrated) {
-    return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
   }
 
   if (!person) {
     return (
       <div className="card mt-6 space-y-3">
-        <p className="text-sm text-ink-600">찾을 수 없는 인연입니다.</p>
+        <p className="text-sm text-ink-600">{t.notFound}</p>
         <Link href="/people" className="btn-secondary">
-          목록으로
+          {t.back}
         </Link>
       </div>
     );
@@ -37,7 +72,7 @@ function Edit() {
   return (
     <div className="space-y-5">
       <h1 className="pt-2 text-xl font-semibold tracking-tight text-ink-900">
-        {person.name} 수정
+        {t.editTitle(person.name)}
       </h1>
       <PersonEditor key={person.id} initial={person} />
     </div>
@@ -45,8 +80,9 @@ function Edit() {
 }
 
 export default function PersonEditPage() {
+  const t = tr(COPY);
   return (
-    <Suspense fallback={<p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>}>
+    <Suspense fallback={<p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>}>
       <Edit />
     </Suspense>
   );

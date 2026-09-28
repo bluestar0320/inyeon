@@ -2,6 +2,31 @@
 
 import { useEffect } from "react";
 
+import { defineCopy, tr } from "./i18n";
+
+const COPY = defineCopy({
+  ko: {
+    leave: "저장하지 않은 변경이 있습니다. 나가면 사라집니다.",
+    confirm: "그래도 나가시겠습니까?",
+  },
+  en: {
+    leave: "You have unsaved changes. They'll be lost if you leave.",
+    confirm: "Leave anyway?",
+  },
+  ja: {
+    leave: "保存していない変更があります。移動すると失われます。",
+    confirm: "それでも移動しますか？",
+  },
+  es: {
+    leave: "Tienes cambios sin guardar. Se perderán si sales.",
+    confirm: "¿Salir de todos modos?",
+  },
+  zh: {
+    leave: "有尚未保存的更改。离开后将会丢失。",
+    confirm: "仍要离开吗？",
+  },
+});
+
 /**
  * 편집 중 저장하지 않은 변경이 있는지 알리는 자리.
  *
@@ -23,12 +48,12 @@ let dirty = false;
  */
 let leaving = false;
 
-export const LEAVE_MESSAGE = "저장하지 않은 변경이 있습니다. 나가면 사라집니다.";
 
 /** 지금 나가도 되는지 묻는다. 안 저장된 게 없으면 묻지 않는다. */
 export function confirmLeave(): boolean {
   if (!dirty) return true;
-  return window.confirm(`${LEAVE_MESSAGE}\n\n그래도 나가시겠습니까?`);
+  const t = tr(COPY);
+  return window.confirm(`${t.leave}\n\n${t.confirm}`);
 }
 
 /** 저장/삭제/취소로 편집을 끝냈을 때 호출해 표시를 지운다. */
@@ -57,8 +82,9 @@ export function useUnsavedGuard(changed: boolean): void {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       // 최신 브라우저는 문구를 무시하고 기본 경고를 띄운다.
-      event.returnValue = LEAVE_MESSAGE;
-      return LEAVE_MESSAGE;
+      const message = tr(COPY).leave;
+      event.returnValue = message;
+      return message;
     };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);

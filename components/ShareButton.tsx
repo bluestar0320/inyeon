@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { defineCopy, tr } from "@/lib/i18n";
 import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
 import {
   currentTheme,
@@ -19,17 +20,36 @@ import {
  * 한 덩어리가 된다. 반대로 사람이 타이핑해서 찾아오는 자리(제목, 매니페스트,
  * 스토어 등록명)는 물음표 없이 "몇 번 더"다 — 아무도 ?를 치지 않는다.
  */
-const WORDMARK = "몇번더?";
-
 type Status = "idle" | "working" | "shared" | "saved" | "failed";
 
-const LABEL: Record<Status, string> = {
-  idle: "이미지로 저장",
-  working: "만드는 중…",
-  shared: "공유했습니다",
-  saved: "저장했습니다",
-  failed: "실패했습니다",
-};
+const COPY = defineCopy({
+  ko: {
+    wordmark: "몇번더?",
+    label: {
+      idle: "이미지로 저장",
+      working: "만드는 중…",
+      shared: "공유했습니다",
+      saved: "저장했습니다",
+      failed: "실패했습니다",
+    } as Record<Status, string>,
+  },
+  en: {
+    wordmark: "How many more?",
+    label: { idle: "Save as image", working: "Creating…", shared: "Shared", saved: "Saved", failed: "Something went wrong" },
+  },
+  ja: {
+    wordmark: "あと何回？",
+    label: { idle: "画像で保存", working: "作成中…", shared: "共有しました", saved: "保存しました", failed: "うまくいきませんでした" },
+  },
+  es: {
+    wordmark: "¿Cuántas veces más?",
+    label: { idle: "Guardar como imagen", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "No se pudo" },
+  },
+  zh: {
+    wordmark: "还有几次？",
+    label: { idle: "保存为图片", working: "生成中…", shared: "已分享", saved: "已保存", failed: "未能完成" },
+  },
+});
 
 export default function ShareButton({
   spec,
@@ -40,13 +60,14 @@ export default function ShareButton({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<Status>("idle");
+  const t = tr(COPY);
 
   async function run(): Promise<void> {
     setStatus("working");
     try {
       const canvas = canvasRef.current ?? document.createElement("canvas");
       canvasRef.current = canvas;
-      drawCard(canvas, spec, currentTheme(), WORDMARK);
+      drawCard(canvas, spec, currentTheme(), t.wordmark);
 
       const blob = await toBlob(canvas);
       if (!blob) throw new Error("이미지를 만들지 못했습니다.");
@@ -99,7 +120,7 @@ export default function ShareButton({
       disabled={status === "working"}
       data-testid="share-card"
     >
-      {LABEL[status]}
+      {t.label[status]}
     </button>
   );
 }

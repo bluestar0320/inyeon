@@ -43,7 +43,7 @@ test.describe("저장과 되돌리기", () => {
     await page.waitForURL(/\/people\/?$/);
     await expect(page.locator("a.card")).toHaveCount(0);
 
-    await expect(page.getByRole("status")).toContainText("어머니을(를) 지웠습니다");
+    await expect(page.getByRole("status")).toContainText("어머니를 지웠습니다");
     await page.getByRole("button", { name: "되돌리기" }).click();
 
     await expect(page.locator("a.card")).toHaveCount(1);
@@ -464,8 +464,82 @@ test.describe("오프라인", () => {
       await page.goto("/people", { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { name: "인연" })).toBeVisible();
       await expect(page.locator("a.card").first()).toContainText("어머니");
+
+      // 앱 안에서 옮겨 다닐 때 실패하는 요청이 없어야 한다. 예전에는 RSC 요청을 쿼리까지
+      // 맞춰 찾다가 캐시를 놓쳐 ERR_FAILED가 찍히고 화면 전체를 다시 불러왔다.
+      const failed: string[] = [];
+      page.on("requestfailed", (request) => failed.push(request.url()));
+      page.on("console", (message) => {
+        if (/RSC payload/.test(message.text())) failed.push(message.text());
+      });
+      await page.locator("a.card").first().click();
+      await page.waitForURL(/\/people\/detail/);
+      await expect(page.locator("p.numeral").first()).toContainText("번");
+      expect(failed).toEqual([]);
     } finally {
       await context.setOffline(false);
     }
+  });
+});
+
+test.describe("백업 권유", () => {
+  test("오래된 기록은 한 줄로 권하고, 내보내면 사라진다", async ({ page }) => {
+    await setUpProfile(page, 30);
+    // 열흘 전에 만든 인연을 심는다. 일주일이 지나야 권하기 시작한다.
+    const old = new Date(Date.now() - 10 * 86_400_000).toISOString();
+    await page.evaluate(
+      ({ key, old }) => {
+        const state = JSON.parse(localStorage.getItem(key)!);
+        state.people.push({
+          id: "p1", name: "어머니", lifeExpectancy: 85, lifeExpectancyManual: true, ageYears: 60,
+          frequency: { count: 1, unit: "month" }, filters: [], createdAt: old, updatedAt: old,
+        });
+        localStorage.setItem(key, JSON.stringify(state));
+      },
+      { key: STORAGE_KEY, old },
+    );
+    await page.goto("/");
+    const nudge = page.getByRole("link", { name: /내보내 두기/ });
+    await expect(nudge).toBeVisible();
+
+    await nudge.click();
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "내보내기" }).click();
+    expect((await download).suggestedFilename()).toMatch(/^몇번더-.*\.json$/);
+    await expect(page.getByText(/마지막 내보내기:/)).toBeVisible();
+
+    await page.goto("/");
+    await expect(page.getByRole("link", { name: /내보내 두기/ })).toHaveCount(0);
+  });
+});
+
+test.describe("비교와 시나리오", () => {
+  test("두 사람을 막대로 나란히 본다", async ({ page }) => {
+    await setUpProfile(page, 30);
+    await addPerson(page, "어머니", 60);
+    await addPerson(page, "친구", 30);
+    await page.getByRole("button", { name: "나란히 비교" }).click();
+    // 남은 만남이 적은 어머니가 먼저, 막대도 더 짧다.
+    const items = page.locator("ul.card > li");
+    await expect(items).toHaveCount(2);
+    await expect(items.first()).toContainText("어머니");
+  });
+
+  test("빈도를 바꿔 시나리오로 남기면 기준은 그대로다", async ({ page }) => {
+    await setUpProfile(page, 30);
+    await addPerson(page, "어머니", 60);
+    await page.locator("a.card").first().click();
+    const before = await headline(page);
+
+    await page.getByLabel("빈도 횟수").fill("2");
+    await expect.poll(() => headline(page)).not.toBe(before);
+    await page.getByLabel("시나리오 이름").fill("매달 2번");
+    await page.getByRole("button", { name: "시나리오로 남기기" }).click();
+
+    await page.reload();
+    await expect(page.getByRole("button", { name: /^매달 2번 \d/ })).toBeVisible();
+    expect(await headline(page)).toBe(before);
+    const state = (await readState(page)) as { people: { frequency: { count: number } }[] };
+    expect(state.people[0].frequency.count).toBe(1);
   });
 });

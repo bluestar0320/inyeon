@@ -2,6 +2,36 @@
 
 import { useId } from "react";
 
+import { defineCopy, tr } from "@/lib/i18n";
+
+const COPY = defineCopy({
+  ko: {
+    search: "검색",
+    noMatch: "일치하는 항목 없음",
+    shownOf: (total: number, shown: number) => `${total}개 중 ${shown}개`,
+  },
+  en: {
+    search: "Search",
+    noMatch: "No matches",
+    shownOf: (total, shown) => `${shown} of ${total}`,
+  },
+  ja: {
+    search: "検索",
+    noMatch: "一致する項目なし",
+    shownOf: (total, shown) => `${total}件中${shown}件`,
+  },
+  es: {
+    search: "Buscar",
+    noMatch: "Sin resultados",
+    shownOf: (total, shown) => `${shown} de ${total}`,
+  },
+  zh: {
+    search: "搜索",
+    noMatch: "没有匹配项",
+    shownOf: (total, shown) => `${total}项中的${shown}项`,
+  },
+});
+
 export interface SortOption<T extends string> {
   key: T;
   label: string;
@@ -33,6 +63,7 @@ export default function ListControls<T extends string>({
   placeholder: string;
 }) {
   const ids = useId();
+  const t = tr(COPY);
   if (total < 2) return null;
 
   return (
@@ -40,7 +71,7 @@ export default function ListControls<T extends string>({
       {total >= SEARCH_THRESHOLD && (
         <div>
           <label className="sr-only" htmlFor={`${ids}-q`}>
-            검색
+            {t.search}
           </label>
           <input
             id={`${ids}-q`}
@@ -66,7 +97,7 @@ export default function ListControls<T extends string>({
         ))}
         {query.trim() !== "" && (
           <span className="ml-auto text-[11px] text-ink-400">
-            {shown === 0 ? "일치하는 항목 없음" : `${total}개 중 ${shown}개`}
+            {shown === 0 ? t.noMatch : t.shownOf(total, shown)}
           </span>
         )}
       </div>

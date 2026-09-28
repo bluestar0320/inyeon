@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import {
   COUNTRIES,
-  isEstimatedTable,
   lookupLifeExpectancy,
   remainingLifeAt,
 } from "../lib/lifeExpectancy.ts";
@@ -34,10 +33,10 @@ test("기대여명은 나이가 들수록 줄어든다 — 모든 국가에서",
   }
 });
 
-test("한국 값이 KOSIS 공표치와 맞는다", () => {
-  // 통계청 2021년 생명표: 남 80.6세, 여 86.6세
-  assert.ok(Math.abs(LIFE_TABLE.KR.male[0] - 80.6) < 0.3);
-  assert.ok(Math.abs(LIFE_TABLE.KR.female[0] - 86.6) < 0.3);
+test("한국 값이 KOSIS 공표치에서 크게 벗어나지 않는다", () => {
+  // 통계청 2023년 생명표: 남 80.6세, 여 86.4세. WPP는 모형 보정치라 1년 안쪽으로 차이가 난다.
+  assert.ok(Math.abs(LIFE_TABLE.KR.male[0] - 80.6) < 1);
+  assert.ok(Math.abs(LIFE_TABLE.KR.female[0] - 86.4) < 1);
 });
 
 test("핵심 교정: 68세는 출생 시 평균으로 계산할 때보다 오래 산다", () => {
@@ -50,9 +49,9 @@ test("핵심 교정: 68세는 출생 시 평균으로 계산할 때보다 오래
 });
 
 test("나이를 모르면 출생 시 기대수명으로 떨어진다", () => {
-  assert.equal(lookupLifeExpectancy("KR", "female"), 86.7);
-  assert.equal(lookupLifeExpectancy("KR", "female", null), 86.7);
-  assert.equal(lookupLifeExpectancy("KR", "female", Number.NaN), 86.7);
+  assert.equal(lookupLifeExpectancy("KR", "female"), 87.2);
+  assert.equal(lookupLifeExpectancy("KR", "female", null), 87.2);
+  assert.equal(lookupLifeExpectancy("KR", "female", Number.NaN), 87.2);
 });
 
 test("성별을 고르면 그 성별 표를 쓴다", () => {
@@ -100,9 +99,3 @@ test("음수 나이도 계산을 깨뜨리지 않는다", () => {
   assert.equal(remainingLifeAt("KR", "all", -5), remainingLifeAt("KR", "all", 0));
 });
 
-test("생명표를 빌려 쓴 국가만 근사치로 표시된다", () => {
-  assert.equal(isEstimatedTable("TW"), true);
-  assert.equal(isEstimatedTable("HK"), true);
-  assert.equal(isEstimatedTable("KR"), false);
-  assert.equal(isEstimatedTable(undefined), false);
-});

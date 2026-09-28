@@ -11,6 +11,7 @@ import type {
   PersonHorizon,
   Profile,
 } from "./types";
+import { defineCopy, tr } from "./i18n.ts";
 
 export const DAYS_PER_YEAR = 365.2425;
 
@@ -33,8 +34,19 @@ export function resolveAge(source: AgeSource, now: Date = new Date()): number | 
   if (source.birthDate) {
     const born = new Date(`${source.birthDate}T00:00:00`);
     if (!Number.isNaN(born.getTime())) {
-      const years = (now.getTime() - born.getTime()) / (DAYS_PER_YEAR * 86_400_000);
-      return Math.max(0, years);
+      /*
+       * 만 나이는 달력으로 센다. 365.2425일로 나누면 생일 당일 새벽에 아직 24.9999세라
+       * "만 24세"로 보였고, 윤년 언저리에서는 생일 전날 이미 한 살을 먹었다.
+       * 정수 부분은 지난 생일까지의 햇수, 소수 부분은 지난 생일부터 다음 생일까지 간 비율.
+       */
+      const birthdayIn = (year: number) =>
+        new Date(year, born.getMonth(), born.getDate());
+      let full = now.getFullYear() - born.getFullYear();
+      if (birthdayIn(now.getFullYear()) > now) full -= 1;
+      if (full < 0) return 0;
+      const last = birthdayIn(born.getFullYear() + full);
+      const next = birthdayIn(born.getFullYear() + full + 1);
+      return full + (now.getTime() - last.getTime()) / (next.getTime() - last.getTime());
     }
   }
   if (typeof source.ageYears === "number" && Number.isFinite(source.ageYears)) {
@@ -143,8 +155,15 @@ function overlapFraction(sliceStart: number, sliceSpan: number, from: number, to
  * 닫힌 수식 대신 시뮬레이션을 쓰는 이유는 decay(매년 감소)와 window(구간 제한)가
  * 섞이면 수식이 금방 손을 벗어나기 때문이다.
  */
+/**
+ * 한 번에 셀 수 있는 가장 긴 기간. 사람의 남은 시간이 이보다 길 수는 없다.
+ * 한 해마다 조각을 하나씩 만들기 때문에, 예상 수명 칸에 1e8을 쳐 넣으면 앱이 멈췄고
+ * 그게 저장되면 열 때마다 멈췄다.
+ */
+export const MAX_YEARS = 150;
+
 export function countOccurrences(input: CountInput): CountResult {
-  const years = Math.max(0, Number.isFinite(input.years) ? input.years : 0);
+  const years = Math.min(MAX_YEARS, Math.max(0, Number.isFinite(input.years) ? input.years : 0));
   const perYear = Math.max(0, Number.isFinite(input.perYear) ? input.perYear : 0);
   const filters = (input.filters ?? []).filter((f) => f.enabled);
 
@@ -163,7 +182,8 @@ export function countOccurrences(input: CountInput): CountResult {
       if (filter.kind === "multiplier") {
         factor *= Math.max(0, filter.factor ?? 1);
       } else if (filter.kind === "decay") {
-        const rate = filter.ratePerYear ?? 0;
+        // 100%를 넘기면 음수의 소수 거듭제곱이 되어 NaN이 된다. 100%면 이듬해부터 0이다.
+        const rate = Math.min(1, filter.ratePerYear ?? 0);
         // 그 해의 한가운데를 기준으로 감쇠시킨다(연초/연말 중 어디를 잡아도
         // 생기는 치우침을 줄이려고).
         const t = i + span / 2;
@@ -329,17 +349,49 @@ export function computeMoment(
  * (calc.ts는 런타임 import 없이 테스트에서 그대로 불러 쓴다).
  * 저녁 식사만 집마다 달라서 사용자 입력으로 따로 받는다.
  */
-const GROWTH_ITEMS: { key: string; label: string; emoji: string; perYear: number }[] = [
-  { key: "spring", label: "봄", emoji: "🌱", perYear: 1 },
-  { key: "summer", label: "여름", emoji: "🌻", perYear: 1 },
-  { key: "autumn", label: "가을", emoji: "🍁", perYear: 1 },
-  { key: "winter", label: "겨울", emoji: "⛄", perYear: 1 },
-  { key: "summerBreak", label: "여름방학", emoji: "🏖️", perYear: 1 },
-  { key: "winterBreak", label: "겨울방학", emoji: "🎿", perYear: 1 },
-  { key: "birthday", label: "생일", emoji: "🎂", perYear: 1 },
-  { key: "holiday", label: "설·추석", emoji: "🏮", perYear: 2 },
-  { key: "weekend", label: "주말", emoji: "🗓️", perYear: 52 },
+const GROWTH_ITEMS: { key: GrowthKey; emoji: string; perYear: number }[] = [
+  { key: "spring", emoji: "🌱", perYear: 1 },
+  { key: "summer", emoji: "🌻", perYear: 1 },
+  { key: "autumn", emoji: "🍁", perYear: 1 },
+  { key: "winter", emoji: "⛄", perYear: 1 },
+  { key: "summerBreak", emoji: "🏖️", perYear: 1 },
+  { key: "winterBreak", emoji: "🎿", perYear: 1 },
+  { key: "birthday", emoji: "🎂", perYear: 1 },
+  { key: "holiday", emoji: "🏮", perYear: 2 },
+  { key: "weekend", emoji: "🗓️", perYear: 52 },
 ];
+
+type GrowthKey =
+  | "spring" | "summer" | "autumn" | "winter" | "summerBreak" | "winterBreak"
+  | "birthday" | "holiday" | "weekend" | "dinner";
+
+const GROWTH_LABELS = defineCopy<Record<GrowthKey, string>>({
+  ko: {
+    spring: "봄", summer: "여름", autumn: "가을", winter: "겨울",
+    summerBreak: "여름방학", winterBreak: "겨울방학", birthday: "생일",
+    holiday: "설·추석", weekend: "주말", dinner: "함께하는 저녁 식사",
+  },
+  en: {
+    spring: "Springs", summer: "Summers", autumn: "Autumns", winter: "Winters",
+    summerBreak: "Summer breaks", winterBreak: "Winter breaks", birthday: "Birthdays",
+    holiday: "Family holidays", weekend: "Weekends", dinner: "Dinners together",
+  },
+  ja: {
+    spring: "春", summer: "夏", autumn: "秋", winter: "冬",
+    summerBreak: "夏休み", winterBreak: "冬休み", birthday: "誕生日",
+    holiday: "お正月・お盆", weekend: "週末", dinner: "一緒に食べる夕食",
+  },
+  es: {
+    spring: "Primaveras", summer: "Veranos", autumn: "Otoños", winter: "Inviernos",
+    summerBreak: "Vacaciones de verano", winterBreak: "Vacaciones de invierno", birthday: "Cumpleaños",
+    holiday: "Fiestas en familia", weekend: "Fines de semana", dinner: "Cenas juntos",
+  },
+  zh: {
+    spring: "春天", summer: "夏天", autumn: "秋天", winter: "冬天",
+    summerBreak: "暑假", winterBreak: "寒假", birthday: "生日",
+    holiday: "春节·中秋", weekend: "周末", dinner: "一起吃的晚饭",
+  },
+});
 
 export interface GrowthItem {
   key: string;
@@ -375,15 +427,15 @@ export function computeGrowth(
   const yearsLeft = childAge === null ? null : Math.max(0, setup.adultAge - childAge);
   const years = yearsLeft ?? 0;
 
+  const labels = tr(GROWTH_LABELS);
   const specs = [
     ...GROWTH_ITEMS,
     {
-      key: "dinner",
-      label: "함께하는 저녁 식사",
+      key: "dinner" as const,
       emoji: "🍚",
       perYear: toPerYear(setup.dinners),
     },
-  ];
+  ].map((spec) => ({ ...spec, label: labels[spec.key] }));
 
   return {
     yearsLeft,

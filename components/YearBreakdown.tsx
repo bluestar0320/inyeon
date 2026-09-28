@@ -2,6 +2,40 @@
 
 import type { YearSlice } from "@/lib/calc";
 import { formatCount } from "@/lib/format";
+import { defineCopy, tr } from "@/lib/i18n";
+
+const COPY = defineCopy({
+  ko: {
+    flat: (from: number, to: number, n: string) =>
+      `${from}년부터 ${to}년까지 해마다 ${n}번씩, 고르게 이어집니다. 조건을 걸면 연도별로 어떻게 달라지는지 여기에 그려집니다.`,
+    count: (n: string) => `${n}번`,
+    omitted: (n: number) => `이후 ${n}년은 생략했습니다.`,
+  },
+  en: {
+    flat: (from, to, n) =>
+      `${n} ${n === "1" ? "time" : "times"} a year, steady from ${from} to ${to}. Add a condition and you'll see how each year changes here.`,
+    count: (n) => `${n}×`,
+    omitted: (n) => `${n} more ${n === 1 ? "year" : "years"} not shown.`,
+  },
+  ja: {
+    flat: (from, to, n) =>
+      `${from}年から${to}年まで、毎年${n}回ずつ同じように続きます。条件を加えると、年ごとの変化がここに表示されます。`,
+    count: (n) => `${n}回`,
+    omitted: (n) => `以降の${n}年分は省略しています。`,
+  },
+  es: {
+    flat: (from, to, n) =>
+      `${n} ${n === "1" ? "vez" : "veces"} al año, de forma constante de ${from} a ${to}. Si añades una condición, aquí verás cómo cambia cada año.`,
+    count: (n) => `${n}×`,
+    omitted: (n) => `No se muestran ${n} ${n === 1 ? "año" : "años"} más.`,
+  },
+  zh: {
+    flat: (from, to, n) =>
+      `从${from}年到${to}年，每年${n}次，平稳延续。加上条件后，这里会显示每年的变化。`,
+    count: (n) => `${n}次`,
+    omitted: (n) => `之后的${n}年未显示。`,
+  },
+});
 
 /** 해마다 값이 같으면(= 조건 필터가 형태를 바꾸지 않으면) 막대는 정보를 담지 못한다. */
 function isFlat(slices: YearSlice[]): boolean {
@@ -22,6 +56,7 @@ export default function YearBreakdown({ slices }: { slices: YearSlice[] }) {
   const peak = slices.reduce((max, slice) => Math.max(max, slice.baseline), 0);
   if (peak <= 0 || slices.length === 0) return null;
 
+  const t = tr(COPY);
   const thisYear = new Date().getFullYear();
   const lastYear = thisYear + slices.length - 1;
 
@@ -29,8 +64,7 @@ export default function YearBreakdown({ slices }: { slices: YearSlice[] }) {
     const perYear = slices[0].adjusted;
     return (
       <p className="text-[11px] leading-relaxed text-ink-400">
-        {thisYear}년부터 {lastYear}년까지 해마다 {formatCount(perYear)}번씩, 고르게
-        이어집니다. 조건을 걸면 연도별로 어떻게 달라지는지 여기에 그려집니다.
+        {t.flat(thisYear, lastYear, formatCount(perYear))}
       </p>
     );
   }
@@ -58,7 +92,7 @@ export default function YearBreakdown({ slices }: { slices: YearSlice[] }) {
                 />
               </span>
               <span className="w-12 shrink-0 text-right tabular-nums">
-                {formatCount(slice.adjusted)}번
+                {t.count(formatCount(slice.adjusted))}
               </span>
             </div>
           );
@@ -66,7 +100,7 @@ export default function YearBreakdown({ slices }: { slices: YearSlice[] }) {
       </div>
       {slices.length > shown.length && (
         <p className="mt-2 text-[11px] text-ink-400">
-          이후 {slices.length - shown.length}년은 생략했습니다.
+          {t.omitted(slices.length - shown.length)}
         </p>
       )}
     </div>

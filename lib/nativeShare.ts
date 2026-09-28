@@ -10,6 +10,16 @@
  * 웹 번들에는 영향을 주지 않는다. Capacitor가 넣어 주는 전역으로 먼저 판별하고,
  * 플러그인은 그때만 동적으로 불러오므로 브라우저에서는 내려받지도 않는다.
  */
+import { defineCopy, tr } from "./i18n";
+
+const COPY = defineCopy({
+  ko: "읽지 못했습니다.",
+  en: "Couldn't read the file.",
+  ja: "読み込めませんでした。",
+  es: "No se pudo leer el archivo.",
+  zh: "无法读取文件。",
+});
+
 declare global {
   interface Window {
     Capacitor?: { isNativePlatform?: () => boolean };
@@ -24,7 +34,7 @@ export function isNativeApp(): boolean {
 function toBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(reader.error ?? new Error("읽지 못했습니다."));
+    reader.onerror = () => reject(reader.error ?? new Error(tr(COPY)));
     reader.onload = () => {
       const result = String(reader.result);
       // data:image/png;base64,XXXX 에서 뒤쪽만 쓴다.

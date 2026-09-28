@@ -1,28 +1,203 @@
 "use client";
 
-import { FILTER_PRESETS } from "@/lib/presets";
+import { defineCopy, tr } from "@/lib/i18n";
+import { filterPresets } from "@/lib/presets";
 import type { CalcFilter } from "@/lib/types";
 
+const COPY = defineCopy({
+  ko: {
+    unchanged: "빈도 그대로",
+    freqDown: (n: number) => `빈도 ${n}% 감소`,
+    freqUp: (n: number) => `빈도 ${n}% 증가`,
+    decayDown: (n: number) => `매년 ${n}%씩 감소`,
+    decayUp: (n: number) => `매년 ${n}%씩 증가`,
+    fromToEnd: (from: number) => `${from}년차부터 끝까지`,
+    fromTo: (from: number, to: number) => `${from}~${to}년차`,
+    except: (range: string) => `${range} 제외`,
+    only: (range: string) => `${range}만 포함`,
+    cap: (n: number) => `최대 ${n}번`,
+    use: (label: string) => `${label} 사용`,
+    name: "조건 이름",
+    remove: "삭제",
+    multBefore: "빈도에",
+    multAria: "배수",
+    multAfter: "배",
+    decayBefore: "매년",
+    decayAria: "연간 감소율(%)",
+    decayAfter: "%씩 감소 (음수면 증가)",
+    windowAria: "구간 포함 여부",
+    windowOnly: "이 구간만",
+    windowExcept: "이 구간 제외",
+    fromAria: "시작 연차",
+    fromAfter: "년차부터",
+    toEnd: "끝까지",
+    toAria: "종료 연차",
+    toAfter: "년차까지",
+    capBefore: "아무리 많아도",
+    capAria: "최대 횟수",
+    capAfter: "번까지",
+    title: "조건 필터",
+    intro: "기본값을 밀어 넣지 않습니다. 이 항목에만 해당하는 조건을 직접 세워 보세요.",
+  },
+  en: {
+    unchanged: "Frequency unchanged",
+    freqDown: (n) => `${n}% less often`,
+    freqUp: (n) => `${n}% more often`,
+    decayDown: (n) => `${n}% less each year`,
+    decayUp: (n) => `${n}% more each year`,
+    fromToEnd: (from) => `from year ${from} on`,
+    fromTo: (from, to) => `years ${from}–${to}`,
+    except: (range) => `Skip ${range}`,
+    only: (range) => `Only ${range}`,
+    cap: (n) => `At most ${n} ${n === 1 ? "time" : "times"}`,
+    use: (label) => `Use ${label}`,
+    name: "Condition name",
+    remove: "Delete",
+    multBefore: "Frequency ×",
+    multAria: "Multiplier",
+    multAfter: "",
+    decayBefore: "Each year,",
+    decayAria: "Yearly decrease (%)",
+    decayAfter: "% less (negative means more)",
+    windowAria: "Include or skip this range",
+    windowOnly: "Only this range",
+    windowExcept: "Skip this range",
+    fromAria: "Start year",
+    fromAfter: "to",
+    toEnd: "end",
+    toAria: "End year",
+    toAfter: "(years from now)",
+    capBefore: "No more than",
+    capAria: "Maximum count",
+    capAfter: "times",
+    title: "Conditions",
+    intro: "Nothing is added by default. Set up conditions that fit just this one.",
+  },
+  ja: {
+    unchanged: "頻度はそのまま",
+    freqDown: (n) => `頻度${n}%減`,
+    freqUp: (n) => `頻度${n}%増`,
+    decayDown: (n) => `毎年${n}%ずつ減少`,
+    decayUp: (n) => `毎年${n}%ずつ増加`,
+    fromToEnd: (from) => `${from}年目から最後まで`,
+    fromTo: (from, to) => `${from}〜${to}年目`,
+    except: (range) => `${range}を除く`,
+    only: (range) => `${range}のみ`,
+    cap: (n) => `最大${n}回`,
+    use: (label) => `${label}を使う`,
+    name: "条件の名前",
+    remove: "削除",
+    multBefore: "頻度を",
+    multAria: "倍率",
+    multAfter: "倍",
+    decayBefore: "毎年",
+    decayAria: "年間の減少率(%)",
+    decayAfter: "%ずつ減少(マイナスなら増加)",
+    windowAria: "期間を含めるか",
+    windowOnly: "この期間のみ",
+    windowExcept: "この期間を除く",
+    fromAria: "開始年目",
+    fromAfter: "年目から",
+    toEnd: "最後まで",
+    toAria: "終了年目",
+    toAfter: "年目まで",
+    capBefore: "多くても",
+    capAria: "最大回数",
+    capAfter: "回まで",
+    title: "条件フィルター",
+    intro: "初期値は入れていません。これだけに当てはまる条件を自分で決めてみてください。",
+  },
+  es: {
+    unchanged: "Frecuencia igual",
+    freqDown: (n) => `${n}% menos a menudo`,
+    freqUp: (n) => `${n}% más a menudo`,
+    decayDown: (n) => `${n}% menos cada año`,
+    decayUp: (n) => `${n}% más cada año`,
+    fromToEnd: (from) => `desde el año ${from} en adelante`,
+    fromTo: (from, to) => `años ${from}–${to}`,
+    except: (range) => `Excluir ${range}`,
+    only: (range) => `Solo ${range}`,
+    cap: (n) => `Como máximo ${n} ${n === 1 ? "vez" : "veces"}`,
+    use: (label) => `Usar ${label}`,
+    name: "Nombre de la condición",
+    remove: "Eliminar",
+    multBefore: "Frecuencia ×",
+    multAria: "Multiplicador",
+    multAfter: "",
+    decayBefore: "Cada año,",
+    decayAria: "Disminución anual (%)",
+    decayAfter: "% menos (negativo = más)",
+    windowAria: "Incluir o excluir este periodo",
+    windowOnly: "Solo este periodo",
+    windowExcept: "Excluir este periodo",
+    fromAria: "Año de inicio",
+    fromAfter: "a",
+    toEnd: "final",
+    toAria: "Año final",
+    toAfter: "(años desde hoy)",
+    capBefore: "Como mucho",
+    capAria: "Número máximo",
+    capAfter: "veces",
+    title: "Condiciones",
+    intro: "No añadimos nada por defecto. Crea las condiciones que encajen solo con esto.",
+  },
+  zh: {
+    unchanged: "频率不变",
+    freqDown: (n) => `频率降低${n}%`,
+    freqUp: (n) => `频率提高${n}%`,
+    decayDown: (n) => `每年减少${n}%`,
+    decayUp: (n) => `每年增加${n}%`,
+    fromToEnd: (from) => `第${from}年起到最后`,
+    fromTo: (from, to) => `第${from}~${to}年`,
+    except: (range) => `排除${range}`,
+    only: (range) => `仅限${range}`,
+    cap: (n) => `最多${n}次`,
+    use: (label) => `启用${label}`,
+    name: "条件名称",
+    remove: "删除",
+    multBefore: "频率乘以",
+    multAria: "倍数",
+    multAfter: "倍",
+    decayBefore: "每年",
+    decayAria: "每年减少率(%)",
+    decayAfter: "%递减（负数为递增）",
+    windowAria: "包含或排除该区间",
+    windowOnly: "仅此区间",
+    windowExcept: "排除此区间",
+    fromAria: "开始年份",
+    fromAfter: "年起",
+    toEnd: "到最后",
+    toAria: "结束年份",
+    toAfter: "年止",
+    capBefore: "最多不超过",
+    capAria: "最多次数",
+    capAfter: "次",
+    title: "条件筛选",
+    intro: "不预设任何条件。请为这一项亲自设定合适的条件。",
+  },
+});
+
 function describe(filter: CalcFilter): string {
+  const t = tr(COPY);
   switch (filter.kind) {
     case "multiplier": {
       const factor = filter.factor ?? 1;
       const delta = Math.round(Math.abs(1 - factor) * 100);
-      if (delta === 0) return "빈도 그대로";
-      return factor < 1 ? `빈도 ${delta}% 감소` : `빈도 ${delta}% 증가`;
+      if (delta === 0) return t.unchanged;
+      return factor < 1 ? t.freqDown(delta) : t.freqUp(delta);
     }
     case "decay": {
       const rate = Math.round((filter.ratePerYear ?? 0) * 1000) / 10;
-      return rate >= 0 ? `매년 ${rate}%씩 감소` : `매년 ${Math.abs(rate)}%씩 증가`;
+      return rate >= 0 ? t.decayDown(rate) : t.decayUp(Math.abs(rate));
     }
     case "window": {
       const from = filter.fromYear ?? 0;
       const to = filter.toYear;
-      const range = to === undefined ? `${from}년차부터 끝까지` : `${from}~${to}년차`;
-      return filter.mode === "except" ? `${range} 제외` : `${range}만 포함`;
+      const range = to === undefined ? t.fromToEnd(from) : t.fromTo(from, to);
+      return filter.mode === "except" ? t.except(range) : t.only(range);
     }
     case "cap":
-      return `최대 ${filter.maxTotal ?? 0}번`;
+      return t.cap(filter.maxTotal ?? 0);
     default:
       return "";
   }
@@ -37,6 +212,7 @@ function FilterRow({
   onChange: (next: CalcFilter) => void;
   onRemove: () => void;
 }) {
+  const t = tr(COPY);
   return (
     <div className="rounded-xl border border-ink-200/70 bg-ink-50/40 p-3">
       <div className="flex items-center gap-2">
@@ -45,24 +221,24 @@ function FilterRow({
           className="h-4 w-4 accent-ink-800"
           checked={filter.enabled}
           onChange={(e) => onChange({ ...filter, enabled: e.target.checked })}
-          aria-label={`${filter.label} 사용`}
+          aria-label={t.use(filter.label)}
         />
         <input
           className="input flex-1 py-1.5"
           value={filter.label}
-          placeholder="조건 이름"
-          aria-label="조건 이름"
+          placeholder={t.name}
+          aria-label={t.name}
           onChange={(e) => onChange({ ...filter, label: e.target.value })}
         />
         <button type="button" className="btn-quiet" onClick={onRemove}>
-          삭제
+          {t.remove}
         </button>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2 pl-6 text-sm text-ink-600">
         {filter.kind === "multiplier" && (
           <>
-            <span>빈도에</span>
+            <span>{t.multBefore}</span>
             <input
               className="input w-20 py-1"
               type="number"
@@ -70,24 +246,25 @@ function FilterRow({
               step="0.05"
               value={filter.factor ?? 1}
               onChange={(e) => onChange({ ...filter, factor: Number(e.target.value) })}
-              aria-label="배수"
+              aria-label={t.multAria}
             />
-            <span>배</span>
+            {t.multAfter && <span>{t.multAfter}</span>}
           </>
         )}
 
         {filter.kind === "decay" && (
           <>
-            <span>매년</span>
+            <span>{t.decayBefore}</span>
             <input
               className="input w-20 py-1"
               type="number"
               step="0.5"
+              max={100}
               value={Math.round((filter.ratePerYear ?? 0) * 1000) / 10}
               onChange={(e) => onChange({ ...filter, ratePerYear: Number(e.target.value) / 100 })}
-              aria-label="연간 감소율(%)"
+              aria-label={t.decayAria}
             />
-            <span>%씩 감소 (음수면 증가)</span>
+            <span>{t.decayAfter}</span>
           </>
         )}
 
@@ -97,10 +274,10 @@ function FilterRow({
               className="input w-28 py-1"
               value={filter.mode ?? "only"}
               onChange={(e) => onChange({ ...filter, mode: e.target.value as "only" | "except" })}
-              aria-label="구간 포함 여부"
+              aria-label={t.windowAria}
             >
-              <option value="only">이 구간만</option>
-              <option value="except">이 구간 제외</option>
+              <option value="only">{t.windowOnly}</option>
+              <option value="except">{t.windowExcept}</option>
             </select>
             <input
               className="input w-20 py-1"
@@ -109,40 +286,40 @@ function FilterRow({
               step="0.5"
               value={filter.fromYear ?? 0}
               onChange={(e) => onChange({ ...filter, fromYear: Number(e.target.value) })}
-              aria-label="시작 연차"
+              aria-label={t.fromAria}
             />
-            <span>년차부터</span>
+            <span>{t.fromAfter}</span>
             <input
               className="input w-20 py-1"
               type="number"
               min={0}
               step="0.5"
               value={filter.toYear ?? ""}
-              placeholder="끝까지"
+              placeholder={t.toEnd}
               onChange={(e) =>
                 onChange({
                   ...filter,
                   toYear: e.target.value === "" ? undefined : Number(e.target.value),
                 })
               }
-              aria-label="종료 연차"
+              aria-label={t.toAria}
             />
-            <span>년차까지</span>
+            <span>{t.toAfter}</span>
           </>
         )}
 
         {filter.kind === "cap" && (
           <>
-            <span>아무리 많아도</span>
+            <span>{t.capBefore}</span>
             <input
               className="input w-24 py-1"
               type="number"
               min={0}
               value={filter.maxTotal ?? 0}
               onChange={(e) => onChange({ ...filter, maxTotal: Number(e.target.value) })}
-              aria-label="최대 횟수"
+              aria-label={t.capAria}
             />
-            <span>번까지</span>
+            <span>{t.capAfter}</span>
           </>
         )}
       </div>
@@ -159,13 +336,12 @@ export default function FilterEditor({
   filters: CalcFilter[];
   onChange: (next: CalcFilter[]) => void;
 }) {
+  const t = tr(COPY);
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-semibold text-ink-800">조건 필터</p>
-        <p className="mt-1 text-xs text-ink-400">
-          기본값을 밀어 넣지 않습니다. 이 항목에만 해당하는 조건을 직접 세워 보세요.
-        </p>
+        <p className="text-sm font-semibold text-ink-800">{t.title}</p>
+        <p className="mt-1 text-xs text-ink-400">{t.intro}</p>
       </div>
 
       {filters.length > 0 && (
@@ -182,7 +358,7 @@ export default function FilterEditor({
       )}
 
       <div className="flex flex-wrap gap-1.5">
-        {FILTER_PRESETS.map((preset) => (
+        {filterPresets().map((preset) => (
           <button
             key={preset.label}
             type="button"

@@ -1,3 +1,5 @@
+import type { Lang } from "./i18n";
+
 /** 빈도를 표현하는 단위. "주 2회"는 { count: 2, unit: "week" }. */
 export type FrequencyUnit = "day" | "week" | "month" | "quarter" | "year";
 
@@ -27,6 +29,17 @@ export interface CalcFilter {
   mode?: "only" | "except";
   /** cap: 필터를 다 적용한 뒤 씌우는 절대 상한. */
   maxTotal?: number;
+}
+
+/**
+ * "만약에"를 이름 붙여 남겨 둔 것. "매달 2번으로 늘리면?"처럼 빈도와 조건을 바꾼 한 벌.
+ * 저장된 값(기준)은 건드리지 않고 나란히 비교만 한다.
+ */
+export interface Scenario {
+  id: string;
+  label: string;
+  frequency: Frequency;
+  filters: CalcFilter[];
 }
 
 /** 나이는 생년월일이 있으면 그것으로, 없으면 직접 입력한 값으로 정한다. */
@@ -95,6 +108,7 @@ export interface Person extends LifeSpan {
    */
   since?: string;
   note?: string;
+  scenarios?: Scenario[];
   createdAt: string;
   updatedAt: string;
 }
@@ -143,6 +157,7 @@ export interface Moment {
   /** 지금 빈도로 해 온 시작점(YYYY-MM-DD). Person.since와 같은 뜻이다. */
   since?: string;
   note?: string;
+  scenarios?: Scenario[];
   createdAt: string;
   updatedAt: string;
 }
@@ -162,7 +177,7 @@ export interface MarriagePlan {
 }
 
 /** 숫자가 주는 무게감을 고르는 옵션. 문구만 바뀌고 계산은 같다. */
-export type Tone = "calm" | "aware";
+export type Tone = "calm" | "warm" | "aware";
 
 /** 화면 테마. system이면 기기 설정을 따라간다. */
 export type Theme = "system" | "light" | "dark";
@@ -172,6 +187,10 @@ export interface Settings {
   theme: Theme;
   /** "지금까지 몇 번"을 같이 보여줄지. 시작점(since)을 넣은 항목에만 나온다. */
   showPast: boolean;
+  /** 화면 언어. 없으면 기기 언어를 따른다. */
+  language?: Lang;
+  /** 마지막으로 내보내기를 한 때(ISO). 백업을 권할지 정하는 데 쓴다(lib/backup.ts). */
+  lastBackupAt?: string;
 }
 
 export interface AppState {

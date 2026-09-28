@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
+import LangRoot from "@/components/LangRoot";
 import Nav from "@/components/Nav";
 import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
+import SkipLink from "@/components/SkipLink";
 import UndoBar from "@/components/UndoBar";
 import { STORAGE_KEY } from "@/lib/storageKey";
 import { THEME_COLOR } from "@/lib/themeColor";
@@ -64,22 +66,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <ThemeApplier />
         <ServiceWorker />
-        {/* 키보드 사용자가 내비게이션 네 개를 매번 지나치지 않도록. 평소엔 숨어 있다. */}
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-30 focus:rounded-lg focus:bg-ink-800 focus:px-4 focus:py-2 focus:text-sm focus:text-onInk"
-        >
-          본문으로 건너뛰기
-        </a>
-        <Nav />
-        {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}
-        <main
-          id="main"
-          className="mx-auto max-w-3xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"
-        >
-          {children}
-        </main>
-        <UndoBar />
+        <LangRoot>
+          <SkipLink />
+          <Nav />
+          {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}
+          <main
+            id="main"
+            className="mx-auto max-w-3xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"
+          >
+            {children}
+          </main>
+          <UndoBar />
+        </LangRoot>
       </body>
     </html>
   );

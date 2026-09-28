@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import FilterEditor from "@/components/FilterEditor";
 import GrowthCalendar from "@/components/GrowthCalendar";
 import ResultPanel from "@/components/ResultPanel";
+import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
 import { computeGrowth, computePast, computeRelationship, resolveAge } from "@/lib/calc";
 import {
@@ -16,16 +16,136 @@ import {
   formatFrequency,
   formatInterval,
   formatYears,
+  josa,
 } from "@/lib/format";
+import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import type { CalcFilter, Person } from "@/lib/types";
+import type { Person } from "@/lib/types";
 
-/** 저장된 값과 지금 화면의 조건이 다른지. 다르면 "시뮬레이션 중"으로 본다. */
-function sameFilters(a: CalcFilter[], b: CalcFilter[]): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
+const COPY = defineCopy({
+  ko: {
+    life: "남은 평생",
+    untilMyAge: (age: number) => `내가 ${age}세 될 때까지`,
+    years: (n: number) => `앞으로 ${n}년`,
+    timesUnit: "번",
+    times: (n: string) => `${n}번`,
+    interval: "만남 간격",
+    together: "함께 보낼 시간",
+    myTime: "내 남은 시간",
+    theirTime: (name: string) => `${name} 남은 시간`,
+    info: "정보",
+    edit: "수정하기",
+    age: "나이",
+    lifeExpectancy: "예상 수명",
+    frequency: "만나는 빈도",
+    horizon: "세는 기간",
+    since: "언제부터",
+    perMeeting: "한 번에",
+    hours: (n: number) => `${n}시간`,
+    byYear: "연도별 추이",
+    backToList: "목록으로",
+    remove: "삭제",
+    removed: (name: string) => `${josa(name, "을/를")} 지웠습니다.`,
+  },
+  en: {
+    life: "The rest of our lives",
+    untilMyAge: (age) => `Until I turn ${age}`,
+    years: (n) => `The next ${n} ${n === 1 ? "year" : "years"}`,
+    timesUnit: "times",
+    times: (n) => `${n} times`,
+    interval: "Every",
+    together: "Time together",
+    myTime: "Your time ahead",
+    theirTime: (name) => `${name}'s time ahead`,
+    info: "Details",
+    edit: "Edit",
+    age: "Age",
+    lifeExpectancy: "Life expectancy",
+    frequency: "How often",
+    horizon: "Counting period",
+    since: "Since",
+    perMeeting: "Per visit",
+    hours: (n) => `${n} ${n === 1 ? "hour" : "hours"}`,
+    byYear: "Year by year",
+    backToList: "Back to list",
+    remove: "Delete",
+    removed: (name) => `Deleted ${name}.`,
+  },
+  ja: {
+    life: "これからずっと",
+    untilMyAge: (age) => `自分が${age}歳になるまで`,
+    years: (n) => `これから${n}年`,
+    timesUnit: "回",
+    times: (n) => `${n}回`,
+    interval: "会う間隔",
+    together: "一緒に過ごす時間",
+    myTime: "自分の残り時間",
+    theirTime: (name) => `${name}の残り時間`,
+    info: "情報",
+    edit: "編集する",
+    age: "年齢",
+    lifeExpectancy: "予想寿命",
+    frequency: "会う頻度",
+    horizon: "数える期間",
+    since: "いつから",
+    perMeeting: "1回に",
+    hours: (n) => `${n}時間`,
+    byYear: "年ごとの推移",
+    backToList: "一覧へ",
+    remove: "削除",
+    removed: (name) => `${name}を削除しました。`,
+  },
+  es: {
+    life: "El resto de la vida",
+    untilMyAge: (age) => `Hasta que cumpla ${age}`,
+    years: (n) => `Los próximos ${n} ${n === 1 ? "año" : "años"}`,
+    timesUnit: "veces",
+    times: (n) => `${n} veces`,
+    interval: "Cada",
+    together: "Tiempo juntos",
+    myTime: "Tu tiempo por delante",
+    theirTime: (name) => `Tiempo de ${name}`,
+    info: "Datos",
+    edit: "Editar",
+    age: "Edad",
+    lifeExpectancy: "Esperanza de vida",
+    frequency: "Frecuencia",
+    horizon: "Periodo contado",
+    since: "Desde",
+    perMeeting: "Por visita",
+    hours: (n) => `${n} ${n === 1 ? "hora" : "horas"}`,
+    byYear: "Año a año",
+    backToList: "Volver a la lista",
+    remove: "Eliminar",
+    removed: (name) => `Se eliminó a ${name}.`,
+  },
+  zh: {
+    life: "余生",
+    untilMyAge: (age) => `到我${age}岁为止`,
+    years: (n) => `今后${n}年`,
+    timesUnit: "次",
+    times: (n) => `${n}次`,
+    interval: "见面间隔",
+    together: "相处的时间",
+    myTime: "我剩余的时间",
+    theirTime: (name) => `${name}剩余的时间`,
+    info: "信息",
+    edit: "编辑",
+    age: "年龄",
+    lifeExpectancy: "预期寿命",
+    frequency: "见面频率",
+    horizon: "计算期间",
+    since: "从何时开始",
+    perMeeting: "每次",
+    hours: (n) => `${n}小时`,
+    byYear: "逐年变化",
+    backToList: "返回列表",
+    remove: "删除",
+    removed: (name) => `已删除${name}。`,
+  },
+});
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -48,20 +168,16 @@ export default function PersonView({ person }: { person: Person }) {
   const router = useRouter();
   const { state } = useAppState();
   const { savePerson, removePerson } = useActions();
+  const t = tr(COPY);
   const copy = copyFor(state.settings.tone);
 
-  // 조건은 여기서 마음껏 바꿔 본다. 저장은 따로 눌러야 한다.
-  const [filters, setFilters] = useState<CalcFilter[]>(person.filters);
-  const simulating = !sameFilters(filters, person.filters);
+  // "만약에"로 바꿔 보는 빈도와 조건. 저장은 따로 눌러야 한다.
+  const [draftSetup, setDraftSetup] = useState({ frequency: person.frequency, filters: person.filters });
 
-  const draft = useMemo(() => ({ ...person, filters }), [person, filters]);
+  const draft = useMemo(() => ({ ...person, ...draftSetup }), [person, draftSetup]);
   const result = useMemo(
     () => computeRelationship(draft, state.profile),
     [draft, state.profile],
-  );
-  const saved = useMemo(
-    () => computeRelationship(person, state.profile),
-    [person, state.profile],
   );
   const growth = useMemo(() => computeGrowth(person), [person]);
   // 설정을 끄면 시작점이 있어도 안 보인다. 어림값이라 끌 수 있어야 한다.
@@ -73,35 +189,35 @@ export default function PersonView({ person }: { person: Person }) {
   const age = resolveAge(person);
   const horizonText =
     !person.horizon || person.horizon.kind === "life"
-      ? "남은 평생"
+      ? t.life
       : person.horizon.kind === "untilMyAge"
-        ? `내가 ${person.horizon.age}세 될 때까지`
-        : `앞으로 ${person.horizon.years}년`;
+        ? t.untilMyAge(person.horizon.age)
+        : t.years(person.horizon.years);
 
   return (
     <div className="space-y-5">
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
-        sentence={copy.meetingSentence(person.name, Math.round(result.total).toLocaleString("ko-KR"))}
+        sentence={copy.meetingSentence(person.name, Math.round(result.total).toLocaleString(locale()))}
         share={{
           emoji: person.emoji ?? "🫧",
           title: person.name,
           subtitle: copy.meetingLabel,
           value: formatCount(result.total),
-          unit: "번",
-          caption: `${formatFrequency(person.frequency)} · ${formatYears(result.sharedYears)}`,
+          unit: t.timesUnit,
+          caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,
         }}
-        shareFileName={[person.name, `${formatCount(result.total)}번`]}
+        shareFileName={[person.name, t.times(formatCount(result.total))]}
         past={past}
         stats={[
-          { label: "만남 간격", value: formatInterval(result.intervalDays) },
+          { label: t.interval, value: formatInterval(result.intervalDays) },
           {
-            label: "함께 보낼 시간",
+            label: t.together,
             value: result.togetherDays === null ? "-" : formatDays(result.togetherDays),
           },
-          { label: "내 남은 시간", value: formatYears(result.myYears) },
-          { label: `${person.name} 남은 시간`, value: formatYears(result.theirYears) },
+          { label: t.myTime, value: formatYears(result.myYears) },
+          { label: t.theirTime(person.name), value: formatYears(result.theirYears) },
         ]}
       />
 
@@ -113,21 +229,21 @@ export default function PersonView({ person }: { person: Person }) {
         {/* 이름은 화면 제목과 히어로에 이미 두 번 나왔다. 여기서 또 쓰지 않는다. */}
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold tracking-[0.1em] text-ink-400">
-            {person.relation ?? "정보"}
+            {person.relation ?? t.info}
           </p>
           <Link href={`/people/edit?id=${person.id}`} className="btn-secondary shrink-0" prefetch={false}>
-            수정하기
+            {t.edit}
           </Link>
         </div>
 
         <div className="mt-3 divide-y divide-ink-200/60 border-t border-ink-200/60 pt-1">
-          <Row label="나이" value={formatAge(age)} />
-          <Row label="예상 수명" value={`만 ${person.lifeExpectancy}세`} />
-          <Row label="만나는 빈도" value={formatFrequency(person.frequency)} />
-          <Row label="세는 기간" value={horizonText} />
-          {person.since && <Row label="언제부터" value={person.since} />}
+          <Row label={t.age} value={formatAge(age)} />
+          <Row label={t.lifeExpectancy} value={formatAge(person.lifeExpectancy)} />
+          <Row label={t.frequency} value={formatFrequency(person.frequency)} />
+          <Row label={t.horizon} value={horizonText} />
+          {person.since && <Row label={t.since} value={person.since} />}
           {person.hoursPerMeeting !== undefined && (
-            <Row label="한 번에" value={`${person.hoursPerMeeting}시간`} />
+            <Row label={t.perMeeting} value={t.hours(person.hoursPerMeeting)} />
           )}
         </div>
 
@@ -138,45 +254,18 @@ export default function PersonView({ person }: { person: Person }) {
         )}
       </div>
 
-      <div className="card space-y-4">
-        <div>
-          <p className="text-sm font-semibold text-ink-800">조건을 바꿔 보기</p>
-          <p className="mt-1 text-xs text-ink-400">
-            여기서 바꾼 것은 저장되지 않습니다. 숫자가 어떻게 달라지는지만 봅니다.
-          </p>
-        </div>
-
-        {simulating && (
-          <div className="rounded-xl bg-accent-50 px-3 py-2.5">
-            <p className="text-xs text-accent-600">
-              지금 {formatCount(result.total)}번 · 저장된 값은 {formatCount(saved.total)}번
-            </p>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                className="btn-quiet"
-                onClick={() => setFilters(person.filters)}
-              >
-                되돌리기
-              </button>
-              <button
-                type="button"
-                className="btn-quiet"
-                onClick={() =>
-                  savePerson({ ...person, filters, updatedAt: new Date().toISOString() })
-                }
-              >
-                이대로 저장
-              </button>
-            </div>
-          </div>
-        )}
-
-        <FilterEditor filters={filters} onChange={setFilters} />
-      </div>
+      <WhatIf
+        draft={draftSetup}
+        onDraft={setDraftSetup}
+        saved={{ frequency: person.frequency, filters: person.filters }}
+        totalFor={(setup) => computeRelationship({ ...person, ...setup }, state.profile).total}
+        scenarios={person.scenarios ?? []}
+        onScenarios={(scenarios) => savePerson({ ...person, scenarios, updatedAt: new Date().toISOString() })}
+        onApply={() => savePerson({ ...person, ...draftSetup, updatedAt: new Date().toISOString() })}
+      />
 
       <div className="card space-y-2">
-        <p className="text-sm font-semibold text-ink-800">연도별 추이</p>
+        <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>
         <YearBreakdown slices={result.slices} />
       </div>
 
@@ -196,18 +285,18 @@ export default function PersonView({ person }: { person: Person }) {
 
       <div className="flex items-center gap-2">
         <Link href="/people" className="btn-secondary">
-          목록으로
+          {t.backToList}
         </Link>
         <button
           type="button"
           className="btn-danger ml-auto"
           onClick={() => {
             removePerson(person.id);
-            offerUndo(`${person.name}을(를) 지웠습니다.`, () => savePerson(person));
+            offerUndo(t.removed(person.name), () => savePerson(person));
             router.push("/people");
           }}
         >
-          삭제
+          {t.remove}
         </button>
       </div>
     </div>

@@ -6,21 +6,119 @@ import HealthFields from "@/components/HealthFields";
 import { healthAgeOffset } from "@/lib/health";
 import { resolveAge } from "@/lib/calc";
 import { formatAge, formatYears } from "@/lib/format";
-import { COUNTRIES, isEstimatedTable, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
+import { defineCopy, tr } from "@/lib/i18n";
+import { COUNTRIES, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
+import { todayISO } from "@/lib/format";
 import type { LifeSpan, Sex } from "@/lib/types";
 
-/** 기기 시간대 기준 오늘. toISOString은 UTC라 하루가 밀릴 수 있다. */
-function todayISO(): string {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
+const SEXES: Sex[] = ["all", "female", "male"];
 
-const SEXES: { value: Sex; label: string }[] = [
-  { value: "all", label: "구분 없음" },
-  { value: "female", label: "여성" },
-  { value: "male", label: "남성" },
-];
+const COPY = defineCopy({
+  ko: {
+    sex: { all: "구분 없음", female: "여성", male: "남성" } as Record<Sex, string>,
+    age: "나이",
+    birthDate: "생년월일",
+    currentAge: (age: string) => `현재 ${age}`,
+    birthUnknown: "모르면 비워 두고 나이만 입력하세요.",
+    agePlaceholder: "예: 60",
+    ageFromBirth: "생년월일이 있으면 자동으로 계산됩니다.",
+    ageHint: "만 나이 기준 · 시간이 지나면 저절로 올라갑니다",
+    country: "국가",
+    sexLabel: "성별",
+    lifeExpectancy: "예상 수명",
+    ageUnit: "세",
+    reset: (age: number) => `통계값(${age}세)으로 되돌리기`,
+    manual: "직접 조정한 값입니다. 나이·국가·성별을 바꿔도 유지됩니다.",
+    needAge: "나이를 채우면 그 나이에 맞는 통계값이 적용됩니다. 언제든 직접 바꿀 수 있어요.",
+    fromTableWithHealth:
+      "생명표에서 이 나이·국가·성별에 맞는 값을 가져오고, 위에서 고른 생활 습관을 반영했습니다. 언제든 직접 바꿀 수 있어요.",
+    fromTable: "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요.",
+    remaining: (years: string) => ` · 남은 기간 약 ${years}`,
+  },
+  en: {
+    sex: { all: "Not specified", female: "Female", male: "Male" },
+    age: "Age",
+    birthDate: "Birthday",
+    currentAge: (age) => `Now ${age}`,
+    birthUnknown: "If you don't know it, leave it blank and just enter the age.",
+    agePlaceholder: "e.g. 60",
+    ageFromBirth: "Calculated automatically from the birthday.",
+    ageHint: "Goes up on its own as time passes",
+    country: "Country",
+    sexLabel: "Sex",
+    lifeExpectancy: "Life expectancy",
+    ageUnit: "yrs",
+    reset: (age) => `Reset to average (${age})`,
+    manual: "Set by you. It stays even if you change age, country or sex.",
+    needAge: "Add an age to use the average for that age. You can change it anytime.",
+    fromTableWithHealth:
+      "Taken from life tables for this age, country and sex, adjusted for the habits above. You can change it anytime.",
+    fromTable: "Taken from life tables for this age, country and sex. You can change it anytime.",
+    remaining: (years) => ` · about ${years} ahead`,
+  },
+  ja: {
+    sex: { all: "指定なし", female: "女性", male: "男性" },
+    age: "年齢",
+    birthDate: "生年月日",
+    currentAge: (age) => `現在${age}`,
+    birthUnknown: "わからなければ空けておき、年齢だけ入れてください。",
+    agePlaceholder: "例: 60",
+    ageFromBirth: "生年月日から自動で計算されます。",
+    ageHint: "満年齢 · 時間がたつと自動で上がります",
+    country: "国",
+    sexLabel: "性別",
+    lifeExpectancy: "予想寿命",
+    ageUnit: "歳",
+    reset: (age) => `統計値（${age}歳）に戻す`,
+    manual: "手動で調整した値です。年齢・国・性別を変えても保たれます。",
+    needAge: "年齢を入れると、その年齢に合った統計値が使われます。いつでも自分で変えられます。",
+    fromTableWithHealth:
+      "生命表からこの年齢・国・性別に合った値を取り、上で選んだ生活習慣を反映しました。いつでも自分で変えられます。",
+    fromTable: "生命表からこの年齢・国・性別に合った値を取ります。いつでも自分で変えられます。",
+    remaining: (years) => ` · 残り約${years}`,
+  },
+  es: {
+    sex: { all: "Sin especificar", female: "Mujer", male: "Hombre" },
+    age: "Edad",
+    birthDate: "Fecha de nacimiento",
+    currentAge: (age) => `Ahora ${age}`,
+    birthUnknown: "Si no la sabes, déjala en blanco y pon solo la edad.",
+    agePlaceholder: "p. ej. 60",
+    ageFromBirth: "Se calcula automáticamente a partir de la fecha de nacimiento.",
+    ageHint: "Sube sola con el paso del tiempo",
+    country: "País",
+    sexLabel: "Sexo",
+    lifeExpectancy: "Esperanza de vida",
+    ageUnit: "años",
+    reset: (age) => `Volver a la media (${age} años)`,
+    manual: "Ajustado por ti. Se mantiene aunque cambies la edad, el país o el sexo.",
+    needAge: "Añade la edad para usar la media correspondiente. Puedes cambiarla cuando quieras.",
+    fromTableWithHealth:
+      "Tomado de las tablas de vida para esta edad, país y sexo, con los hábitos de arriba. Puedes cambiarlo cuando quieras.",
+    fromTable: "Tomado de las tablas de vida para esta edad, país y sexo. Puedes cambiarlo cuando quieras.",
+    remaining: (years) => ` · unos ${years} por delante`,
+  },
+  zh: {
+    sex: { all: "不区分", female: "女", male: "男" },
+    age: "年龄",
+    birthDate: "出生日期",
+    currentAge: (age) => `现在${age}`,
+    birthUnknown: "不知道的话可以留空，只填年龄。",
+    agePlaceholder: "例如：60",
+    ageFromBirth: "有出生日期时会自动计算。",
+    ageHint: "按周岁计算 · 会随时间自动增长",
+    country: "国家/地区",
+    sexLabel: "性别",
+    lifeExpectancy: "预期寿命",
+    ageUnit: "岁",
+    reset: (age) => `恢复为统计值（${age}岁）`,
+    manual: "这是你手动调整的值。更改年龄、国家或性别也会保留。",
+    needAge: "填写年龄后，会使用与该年龄相符的统计值。随时可以自己修改。",
+    fromTableWithHealth: "取自生命表中与该年龄、国家、性别相符的值，并反映了上面选择的生活习惯。随时可以自己修改。",
+    fromTable: "取自生命表中与该年龄、国家、性别相符的值。随时可以自己修改。",
+    remaining: (years) => ` · 大约还有${years}`,
+  },
+});
 
 /**
  * 나이 + 예상 수명을 다루는 입력 묶음. 내 프로필과 인연 카드가 같은 규칙을 쓰므로
@@ -30,7 +128,7 @@ const SEXES: { value: Sex; label: string }[] = [
 export default function LifeSpanFields<T extends LifeSpan>({
   value,
   onChange,
-  ageLabel = "나이",
+  ageLabel,
   showHealth = false,
 }: {
   value: T;
@@ -43,13 +141,13 @@ export default function LifeSpanFields<T extends LifeSpan>({
    */
   showHealth?: boolean;
 }) {
+  const t = tr(COPY);
   const ids = useId();
   const age = resolveAge(value);
   const remaining = age === null ? null : Math.max(0, value.lifeExpectancy - age);
   // 예상 수명은 나이에 따라 달라진다. 이미 그 나이까지 살아온 사람은 일찍 떠난
   // 사람들이 끌어내린 출생 시 평균보다 더 오래 산다.
   const average = lookupLifeExpectancy(value.countryCode, value.sex, age, value.health);
-  const estimated = isEstimatedTable(value.countryCode);
 
   function patch(changes: Partial<LifeSpan>): void {
     const next = { ...value, ...changes } as T;
@@ -69,23 +167,23 @@ export default function LifeSpanFields<T extends LifeSpan>({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor={`${ids}-birth`}>
-            생년월일
+            {t.birthDate}
           </label>
           <input
             id={`${ids}-birth`}
             className="input"
             type="date"
             value={value.birthDate ?? ""}
-            max={new Date().toISOString().slice(0, 10)}
+            max={todayISO()}
             onChange={(e) => patch({ birthDate: e.target.value || undefined })}
           />
           <p className="mt-1 text-[11px] text-ink-400">
-            {value.birthDate ? `현재 ${formatAge(age)}` : "모르면 비워 두고 나이만 입력하세요."}
+            {value.birthDate ? t.currentAge(formatAge(age)) : t.birthUnknown}
           </p>
         </div>
         <div>
           <label className="label" htmlFor={`${ids}-age`}>
-            {ageLabel}
+            {ageLabel ?? t.age}
           </label>
           <input
             id={`${ids}-age`}
@@ -95,7 +193,7 @@ export default function LifeSpanFields<T extends LifeSpan>({
             max={130}
             value={value.ageYears ?? ""}
             disabled={Boolean(value.birthDate)}
-            placeholder="예: 60"
+            placeholder={t.agePlaceholder}
             onChange={(e) => {
               // 적어 넣은 날짜를 같이 남겨야 나이가 시간과 함께 늙는다.
               const next = e.target.value === "" ? undefined : Number(e.target.value);
@@ -107,8 +205,8 @@ export default function LifeSpanFields<T extends LifeSpan>({
           />
           <p className="mt-1 text-[11px] text-ink-400">
             {value.birthDate
-              ? "생년월일이 있으면 자동으로 계산됩니다."
-              : "만 나이 기준 · 시간이 지나면 저절로 올라갑니다"}
+              ? t.ageFromBirth
+              : t.ageHint}
           </p>
         </div>
       </div>
@@ -116,7 +214,7 @@ export default function LifeSpanFields<T extends LifeSpan>({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor={`${ids}-country`}>
-            국가
+            {t.country}
           </label>
           <select
             id={`${ids}-country`}
@@ -132,16 +230,16 @@ export default function LifeSpanFields<T extends LifeSpan>({
           </select>
         </div>
         <div>
-          <span className="label">성별</span>
-          <div className="flex gap-1.5" role="group" aria-label="성별">
-            {SEXES.map((option) => (
+          <span className="label">{t.sexLabel}</span>
+          <div className="flex gap-1.5" role="group" aria-label={t.sexLabel}>
+            {SEXES.map((sex) => (
               <button
-                key={option.value}
+                key={sex}
                 type="button"
-                onClick={() => patch({ sex: option.value })}
-                className={`chip ${value.sex === option.value ? "chip-active" : ""}`}
+                onClick={() => patch({ sex })}
+                className={`chip ${value.sex === sex ? "chip-active" : ""}`}
               >
-                {option.label}
+                {t.sex[sex]}
               </button>
             ))}
           </div>
@@ -158,7 +256,7 @@ export default function LifeSpanFields<T extends LifeSpan>({
 
       <div>
         <label className="label" htmlFor={`${ids}-expectancy`}>
-          예상 수명
+          {t.lifeExpectancy}
         </label>
         <div className="flex items-center gap-2">
           <input
@@ -177,7 +275,7 @@ export default function LifeSpanFields<T extends LifeSpan>({
               } as T)
             }
           />
-          <span className="text-sm text-ink-400">세</span>
+          <span className="text-sm text-ink-400">{t.ageUnit}</span>
           {value.lifeExpectancyManual && (
             <button
               type="button"
@@ -190,20 +288,19 @@ export default function LifeSpanFields<T extends LifeSpan>({
                 } as T)
               }
             >
-              통계값({average}세)으로 되돌리기
+              {t.reset(average)}
             </button>
           )}
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-ink-400">
           {value.lifeExpectancyManual
-            ? "직접 조정한 값입니다. 나이·국가·성별을 바꿔도 유지됩니다."
+            ? t.manual
             : age === null
-              ? "나이를 채우면 그 나이에 맞는 통계값이 적용됩니다. 언제든 직접 바꿀 수 있어요."
+              ? t.needAge
               : showHealth && healthAgeOffset(value.health) !== 0
-                ? "생명표에서 이 나이·국가·성별에 맞는 값을 가져오고, 위에서 고른 생활 습관을 반영했습니다. 언제든 직접 바꿀 수 있어요."
-                : "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요."}
-          {remaining !== null && ` · 남은 기간 약 ${formatYears(remaining)}`}
-          {estimated && " · 이 나라는 이웃 나라 표를 조정한 근사치입니다."}
+                ? t.fromTableWithHealth
+                : t.fromTable}
+          {remaining !== null && t.remaining(formatYears(remaining))}
         </p>
       </div>
     </div>

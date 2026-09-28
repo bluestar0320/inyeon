@@ -4,17 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MouseEvent } from "react";
 
+import { defineCopy, tr } from "@/lib/i18n";
 import { confirmLeave } from "@/lib/unsaved";
 
+const COPY = defineCopy({
+  ko: { brand: "몇번더?", home: "홈", people: "인연", moments: "순간", settings: "설정" },
+  en: { brand: "How Many More?", home: "Home", people: "People", moments: "Moments", settings: "Settings" },
+  ja: { brand: "あと何回？", home: "ホーム", people: "大切な人", moments: "ひととき", settings: "設定" },
+  es: { brand: "¿Cuántas veces más?", home: "Inicio", people: "Personas", moments: "Momentos", settings: "Ajustes" },
+  zh: { brand: "还有几次？", home: "首页", people: "亲友", moments: "时光", settings: "设置" },
+});
+
 const LINKS = [
-  { href: "/", label: "홈" },
-  { href: "/people", label: "인연" },
-  { href: "/moments", label: "순간" },
-  { href: "/settings", label: "설정" },
-];
+  { href: "/", key: "home" },
+  { href: "/people", key: "people" },
+  { href: "/moments", key: "moments" },
+  { href: "/settings", key: "settings" },
+] as const;
 
 export default function Nav() {
   const pathname = usePathname();
+  const t = tr(COPY);
 
   // 편집 중 저장하지 않은 게 있으면 화면을 옮기기 전에 한 번 묻는다.
   function guard(event: MouseEvent<HTMLAnchorElement>): void {
@@ -35,7 +45,7 @@ export default function Nav() {
           prefetch={false}
           className="text-sm font-semibold tracking-tight text-ink-900"
         >
-          몇번더?
+          {t.brand}
         </Link>
         <nav className="flex items-center gap-1">
           {LINKS.map((link) => {
@@ -58,7 +68,7 @@ export default function Nav() {
                     : "border-transparent text-ink-400 hover:text-ink-800"
                 }`}
               >
-                {link.label}
+                {t[link.key]}
               </Link>
             );
           })}

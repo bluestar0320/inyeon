@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import BigNumber from "@/components/BigNumber";
 import EmptyState from "@/components/EmptyState";
 import StatCard from "@/components/StatCard";
+import { backupDue } from "@/lib/backup";
 import {
   computeGrowth,
   computeMarriage,
@@ -22,10 +23,176 @@ import {
   formatPercent,
   formatYears,
 } from "@/lib/format";
+import { defineCopy, tr } from "@/lib/i18n";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 
+const COPY = defineCopy({
+  ko: {
+    loading: "불러오는 중…",
+    introTitle: "남은 것을 세어 봅니다",
+    introBody:
+      "이 앱은 할 일을 알려주지 않습니다. 남은 시간과 남은 만남을 횟수로 계산할 뿐입니다. 먼저 내 정보를 채워 주세요.",
+    start: "시작하기",
+    lifeSub: (age: string, lifeExpectancy: number) => `${age} · 예상 수명 ${lifeExpectancy}세`,
+    progress: (past: string, left: string) => `지나온 ${past} · 남은 ${left}`,
+    summers: "남은 여름",
+    weekends: "남은 주말",
+    fullMoons: "남은 보름달",
+    editProfile: "내 정보 수정",
+    backupNudge: "기록은 이 기기 안에만 있습니다. 지난 백업 뒤로 바뀐 것이 있어요 — 내보내 두기 →",
+    people: "인연",
+    seeAll: "전체 보기",
+    emptyPeopleBody:
+      "부모님, 친구, 아이 — 나와 이어진 사람이면 누구든. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 볼 수 있는지 바로 나옵니다.",
+    addPerson: "인연 추가",
+    relationFallback: "인연",
+    times: "번",
+    timesValue: (n: number) => `${n}번`,
+    growingTitle: "아이와 남은 것들",
+    untilAdult: (age: number, years: string) => `만 ${age}세까지 ${years}`,
+    moments: "순간",
+    emptyMomentsBody: "벚꽃, 해외여행, 서핑… 빈도만 정하면 남은 횟수가 나옵니다.",
+    addMoment: "순간 추가",
+    marriageLink: "결혼까지 남은 기회도 세어 보기 →",
+    marriageTitle: "결혼 계획",
+    untilAge: (age: number) => `만 ${age}세까지`,
+    yearsLeft: (years: string) => ` · ${years} 남음`,
+    timesLeft: "번 남음",
+  },
+  en: {
+    loading: "Loading…",
+    introTitle: "Let's count what's ahead",
+    introBody:
+      "This app won't tell you what to do. It simply counts your time and your meetings ahead. Start by filling in your details.",
+    start: "Get started",
+    lifeSub: (age, lifeExpectancy) => `${age} · life expectancy ${lifeExpectancy}`,
+    progress: (past, left) => `${past} behind · ${left} ahead`,
+    summers: "Summers ahead",
+    weekends: "Weekends ahead",
+    fullMoons: "Full moons ahead",
+    editProfile: "Edit my details",
+    backupNudge:
+      "Your records live only on this device, and some have changed since your last backup — export a copy →",
+    people: "People",
+    seeAll: "See all",
+    emptyPeopleBody:
+      "Parents, friends, kids — anyone in your life. With just an age and how often you meet, you'll see how many more times you can be together.",
+    addPerson: "Add person",
+    relationFallback: "Person",
+    times: "times",
+    timesValue: (n) => `${n} ${n === 1 ? "time" : "times"}`,
+    growingTitle: "Time with your kids",
+    untilAdult: (age, years) => `${years} until age ${age}`,
+    moments: "Moments",
+    emptyMomentsBody: "Cherry blossoms, trips abroad, surfing… just set how often, and you'll see how many times remain.",
+    addMoment: "Add moment",
+    marriageLink: "Count your chances to meet someone, too →",
+    marriageTitle: "Marriage plan",
+    untilAge: (age) => `By age ${age}`,
+    yearsLeft: (years) => ` · ${years} to go`,
+    timesLeft: "times left",
+  },
+  ja: {
+    loading: "読み込み中…",
+    introTitle: "これからを数えてみましょう",
+    introBody:
+      "このアプリはやることを教えません。残りの時間と会える回数を数えるだけです。まずは自分の情報を入力してください。",
+    start: "はじめる",
+    lifeSub: (age, lifeExpectancy) => `${age} · 予想寿命 ${lifeExpectancy}歳`,
+    progress: (past, left) => `過ぎた ${past} · 残り ${left}`,
+    summers: "残りの夏",
+    weekends: "残りの週末",
+    fullMoons: "残りの満月",
+    editProfile: "自分の情報を編集",
+    backupNudge: "記録はこの端末の中にだけあります。前回のバックアップから変更があります — 書き出しておく →",
+    people: "大切な人",
+    seeAll: "すべて見る",
+    emptyPeopleBody:
+      "両親、友だち、子ども — つながっている人なら誰でも。年齢と会う頻度だけで、あと何回会えるかがすぐにわかります。",
+    addPerson: "大切な人を追加",
+    relationFallback: "大切な人",
+    times: "回",
+    timesValue: (n) => `${n}回`,
+    growingTitle: "子どもと過ごせる時間",
+    untilAdult: (age, years) => `${age}歳まで ${years}`,
+    moments: "ひととき",
+    emptyMomentsBody: "桜、海外旅行、サーフィン… 頻度を決めるだけで残りの回数がわかります。",
+    addMoment: "ひとときを追加",
+    marriageLink: "結婚までの出会いの機会も数えてみる →",
+    marriageTitle: "結婚の計画",
+    untilAge: (age) => `${age}歳まで`,
+    yearsLeft: (years) => ` · あと${years}`,
+    timesLeft: "回",
+  },
+  es: {
+    loading: "Cargando…",
+    introTitle: "Contemos lo que queda por delante",
+    introBody:
+      "Esta app no te dice qué hacer. Solo cuenta el tiempo y los encuentros que tienes por delante. Empieza rellenando tus datos.",
+    start: "Empezar",
+    lifeSub: (age, lifeExpectancy) => `${age} · esperanza de vida ${lifeExpectancy}`,
+    progress: (past, left) => `${past} recorrido · ${left} por delante`,
+    summers: "Veranos por delante",
+    weekends: "Fines de semana",
+    fullMoons: "Lunas llenas",
+    editProfile: "Editar mis datos",
+    backupNudge:
+      "Tus registros solo están en este dispositivo y hay cambios desde tu última copia — exporta una copia →",
+    people: "Personas",
+    seeAll: "Ver todo",
+    emptyPeopleBody:
+      "Padres, amigos, hijos — cualquiera que forme parte de tu vida. Con su edad y cada cuánto os veis, verás cuántas veces más podéis estar juntos.",
+    addPerson: "Añadir persona",
+    relationFallback: "Persona",
+    times: "veces",
+    timesValue: (n) => `${n} ${n === 1 ? "vez" : "veces"}`,
+    growingTitle: "Tiempo con tus hijos",
+    untilAdult: (age, years) => `${years} hasta los ${age}`,
+    moments: "Momentos",
+    emptyMomentsBody: "Cerezos en flor, viajes, surf… solo elige cada cuánto y verás cuántas veces quedan.",
+    addMoment: "Añadir momento",
+    marriageLink: "Cuenta también tus oportunidades de conocer a alguien →",
+    marriageTitle: "Plan de boda",
+    untilAge: (age) => `Hasta los ${age}`,
+    yearsLeft: (years) => ` · quedan ${years}`,
+    timesLeft: "veces más",
+  },
+  zh: {
+    loading: "加载中…",
+    introTitle: "数一数往后的日子",
+    introBody: "这个应用不会告诉你该做什么，只是把往后的时间和相见算成次数。请先填写你的信息。",
+    start: "开始",
+    lifeSub: (age, lifeExpectancy) => `${age} · 预期寿命 ${lifeExpectancy}岁`,
+    progress: (past, left) => `已走过 ${past} · 还有 ${left}`,
+    summers: "还有的夏天",
+    weekends: "还有的周末",
+    fullMoons: "还有的满月",
+    editProfile: "修改我的信息",
+    backupNudge: "记录只保存在这台设备上。上次备份后有了新的变化 — 导出一份 →",
+    people: "亲友",
+    seeAll: "查看全部",
+    emptyPeopleBody:
+      "父母、朋友、孩子 — 只要是和你相连的人都可以。只需年龄和见面频率，就能看到还能见几次。",
+    addPerson: "添加亲友",
+    relationFallback: "亲友",
+    times: "次",
+    timesValue: (n) => `${n}次`,
+    growingTitle: "和孩子相处的时光",
+    untilAdult: (age, years) => `到${age}岁还有${years}`,
+    moments: "时光",
+    emptyMomentsBody: "樱花、出国旅行、冲浪… 只要设定频率，就能看到还剩几次。",
+    addMoment: "添加时光",
+    marriageLink: "也数一数结婚前还有多少相遇的机会 →",
+    marriageTitle: "结婚计划",
+    untilAge: (age) => `${age}岁之前`,
+    yearsLeft: (years) => ` · 还有${years}`,
+    timesLeft: "次",
+  },
+});
+
 export default function HomePage() {
+  const t = tr(COPY);
   const { state, hydrated } = useAppState();
   const copy = copyFor(state.settings.tone);
   const profile = state.profile;
@@ -68,7 +235,7 @@ export default function HomePage() {
   );
 
   if (!hydrated) {
-    return <p className="py-12 text-center text-sm text-ink-400">불러오는 중…</p>;
+    return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
   }
 
   if (!profile) {
@@ -76,15 +243,14 @@ export default function HomePage() {
       <div className="space-y-5 py-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
-            남은 것을 세어 봅니다
+            {t.introTitle}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-600">
-            이 앱은 할 일을 알려주지 않습니다. 남은 시간과 남은 만남을 횟수로 계산할
-            뿐입니다. 먼저 내 정보를 채워 주세요.
+            {t.introBody}
           </p>
         </div>
         <Link href="/setup" className="btn-primary">
-          시작하기
+          {t.start}
         </Link>
       </div>
     );
@@ -106,7 +272,7 @@ export default function HomePage() {
           sub={
             age === null
               ? undefined
-              : `${formatAge(age)} · 예상 수명 ${profile.lifeExpectancy}세`
+              : t.lifeSub(formatAge(age), profile.lifeExpectancy)
           }
         />
         {progress !== null && (
@@ -115,42 +281,52 @@ export default function HomePage() {
               <div className="h-full rounded-full bg-ink-800" style={{ width: `${progress * 100}%` }} />
             </div>
             <p className="mt-2 text-xs text-ink-600">
-              지나온 {formatPercent(progress)} · 남은 {formatPercent(1 - progress)}
+              {t.progress(formatPercent(progress), formatPercent(1 - progress))}
             </p>
           </div>
         )}
         <div className="grid grid-cols-3 gap-3 border-t border-hero-line pt-5">
           <StatCard
-            label="남은 여름"
-            value={myRemaining === null ? "-" : `${Math.floor(myRemaining)}번`}
+            label={t.summers}
+            value={myRemaining === null ? "-" : t.timesValue(Math.floor(myRemaining))}
           />
           <StatCard
-            label="남은 주말"
+            label={t.weekends}
             value={myRemaining === null ? "-" : formatCount(myRemaining * 52)}
           />
           <StatCard
-            label="남은 보름달"
+            label={t.fullMoons}
             value={myRemaining === null ? "-" : formatCount(myRemaining * 12.37)}
           />
         </div>
         <Link href="/setup" className="btn-quiet">
-          내 정보 수정
+          {t.editProfile}
         </Link>
       </section>
 
+      {/* 조르지 않는 한 줄. 언제 뜨는지는 lib/backup.ts. */}
+      {backupDue(state) && (
+        <Link
+          href="/settings#backup"
+          className="block rounded-xl border border-ink-200/70 px-4 py-3 text-xs leading-relaxed text-ink-600 transition hover:border-ink-400"
+        >
+          {t.backupNudge}
+        </Link>
+      )}
+
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">인연</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.people}</h2>
           <Link href="/people" className="btn-quiet">
-            전체 보기
+            {t.seeAll}
           </Link>
         </div>
         {people.length === 0 ? (
           <EmptyState
             title={copy.emptyPeople}
-            body="부모님, 친구, 아이 — 나와 이어진 사람이면 누구든. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 볼 수 있는지 바로 나옵니다."
+            body={t.emptyPeopleBody}
             actionHref="/people/new"
-            actionLabel="인연 추가"
+            actionLabel={t.addPerson}
           />
         ) : (
           /*
@@ -173,7 +349,7 @@ export default function HomePage() {
                         {person.name}
                       </span>
                       <span className="block text-xs text-ink-400">
-                        {person.relation ?? "인연"}
+                        {person.relation ?? t.relationFallback}
                       </span>
                     </span>
                   </span>
@@ -181,7 +357,7 @@ export default function HomePage() {
                     <span className="numeral text-3xl leading-none text-ink-900">
                       {formatCount(result.total)}
                     </span>
-                    <span className="ml-1 text-xs text-ink-400">번</span>
+                    <span className="ml-1 text-xs text-ink-400">{t.times}</span>
                   </span>
                 </Link>
               </li>
@@ -192,7 +368,7 @@ export default function HomePage() {
 
       {growing.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">아이와 남은 것들</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.growingTitle}</h2>
           {growing.map(({ person, growth }) => {
             const pick = (key: string) => growth.items.find((i) => i.key === key);
             return (
@@ -205,7 +381,7 @@ export default function HomePage() {
                     {person.emoji ?? "🧸"} {person.name}
                   </p>
                   <p className="text-xs text-ink-400">
-                    만 {growth.adultAge}세까지 {formatYears(growth.yearsLeft)}
+                    {t.untilAdult(growth.adultAge, formatYears(growth.yearsLeft))}
                   </p>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2">
@@ -219,7 +395,7 @@ export default function HomePage() {
                         </p>
                         <p className="numeral mt-0.5 text-lg text-ink-800">
                           {formatCount(item.count)}
-                          <span className="ml-0.5 text-xs font-normal text-ink-400">번</span>
+                          <span className="ml-0.5 text-xs font-normal text-ink-400">{t.times}</span>
                         </p>
                       </div>
                     );
@@ -233,17 +409,17 @@ export default function HomePage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">순간</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.moments}</h2>
           <Link href="/moments" className="btn-quiet">
-            전체 보기
+            {t.seeAll}
           </Link>
         </div>
         {moments.length === 0 ? (
           <EmptyState
             title={copy.emptyMoments}
-            body="벚꽃, 해외여행, 서핑… 빈도만 정하면 남은 횟수가 나옵니다."
+            body={t.emptyMomentsBody}
             actionHref="/moments/new"
-            actionLabel="순간 추가"
+            actionLabel={t.addMoment}
           />
         ) : (
           <div className="grid grid-cols-2 gap-2">
@@ -258,7 +434,7 @@ export default function HomePage() {
                 <p className="mt-2 truncate text-sm font-medium text-ink-800">{moment.title}</p>
                 <p className="numeral mt-1 text-3xl leading-none text-ink-900">
                   {formatCount(result.total)}
-                  <span className="ml-1 text-sm font-normal text-ink-400">번</span>
+                  <span className="ml-1 text-sm font-normal text-ink-400">{t.times}</span>
                 </p>
               </Link>
             ))}
@@ -276,11 +452,11 @@ export default function HomePage() {
           href="/marriage"
           className="block pt-2 text-center text-xs text-ink-400 transition hover:text-ink-600"
         >
-          결혼까지 남은 기회도 세어 보기 →
+          {t.marriageLink}
         </Link>
       ) : (
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">결혼 계획</h2>
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.marriageTitle}</h2>
           <Link
             href="/marriage"
             className="card flex items-center justify-between py-4 transition hover:border-ink-400"
@@ -289,12 +465,12 @@ export default function HomePage() {
               <span className="text-xl">💍</span>
               <span className="min-w-0">
                 <span className="block text-sm font-medium text-ink-800">
-                  만 {marriage.plan.targetAge}세까지
+                  {t.untilAge(marriage.plan.targetAge)}
                 </span>
                 <span className="block text-xs text-ink-400">
                   {formatFrequency(marriage.plan.frequency)}
                   {marriage.result.yearsLeft !== null &&
-                    ` · ${formatYears(marriage.result.yearsLeft)} 남음`}
+                    t.yearsLeft(formatYears(marriage.result.yearsLeft))}
                 </span>
                 {marriage.plan.note && (
                   <span className="mt-0.5 block truncate text-xs text-ink-400">
@@ -307,7 +483,7 @@ export default function HomePage() {
               <span className="numeral block text-3xl leading-none text-ink-900">
                 {formatCount(marriage.result.total)}
               </span>
-              <span className="mt-1 block text-[11px] text-ink-400">번 남음</span>
+              <span className="mt-1 block text-[11px] text-ink-400">{t.timesLeft}</span>
             </span>
           </Link>
         </section>

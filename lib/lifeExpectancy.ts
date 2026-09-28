@@ -1,64 +1,77 @@
 import { resolveAge } from "./calc.ts";
 import { healthAgeOffset } from "./health.ts";
-import { ESTIMATED_TABLE_COUNTRIES, LIFE_TABLE, LIFE_TABLE_AGES } from "./lifeTable.ts";
+import { getLang, locale } from "./i18n.ts";
+import { LIFE_TABLE, LIFE_TABLE_AGES, WORLD_LIFE_TABLE } from "./lifeTable.ts";
 import type { HealthProfile, LifeSpan, Sex } from "./types";
 
 export interface Country {
   code: string;
-  /** 한국어 표기. 셀렉트 박스에 그대로 쓴다. */
-  name: string;
+  /** 지금 언어의 나라 이름. 한국어는 아래 표기를 그대로, 나머지는 Intl에 맡긴다. */
+  readonly name: string;
 }
 
 /** 이름만 둔다. 숫자는 전부 생명표(lifeTable.ts)에서 온다. */
-export const COUNTRIES: Country[] = [
-  { code: "KR", name: "대한민국" },
-  { code: "JP", name: "일본" },
-  { code: "CN", name: "중국" },
-  { code: "TW", name: "대만" },
-  { code: "HK", name: "홍콩" },
-  { code: "SG", name: "싱가포르" },
-  { code: "US", name: "미국" },
-  { code: "CA", name: "캐나다" },
-  { code: "GB", name: "영국" },
-  { code: "FR", name: "프랑스" },
-  { code: "DE", name: "독일" },
-  { code: "IT", name: "이탈리아" },
-  { code: "ES", name: "스페인" },
-  { code: "NL", name: "네덜란드" },
-  { code: "SE", name: "스웨덴" },
-  { code: "NO", name: "노르웨이" },
-  { code: "DK", name: "덴마크" },
-  { code: "FI", name: "핀란드" },
-  { code: "CH", name: "스위스" },
-  { code: "AU", name: "호주" },
-  { code: "NZ", name: "뉴질랜드" },
-  { code: "RU", name: "러시아" },
-  { code: "PL", name: "폴란드" },
-  { code: "BR", name: "브라질" },
-  { code: "MX", name: "멕시코" },
-  { code: "AR", name: "아르헨티나" },
-  { code: "IN", name: "인도" },
-  { code: "ID", name: "인도네시아" },
-  { code: "TH", name: "태국" },
-  { code: "VN", name: "베트남" },
-  { code: "PH", name: "필리핀" },
-  { code: "TR", name: "튀르키예" },
-  { code: "SA", name: "사우디아라비아" },
-  { code: "AE", name: "아랍에미리트" },
-  { code: "ZA", name: "남아프리카공화국" },
-  { code: "NG", name: "나이지리아" },
-  { code: "EG", name: "이집트" },
+const KO_NAMES: [code: string, name: string][] = [
+  ["KR", "대한민국"],
+  ["JP", "일본"],
+  ["CN", "중국"],
+  ["TW", "대만"],
+  ["HK", "홍콩"],
+  ["SG", "싱가포르"],
+  ["US", "미국"],
+  ["CA", "캐나다"],
+  ["GB", "영국"],
+  ["FR", "프랑스"],
+  ["DE", "독일"],
+  ["IT", "이탈리아"],
+  ["ES", "스페인"],
+  ["NL", "네덜란드"],
+  ["SE", "스웨덴"],
+  ["NO", "노르웨이"],
+  ["DK", "덴마크"],
+  ["FI", "핀란드"],
+  ["CH", "스위스"],
+  ["AU", "호주"],
+  ["NZ", "뉴질랜드"],
+  ["RU", "러시아"],
+  ["PL", "폴란드"],
+  ["BR", "브라질"],
+  ["MX", "멕시코"],
+  ["AR", "아르헨티나"],
+  ["IN", "인도"],
+  ["ID", "인도네시아"],
+  ["TH", "태국"],
+  ["VN", "베트남"],
+  ["PH", "필리핀"],
+  ["TR", "튀르키예"],
+  ["SA", "사우디아라비아"],
+  ["AE", "아랍에미리트"],
+  ["ZA", "남아프리카공화국"],
+  ["NG", "나이지리아"],
+  ["EG", "이집트"],
 ];
+
+function countryName(code: string, ko: string): string {
+  if (getLang() === "ko") return ko;
+  try {
+    return new Intl.DisplayNames([locale()], { type: "region" }).of(code) ?? ko;
+  } catch {
+    return code;
+  }
+}
+
+export const COUNTRIES: Country[] = KO_NAMES.map(([code, ko]) => ({
+  code,
+  get name() {
+    return countryName(code, ko);
+  },
+}));
 
 export const DEFAULT_COUNTRY_CODE = "KR";
 
-/** 목록에 없는 국가의 폴백(WHO 세계 평균 기대여명, 2021년 기준 근사치). */
-const WORLD_FALLBACK = [71.4, 71.6, 68.0, 63.2, 58.4, 53.7, 49.1, 44.5, 40.0, 35.6, 31.3, 27.2, 23.3, 19.6, 16.2, 13.0, 10.1, 7.6, 5.6];
-
 /** 그 나라의 표를 고른다. 모르면 세계 평균. */
 function tableFor(code: string | undefined, sex: Sex | undefined): number[] {
-  const country = code ? LIFE_TABLE[code] : undefined;
-  if (!country) return WORLD_FALLBACK;
+  const country = (code ? LIFE_TABLE[code] : undefined) ?? WORLD_LIFE_TABLE;
   if (sex === "male") return country.male;
   if (sex === "female") return country.female;
   return country.all;
@@ -118,11 +131,6 @@ export function lookupLifeExpectancy(
   }
   const lookupAge = Math.max(0, age + healthAgeOffset(health));
   return round1(age + remainingLifeAt(code, sex, lookupAge));
-}
-
-/** 생명표를 빌려 쓴 국가인지(화면에서 근사치라고 밝힌다). */
-export function isEstimatedTable(code: string | undefined): boolean {
-  return code !== undefined && ESTIMATED_TABLE_COUNTRIES.includes(code);
 }
 
 function round1(value: number): number {

@@ -512,3 +512,28 @@ test("lifeProgress is a clamped 0..1 ratio", () => {
   assert.equal(lifeProgress({ lifeExpectancy: 60 }, NOW), null);
   assert.equal(lifeProgress({ ageYears: 30, lifeExpectancy: 0 }, NOW), null);
 });
+
+test("터무니없이 긴 기간도 멈추지 않고 150년에서 자른다", () => {
+  const r = countOccurrences({ years: 1e8, perYear: 1 });
+  assert.equal(r.slices.length, 150);
+  assert.equal(r.total, 150);
+});
+
+test("연간 감소율이 100%를 넘어도 NaN이 되지 않는다", () => {
+  const r = countOccurrences({
+    years: 10,
+    perYear: 10,
+    filters: [{ id: "d", label: "", enabled: true, kind: "decay", ratePerYear: 1.5 }],
+  });
+  assert.ok(Number.isFinite(r.total));
+});
+
+test("생일 당일 새벽이면 이미 한 살을 먹었다", () => {
+  const age = resolveAge({ birthDate: "2001-09-28" }, new Date("2026-09-28T00:30:00"));
+  assert.equal(Math.floor(age), 25);
+});
+
+test("윤년 언저리에서 생일 전날에 나이를 먹지 않는다", () => {
+  const age = resolveAge({ birthDate: "2020-03-01" }, new Date("2024-02-29T23:30:00"));
+  assert.equal(Math.floor(age), 3);
+});

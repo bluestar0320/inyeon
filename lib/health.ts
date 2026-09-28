@@ -1,4 +1,5 @@
 import type { HealthProfile, HealthKey, HealthLevel } from "./types";
+import { defineCopy, tr } from "./i18n.ts";
 
 /*
  * 생활 습관을 "나이 보정"으로 바꾼다.
@@ -38,40 +39,134 @@ export interface HealthFactor {
   basis: string;
 }
 
+type FactorCopy = { label: string; basis: string; options: Record<HealthLevel, string> };
+
+/* 문구는 언어별로, 숫자는 아래 HEALTH_FACTORS 한 곳에만 둔다. */
+const COPY = defineCopy<Record<HealthKey, FactorCopy>>({
+  ko: {
+    smoking: {
+      label: "담배",
+      basis:
+        "평생 흡연자는 비흡연자보다 약 10년을 잃는다는 대규모 연구(Doll 2004, Jha 2013)를 근거로 합니다. 이 앱에서 근거가 가장 확실한 항목입니다.",
+      options: { good: "안 피움", mid: "끊었음", bad: "피움" },
+    },
+    drinking: {
+      label: "술",
+      basis:
+        "많이 마실수록 나쁘다는 방향만 분명하고 연수 환산 근거는 약합니다. 작게 잡은 출발점입니다.",
+      options: { good: "거의 안 마심", mid: "가끔", bad: "자주 많이" },
+    },
+    exercise: {
+      label: "운동",
+      basis:
+        "움직이는 쪽이 낫다는 방향만 분명하고 연수 환산 근거는 약합니다. 작게 잡은 출발점입니다.",
+      options: { good: "주 3회 이상", mid: "가끔", bad: "거의 안 함" },
+    },
+  },
+  en: {
+    smoking: {
+      label: "Smoking",
+      basis:
+        "Based on large studies (Doll 2004, Jha 2013) showing lifelong smokers lose about 10 years compared with non-smokers. This is the best-supported item in the app.",
+      options: { good: "Never", mid: "Quit", bad: "Smoke" },
+    },
+    drinking: {
+      label: "Drinking",
+      basis:
+        "Only the direction is clear — more is worse — and the evidence for converting it to years is weak. A small starting point.",
+      options: { good: "Rarely", mid: "Sometimes", bad: "Often, heavily" },
+    },
+    exercise: {
+      label: "Exercise",
+      basis:
+        "Only the direction is clear — moving more is better — and the evidence for converting it to years is weak. A small starting point.",
+      options: { good: "3+ times a week", mid: "Sometimes", bad: "Rarely" },
+    },
+  },
+  ja: {
+    smoking: {
+      label: "たばこ",
+      basis:
+        "生涯喫煙者は非喫煙者より約10年短いという大規模研究（Doll 2004、Jha 2013）に基づきます。このアプリで最も根拠が確かな項目です。",
+      options: { good: "吸わない", mid: "やめた", bad: "吸う" },
+    },
+    drinking: {
+      label: "お酒",
+      basis:
+        "多く飲むほど良くないという方向ははっきりしていますが、年数に換算する根拠は弱めです。小さめに見積もった出発点です。",
+      options: { good: "ほとんど飲まない", mid: "ときどき", bad: "よく、たくさん" },
+    },
+    exercise: {
+      label: "運動",
+      basis:
+        "体を動かすほうが良いという方向ははっきりしていますが、年数に換算する根拠は弱めです。小さめに見積もった出発点です。",
+      options: { good: "週3回以上", mid: "ときどき", bad: "ほとんどしない" },
+    },
+  },
+  es: {
+    smoking: {
+      label: "Tabaco",
+      basis:
+        "Se basa en grandes estudios (Doll 2004, Jha 2013) según los cuales quien fuma toda la vida pierde unos 10 años frente a quien no fuma. Es el dato mejor respaldado de la app.",
+      options: { good: "No fumo", mid: "Lo dejé", bad: "Fumo" },
+    },
+    drinking: {
+      label: "Alcohol",
+      basis:
+        "Solo está clara la dirección —más es peor— y la base para traducirlo a años es débil. Es un punto de partida prudente.",
+      options: { good: "Casi nunca", mid: "A veces", bad: "A menudo y mucho" },
+    },
+    exercise: {
+      label: "Ejercicio",
+      basis:
+        "Solo está clara la dirección —moverse es mejor— y la base para traducirlo a años es débil. Es un punto de partida prudente.",
+      options: { good: "3+ veces por semana", mid: "A veces", bad: "Casi nunca" },
+    },
+  },
+  zh: {
+    smoking: {
+      label: "吸烟",
+      basis:
+        "依据大规模研究（Doll 2004、Jha 2013）：终身吸烟者比不吸烟者少活约10年。这是本应用中依据最可靠的一项。",
+      options: { good: "不吸", mid: "已戒", bad: "吸烟" },
+    },
+    drinking: {
+      label: "饮酒",
+      basis: "只能确定喝得越多越不好，换算成年数的依据较弱。这是保守设定的起点。",
+      options: { good: "几乎不喝", mid: "偶尔", bad: "经常大量" },
+    },
+    exercise: {
+      label: "运动",
+      basis: "只能确定多动更好，换算成年数的依据较弱。这是保守设定的起点。",
+      options: { good: "每周3次以上", mid: "偶尔", bad: "几乎不动" },
+    },
+  },
+});
+
+/* 문구는 읽을 때마다 지금 언어로 가져온다(언어는 렌더 시점에 정해진다). */
+function factor(key: HealthKey, offsets: Record<HealthLevel, number>): HealthFactor {
+  return {
+    key,
+    get label() {
+      return tr(COPY)[key].label;
+    },
+    get basis() {
+      return tr(COPY)[key].basis;
+    },
+    options: (["good", "mid", "bad"] as const).map((level) => ({
+      level,
+      offsetYears: offsets[level],
+      get label() {
+        return tr(COPY)[key].options[level];
+      },
+    })),
+  };
+}
+
 export const HEALTH_FACTORS: HealthFactor[] = [
-  {
-    key: "smoking",
-    label: "담배",
-    basis:
-      "평생 흡연자는 비흡연자보다 약 10년을 잃는다는 대규모 연구(Doll 2004, Jha 2013)를 근거로 합니다. 이 앱에서 근거가 가장 확실한 항목입니다.",
-    options: [
-      { level: "good", label: "안 피움", offsetYears: 0 },
-      { level: "mid", label: "끊었음", offsetYears: 3 },
-      { level: "bad", label: "피움", offsetYears: 10 },
-    ],
-  },
-  {
-    key: "drinking",
-    label: "술",
-    basis:
-      "많이 마실수록 나쁘다는 방향만 분명하고 연수 환산 근거는 약합니다. 작게 잡은 출발점입니다.",
-    options: [
-      { level: "good", label: "거의 안 마심", offsetYears: 0 },
-      { level: "mid", label: "가끔", offsetYears: 0 },
-      { level: "bad", label: "자주 많이", offsetYears: 2 },
-    ],
-  },
-  {
-    key: "exercise",
-    label: "운동",
-    basis:
-      "움직이는 쪽이 낫다는 방향만 분명하고 연수 환산 근거는 약합니다. 작게 잡은 출발점입니다.",
-    options: [
-      { level: "good", label: "주 3회 이상", offsetYears: -2 },
-      { level: "mid", label: "가끔", offsetYears: 0 },
-      { level: "bad", label: "거의 안 함", offsetYears: 2 },
-    ],
-  },
+  factor("smoking", { good: 0, mid: 3, bad: 10 }),
+  factor("drinking", { good: 0, mid: 0, bad: 2 }),
+  factor("exercise", { good: -2, mid: 0, bad: 2 }),
 ];
 
 /** 항목별로 몇 년이 붙었는지. 총합만 보여주면 어디서 왔는지 알 수 없다. */

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
+import { todayISO } from "./format";
 import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
@@ -34,13 +35,6 @@ function emit(): void {
   for (const listener of listeners) listener();
 }
 
-/** 오늘(YYYY-MM-DD). 기기 시간대 기준이라 toISOString을 쓰면 하루가 밀릴 수 있다. */
-function today(): string {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-
 /*
  * 저장된 기록을 지금 시점에 맞춘다. 두 가지를 손본다.
  *
@@ -51,8 +45,38 @@ function today(): string {
  */
 function refresh<T extends { ageYears?: number; ageAsOf?: string }>(span: T): T {
   const withDate =
-    span.ageYears !== undefined && !span.ageAsOf ? { ...span, ageAsOf: today() } : span;
+    span.ageYears !== undefined && !span.ageAsOf ? { ...span, ageAsOf: todayISO() } : span;
   return refreshLifeSpan(withDate as T & Parameters<typeof refreshLifeSpan>[0]) as T;
+}
+
+const UNITS = ["day", "week", "month", "quarter", "year"];
+
+/*
+ * 계산이 기대는 최소한의 모양. 이게 없는 항목은 화면을 그리다 터진다(빈도가 없으면
+ * toPerYear에서). 그리고 그 상태가 저장되면 열 때마다 오류 화면이 뜬다. 그래서 읽을 때
+ * 걸러 낸다. 조건 필터가 빠진 것은 빈 배열로 채워 살린다.
+ */
+function repairItem<T extends { id?: unknown; frequency?: unknown; filters?: unknown }>(
+  item: T,
+): T | null {
+  if (!item || typeof item !== "object" || typeof item.id !== "string") return null;
+  const f = item.frequency as { count?: unknown; unit?: unknown } | undefined;
+  if (!f || typeof f.count !== "number" || !UNITS.includes(f.unit as string)) return null;
+  return Array.isArray(item.filters) ? item : { ...item, filters: [] };
+}
+
+function repairAll<T extends { id?: unknown; frequency?: unknown; filters?: unknown }>(
+  items: unknown,
+): T[] {
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => repairItem(item as T)).filter((item): item is T => item !== null);
+}
+
+/** 불러오기 파일이 이 앱의 내보내기처럼 생겼는지. 아무 JSON이나 받아 기록을 비우지 않도록. */
+export function looksLikeBackup(raw: unknown): boolean {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const value = raw as Record<string, unknown>;
+  return Array.isArray(value.people) && Array.isArray(value.moments) && "settings" in value;
 }
 
 function normalise(raw: unknown): AppState {
@@ -61,8 +85,8 @@ function normalise(raw: unknown): AppState {
   return {
     version: 1,
     profile: value.profile ? refresh(value.profile) : null,
-    people: Array.isArray(value.people) ? value.people.map(refresh) : [],
-    moments: Array.isArray(value.moments) ? value.moments : [],
+    people: repairAll<Person>(value.people).map(refresh),
+    moments: repairAll<Moment>(value.moments),
     // 결혼 계획이 생기기 전에 저장된 데이터에는 이 키가 없다. null로 떨어뜨린다.
     marriage: value.marriage ?? null,
     settings: { ...DEFAULT_SETTINGS, ...(value.settings ?? {}) },
@@ -99,7 +123,24 @@ function persist(): void {
   }
 }
 
+/*
+ * 다른 탭(또는 설치한 앱과 브라우저)에서 저장하면 여기도 따라 읽는다. 안 그러면 늦게
+ * 저장하는 쪽이 자기가 들고 있던 옛 상태로 상대가 추가한 것을 지운다.
+ */
+function onStorage(event: StorageEvent): void {
+  if (event.key !== STORAGE_KEY || !booted) return;
+  try {
+    state = event.newValue ? normalise(JSON.parse(event.newValue)) : EMPTY_STATE;
+  } catch {
+    return;
+  }
+  emit();
+}
+
 function subscribe(listener: () => void): () => void {
+  if (listeners.size === 0 && typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
