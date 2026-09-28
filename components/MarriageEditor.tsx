@@ -15,7 +15,7 @@ import { meetingFrequencyPresets } from "@/lib/presets";
 import { emptyMarriage, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
 import type { Frequency, MarriagePlan } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -192,6 +192,11 @@ export default function MarriageEditor() {
     leaveTo(router, "/");
   }
 
+  function save(): void {
+    saveMarriage({ ...draft, updatedAt: new Date().toISOString() });
+    leaveTo(router, "/");
+  }
+
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
   }
@@ -205,7 +210,20 @@ export default function MarriageEditor() {
         : undefined;
 
   return (
-    <div className="space-y-5">
+    /*
+     * form으로 감싸 입력 칸에서 Enter를 누르면 저장되게 한다. 브라우저는 제출 단추가
+     * 있는 form에서만 Enter를 제출로 받으므로 저장 단추를 type="submit"으로 둔다.
+     * 저장 단추가 꺼져 있으면(이름이 비었을 때) Enter도 제출하지 않는다.
+     */
+    <form
+      className="space-y-5"
+      noValidate
+      onKeyDown={blockImeEnter}
+      onSubmit={(event) => {
+        event.preventDefault();
+        save();
+      }}
+    >
       <ResultPanel
         label={copy.marriageLabel}
         result={result}
@@ -317,12 +335,8 @@ export default function MarriageEditor() {
 
       <div className="flex items-center gap-2">
         <button
-          type="button"
+          type="submit"
           className="btn-primary"
-          onClick={() => {
-            saveMarriage({ ...draft, updatedAt: new Date().toISOString() });
-            leaveTo(router, "/");
-          }}
         >
           {saved ? t.save : t.create}
         </button>
@@ -346,6 +360,6 @@ export default function MarriageEditor() {
           </button>
         )}
       </div>
-    </div>
+    </form>
   );
 }

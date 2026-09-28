@@ -17,7 +17,7 @@ import { momentPresets } from "@/lib/presets";
 import { momentFrom, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
 import { DAYS_PER_YEAR, toPerYear } from "@/lib/calc";
 import type { Moment, MomentHorizon } from "@/lib/types";
 
@@ -224,7 +224,20 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
   }
 
   return (
-    <div className="space-y-5">
+    /*
+     * form으로 감싸 입력 칸에서 Enter를 누르면 저장되게 한다. 브라우저는 제출 단추가
+     * 있는 form에서만 Enter를 제출로 받으므로 저장 단추를 type="submit"으로 둔다.
+     * 저장 단추가 꺼져 있으면(이름이 비었을 때) Enter도 제출하지 않는다.
+     */
+    <form
+      className="space-y-5"
+      noValidate
+      onKeyDown={blockImeEnter}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (draft.title.trim()) save();
+      }}
+    >
       <EditConflict conflict={conflict} />
       <ResultPanel
         label={copy.momentLabel}
@@ -417,7 +430,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="button" className="btn-primary" onClick={save} disabled={!draft.title.trim()}>
+        <button type="submit" className="btn-primary" disabled={!draft.title.trim()}>
           {isNew ? t.add : t.save}
         </button>
         <button type="button" className="btn-secondary" onClick={leave}>
@@ -439,6 +452,6 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
           </button>
         )}
       </div>
-    </div>
+    </form>
   );
 }

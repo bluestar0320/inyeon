@@ -20,7 +20,7 @@ import { relationPresets } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
 import type { GrowthSetup, Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -247,7 +247,20 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   }
 
   return (
-    <div className="space-y-5">
+    /*
+     * form으로 감싸 입력 칸에서 Enter를 누르면 저장되게 한다. 브라우저는 제출 단추가
+     * 있는 form에서만 Enter를 제출로 받으므로 저장 단추를 type="submit"으로 둔다.
+     * 저장 단추가 꺼져 있으면(이름이 비었을 때) Enter도 제출하지 않는다.
+     */
+    <form
+      className="space-y-5"
+      noValidate
+      onKeyDown={blockImeEnter}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (draft.name.trim()) save();
+      }}
+    >
       <EditConflict conflict={conflict} />
       <ResultPanel
         label={copy.meetingLabel}
@@ -435,7 +448,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="button" className="btn-primary" onClick={save} disabled={!draft.name.trim()}>
+        <button type="submit" className="btn-primary" disabled={!draft.name.trim()}>
           {isNew ? t.add : t.save}
         </button>
         <button type="button" className="btn-secondary" onClick={leave}>
@@ -460,6 +473,6 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           </button>
         )}
       </div>
-    </div>
+    </form>
   );
 }

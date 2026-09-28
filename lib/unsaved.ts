@@ -155,3 +155,12 @@ export function useUnsavedGuard(changed: boolean): void {
     };
   }, [changed]);
 }
+
+/**
+ * 한글 입력 중에 글자를 확정하려고 누른 Enter가 곧바로 저장으로 이어지지 않게 한다.
+ * 일부 브라우저(Safari 등)는 조합 중인 Enter로도 form을 제출해서, 마지막 글자가
+ * 빠진 채 저장된다. 편집 화면의 form에 onKeyDown으로 단다.
+ */
+export function blockImeEnter(event: { key: string; nativeEvent: { isComposing?: boolean }; preventDefault: () => void }): void {
+  if (event.key === "Enter" && event.nativeEvent.isComposing) event.preventDefault();
+}

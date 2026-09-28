@@ -170,3 +170,49 @@ test("없는 주소는 고른 언어로 안내한다", async ({ page }) => {
   await page.goto("/nope");
   await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
 });
+
+test("입력 칸에서 Enter를 누르면 저장된다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people/new");
+  await page.getByLabel("이름").fill("엄마");
+  await page.getByLabel("나이", { exact: true }).fill("60");
+  await page.getByLabel("나이", { exact: true }).press("Enter");
+  await page.waitForURL(/\/people\/detail/);
+  const state = (await readState(page)) as { people: { name: string }[] };
+  expect(state.people.map((p) => p.name)).toEqual(["엄마"]);
+});
+
+test("이름이 비어 있으면 Enter로도 저장되지 않는다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people/new");
+  await page.getByLabel("나이", { exact: true }).fill("60");
+  await page.getByLabel("나이", { exact: true }).press("Enter");
+  await expect(page).toHaveURL(/\/people\/new/);
+});
+
+test("내 정보도 다른 창에서 바뀌면 알리고, 손대지 않았으면 나갈 때 묻지 않는다", async ({ page, context }) => {
+  await seed(page, {});
+  await page.goto("/setup");
+  const other = await context.newPage();
+  await other.goto("/setup");
+  await other.getByLabel("내 나이").fill("40");
+  await other.getByRole("button", { name: "저장하기" }).click();
+  await expect(page.getByText("다른 창에서 이 기록이 바뀌었습니다")).toBeVisible();
+
+  let asked = false;
+  page.on("dialog", (dialog) => {
+    asked = true;
+    void dialog.dismiss();
+  });
+  await page.getByRole("link", { name: "홈" }).click();
+  await page.waitForURL(/\/$/);
+  expect(asked).toBe(false);
+});
+
+test("영문 이름에도 조사를 맞춰 붙인다", async ({ page }) => {
+  await seed(page, { people: [person("a", "Tom"), person("b", "Kate")] });
+  await page.goto("/people/detail?id=a");
+  await expect(page.getByText(/Tom과 앞으로/)).toBeVisible();
+  await page.goto("/people/detail?id=b");
+  await expect(page.getByText(/Kate와 앞으로/)).toBeVisible();
+});

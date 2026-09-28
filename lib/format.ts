@@ -151,7 +151,12 @@ export function formatPercent(ratio: number | null | undefined, digits = 0): str
 
 /**
  * 받침에 맞춰 조사를 붙인다. josa("어머니", "와/과") → "어머니와".
- * 한글로 끝나지 않는 이름(영문 등)은 어느 쪽인지 알 수 없어 "와(과)"로 둔다.
+ *
+ * 한글이 아닌 이름은 한국어로 읽는 소리로 짐작한다.
+ * - 숫자: 한국어로 읽는다(1 일 → 받침, 2 이 → 없음).
+ * - 영문: -l, -m, -n, -ng, -ck로 끝나면 받침이 생긴다(Tom 톰, Bill 빌, Jack 잭, King 킹).
+ *   나머지는 "으"가 붙거나 모음으로 끝나 받침이 없다(Kate 케이트, Chris 크리스, Peter 피터).
+ * - 한자·가나 등 읽는 법을 알 수 없는 글자만 "와(과)"로 둘 다 적는다.
  */
 const JOSA = {
   // [받침 없을 때, 받침 있을 때]
@@ -161,11 +166,22 @@ const JOSA = {
   "이/가": ["가", "이"],
 } as const;
 
+/** 받침이 있으면 true, 없으면 false, 알 수 없으면 null. */
+function hasFinal(word: string): boolean | null {
+  const trimmed = word.trim();
+  const last = trimmed.slice(-1);
+  const code = last.charCodeAt(0) - 0xac00;
+  if (code >= 0 && code <= 11171) return code % 28 !== 0;
+  if (/[0-9]/.test(last)) return "013678".includes(last);
+  if (/[a-z]/i.test(last)) return /(l|m|n|ng|ck)$/i.test(trimmed);
+  return null;
+}
+
 export function josa(word: string, pair: keyof typeof JOSA): string {
   const [noFinal, withFinal] = JOSA[pair];
-  const code = word.charCodeAt(word.length - 1) - 0xac00;
-  if (!(code >= 0 && code <= 11171)) return `${word}${pair.replace("/", "(")})`;
-  return word + (code % 28 === 0 ? noFinal : withFinal);
+  const final = hasFinal(word);
+  if (final === null) return `${word}${pair.replace("/", "(")})`;
+  return word + (final ? withFinal : noFinal);
 }
 
 /** 기기 시간대 기준 오늘(YYYY-MM-DD). toISOString은 UTC라 한국 오전 9시 전에는 어제가 된다. */

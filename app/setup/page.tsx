@@ -1,14 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import EditConflict, { confirmOverwrite, type Conflict } from "@/components/EditConflict";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import { remainingYears } from "@/lib/calc";
 import { formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { emptyProfile, useActions, useAppState } from "@/lib/store";
-import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
 import type { Profile } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -76,28 +77,67 @@ export default function SetupPage() {
   const { saveProfile } = useActions();
   const [draft, setDraft] = useState<Profile>(emptyProfile);
   const [loaded, setLoaded] = useState(false);
+  // 편집을 시작할 때의 내 정보. 다른 창에서 바뀌었는지 견주는 기준이자, "안 저장됨"을
+  // 가리는 기준이다. 지금 저장된 값과 견주면 다른 창에서 바꾼 것만으로 이 화면이
+  // "저장하지 않은 변경이 있다"고 물었다.
+  const [started, setStarted] = useState<string | null>(null);
+  const savedHere = useRef(false);
 
   // 저장된 프로필은 하이드레이션 뒤에야 들어오므로, 한 번만 폼에 옮겨 담는다.
   useEffect(() => {
     if (!hydrated || loaded) return;
     if (state.profile) setDraft(state.profile);
+    setStarted(JSON.stringify(state.profile));
     setLoaded(true);
   }, [hydrated, loaded, state.profile]);
 
   const remaining = remainingYears(draft);
 
-  const baseline = state.profile ?? emptyProfile();
+  const baseline: Profile = (started && JSON.parse(started)) ?? emptyProfile();
   const dirty = loaded && JSON.stringify(baseline) !== JSON.stringify(draft);
   useUnsavedGuard(dirty);
 
+  const conflict: Conflict =
+    !loaded || savedHere.current || JSON.stringify(state.profile) === started
+      ? null
+      : state.profile === null
+        ? "deleted"
+        : "changed";
+
+  function save(): void {
+    if (remaining === null || !confirmOverwrite(conflict)) return;
+    savedHere.current = true;
+    saveProfile(draft);
+    /*
+     * 사람을 때리는 건 "47년"이 아니라 "엄마 232번"이다.
+     * 그런데 저장하고 빈 홈으로 보내면 약한 숫자를 먼저 보여주고, 센 숫자는
+     * 사용자가 알아서 두 화면을 더 거쳐야 나온다. 처음 들어온 사람은
+     * 거기서 멈춘다. 그래서 첫 설정일 때만 바로 첫 인연을 세우러 보낸다.
+     * 나중에 내 정보를 고치러 다시 온 경우는 그대로 홈으로 돌아간다.
+     */
+    const first = state.profile === null && state.people.length === 0;
+    leaveTo(router, first ? "/people/new" : "/");
+  }
+
   return (
-    <div className="space-y-5">
+    // form: 입력 칸에서 Enter를 누르면 저장한다(저장 단추가 type="submit").
+    <form
+      className="space-y-5"
+      noValidate
+      onKeyDown={blockImeEnter}
+      onSubmit={(event) => {
+        event.preventDefault();
+        save();
+      }}
+    >
       <div className="pt-2">
         <h1 className="text-xl font-semibold tracking-tight text-ink-900">{t.title}</h1>
         <p className="mt-1 text-sm text-ink-400">
           {t.subtitle}
         </p>
       </div>
+
+      <EditConflict conflict={conflict} />
 
       <div className="card">
         <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.ageLabel} showHealth />
@@ -114,21 +154,9 @@ export default function SetupPage() {
 
       <div className="flex gap-2">
         <button
-          type="button"
+          type="submit"
           className="btn-primary"
           disabled={remaining === null}
-          onClick={() => {
-            saveProfile(draft);
-            /*
-             * 사람을 때리는 건 "47년"이 아니라 "엄마 232번"이다.
-             * 그런데 저장하고 빈 홈으로 보내면 약한 숫자를 먼저 보여주고, 센 숫자는
-             * 사용자가 알아서 두 화면을 더 거쳐야 나온다. 처음 들어온 사람은
-             * 거기서 멈춘다. 그래서 첫 설정일 때만 바로 첫 인연을 세우러 보낸다.
-             * 나중에 내 정보를 고치러 다시 온 경우는 그대로 홈으로 돌아간다.
-             */
-            const first = state.profile === null && state.people.length === 0;
-            leaveTo(router, first ? "/people/new" : "/");
-          }}
         >
           {t.save}
         </button>
@@ -148,6 +176,6 @@ export default function SetupPage() {
       {remaining === null && (
         <p className="px-1 text-xs text-accent-600">{t.needAge}</p>
       )}
-    </div>
+    </form>
   );
 }

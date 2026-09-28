@@ -175,6 +175,12 @@ export default function WhatIf({
               placeholder={t.namePlaceholder}
               aria-label={t.nameAria}
               onChange={(e) => setLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  keep();
+                }
+              }}
             />
             <button type="button" className="btn-secondary shrink-0" onClick={keep}>
               {t.keep}
