@@ -8,7 +8,7 @@ import { remainingYears } from "@/lib/calc";
 import { formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { emptyProfile, useActions, useAppState } from "@/lib/store";
-import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
 import type { Profile } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -119,7 +119,6 @@ export default function SetupPage() {
           disabled={remaining === null}
           onClick={() => {
             saveProfile(draft);
-            clearDirty();
             /*
              * 사람을 때리는 건 "47년"이 아니라 "엄마 232번"이다.
              * 그런데 저장하고 빈 홈으로 보내면 약한 숫자를 먼저 보여주고, 센 숫자는
@@ -128,7 +127,7 @@ export default function SetupPage() {
              * 나중에 내 정보를 고치러 다시 온 경우는 그대로 홈으로 돌아간다.
              */
             const first = state.profile === null && state.people.length === 0;
-            router.push(first ? "/people/new" : "/");
+            leaveTo(router, first ? "/people/new" : "/");
           }}
         >
           {t.save}
@@ -139,8 +138,7 @@ export default function SetupPage() {
             className="btn-secondary"
             onClick={() => {
               if (!confirmLeave()) return;
-              clearDirty();
-              router.push("/");
+              leaveTo(router, "/");
             }}
           >
             {t.cancel}

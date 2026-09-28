@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 
+import NumberInput from "@/components/NumberInput";
 import type { Frequency, FrequencyUnit } from "@/lib/types";
 import { unitLabel } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
@@ -78,14 +79,14 @@ export default function FrequencyInput({
             </option>
           ))}
         </select>
-        <input
+        <NumberInput
           id={`${ids}-count`}
           className="input w-24"
-          type="number"
           min={0}
+          max={1000}
           step="0.5"
           value={Number.isFinite(value.count) ? value.count : 0}
-          onChange={(e) => onChange({ ...value, count: Number(e.target.value) })}
+          onChange={(count) => onChange({ ...value, count })}
           aria-label={t.countAria}
         />
         <span className="text-sm text-ink-400">{t.times}</span>

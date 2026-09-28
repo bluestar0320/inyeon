@@ -175,13 +175,27 @@ export function drawCard(
    * 기준선을 830에 두는 이유: 340px 글자의 윗머리가 830 - 0.71×340 ≈ 589까지 올라가는데,
    * 그 위 설명줄이 537에서 끝나므로 50px쯤 남는다. 더 올리면 서로 겹친다.
    */
-  const size = valueFontSize(spec.value);
-  ctx.font = `700 ${size}px ${FONT_STACK}`;
-  const valueWidth = ctx.measureText(spec.value).width;
-  const unitSize = Math.round(size * 0.34);
-  ctx.font = `600 ${unitSize}px ${FONT_STACK}`;
-  const unitWidth = ctx.measureText(spec.unit).width;
+  /*
+   * 자릿수만 보고 크기를 고르면 단위 폭을 못 본다. "3,614 times"·"3614 veces"처럼
+   * 단위가 긴 언어에서는 카드 밖으로 나갔다. 숫자+단위를 실제로 재어 보고 넘치면 줄인다.
+   */
+  let size = valueFontSize(spec.value);
   const gap = 18;
+  const measure = (s: number) => {
+    ctx.font = `700 ${s}px ${FONT_STACK}`;
+    const value = ctx.measureText(spec.value).width;
+    ctx.font = `600 ${Math.round(s * 0.34)}px ${FONT_STACK}`;
+    return { value, unit: ctx.measureText(spec.unit).width };
+  };
+  let widths = measure(size);
+  const total = widths.value + gap + widths.unit;
+  if (total > inner) {
+    size = Math.floor((size * inner) / total);
+    widths = measure(size);
+  }
+  const valueWidth = widths.value;
+  const unitWidth = widths.unit;
+  const unitSize = Math.round(size * 0.34);
   const startX = cx - (valueWidth + gap + unitWidth) / 2;
   const baselineY = 830;
 
@@ -227,5 +241,8 @@ export function safeFileName(parts: string[]): string {
     .join("-")
     .replace(/[\\/:*?"<>|]+/g, "")
     .replace(/\s+/g, "-");
-  return `${joined || tr(FALLBACK_NAME)}.png`;
+  // 이름이 길면 파일 이름이 수백 바이트가 되어 일부 기기에서 저장이 실패한다.
+  // 글자(코드포인트) 단위로 자르므로 한글·이모지 중간에서 깨지지 않는다.
+  const short = Array.from(joined).slice(0, 60).join("");
+  return `${short || tr(FALLBACK_NAME)}.png`;
 }

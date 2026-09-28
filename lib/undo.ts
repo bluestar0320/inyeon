@@ -21,7 +21,13 @@ export interface UndoEntry {
 /** 이 시간이 지나면 되돌리기 막대가 스스로 사라진다. */
 export const UNDO_TIMEOUT_MS = 8000;
 
-let entry: UndoEntry | null = null;
+/*
+ * 되돌릴 것들을 쌓아 둔다. 예전에는 한 칸뿐이라, 막대가 떠 있는 동안 다른 것을
+ * 지우면 먼저 지운 것은 되돌릴 길 없이 사라졌다(어머니 둘을 연달아 지우면 하나만
+ * 돌아왔다). 되돌리기를 누르면 맨 위부터 하나씩 돌아오고, 남은 게 있으면 막대가
+ * 다음 것을 보여준다. 시간이 다 되면 한꺼번에 사라진다.
+ */
+let stack: UndoEntry[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<() => void>();
 
@@ -36,28 +42,33 @@ function clearTimer(): void {
   }
 }
 
-export function offerUndo(message: string, restore: () => void): void {
+function restartTimer(): void {
   clearTimer();
-  entry = { message, restore, token: Date.now() };
+  if (stack.length === 0) return;
   timer = setTimeout(() => {
-    entry = null;
+    stack = [];
     timer = null;
     emit();
   }, UNDO_TIMEOUT_MS);
+}
+
+export function offerUndo(message: string, restore: () => void): void {
+  stack = [...stack, { message, restore, token: Date.now() + stack.length }];
+  restartTimer();
   emit();
 }
 
 export function takeUndo(): void {
-  const current = entry;
-  clearTimer();
-  entry = null;
+  const current = stack[stack.length - 1];
+  stack = stack.slice(0, -1);
+  restartTimer();
   emit();
   current?.restore();
 }
 
 export function dismissUndo(): void {
   clearTimer();
-  entry = null;
+  stack = [];
   emit();
 }
 
@@ -72,7 +83,7 @@ function subscribe(listener: () => void): () => void {
 export function useUndo(): UndoEntry | null {
   return useSyncExternalStore(
     subscribe,
-    () => entry,
+    () => stack[stack.length - 1] ?? null,
     () => null,
   );
 }

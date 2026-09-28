@@ -5,6 +5,7 @@ import LangRoot from "@/components/LangRoot";
 import Nav from "@/components/Nav";
 import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
+import SaveWarning from "@/components/SaveWarning";
 import SkipLink from "@/components/SkipLink";
 import UndoBar from "@/components/UndoBar";
 import { STORAGE_KEY } from "@/lib/storageKey";
@@ -69,6 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LangRoot>
           <SkipLink />
           <Nav />
+          <SaveWarning />
           {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}
           <main
             id="main"

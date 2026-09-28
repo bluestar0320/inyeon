@@ -3,6 +3,7 @@
 import { useId } from "react";
 
 import FrequencyInput from "@/components/FrequencyInput";
+import NumberInput from "@/components/NumberInput";
 import ShareButton from "@/components/ShareButton";
 import type { GrowthResult } from "@/lib/calc";
 import { formatCount, formatYears, josa } from "@/lib/format";
@@ -214,14 +215,13 @@ export default function GrowthCalendar({
             {t.adultAge}
           </label>
           <div className="flex items-center gap-2">
-            <input
+            <NumberInput
               id={`${ids}-adult`}
               className="input w-20"
-              type="number"
               min={1}
-              max={40}
+              max={30}
               value={setup.adultAge}
-              onChange={(e) => onChange({ ...setup, adultAge: Number(e.target.value) })}
+              onChange={(adultAge) => onChange({ ...setup, adultAge })}
             />
             <span className="text-sm text-ink-400">{t.ageUnit}</span>
             {ADULT_AGES.map((age) => (

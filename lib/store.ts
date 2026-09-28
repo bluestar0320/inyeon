@@ -182,6 +182,10 @@ function repairPerson(raw: unknown): Person | null {
     ...repairSpan(item),
     name: text(item.name) ?? "",
     relation: text(item.relation),
+    // 한 번에 보내는 시간은 0~24시간. 음수가 들어오면 상세에 "한 번에 -3시간"이 찍혔다.
+    hoursPerMeeting: finite(item.hoursPerMeeting) && item.hoursPerMeeting > 0
+      ? Math.min(24, item.hoursPerMeeting)
+      : undefined,
     horizon,
     growth,
   } as unknown as Person;
@@ -268,12 +272,29 @@ function boot(): void {
   emit();
 }
 
-function persist(): void {
+/*
+ * 마지막 저장이 실패했는지. 화면은 계속 동작해야 하지만(시크릿 모드, 저장 공간 가득 참),
+ * 조용히 넘기면 새로고침 때 기록이 사라진다 — 사용자는 저장된 줄 안다. 그래서 실패를
+ * 들고 있다가 화면 위에 알린다(SaveWarning).
+ */
+let saveFailed = false;
+
+function persist(): boolean {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveFailed = false;
   } catch {
-    // 시크릿 모드 등 저장이 막힌 환경에서도 화면은 계속 동작해야 한다.
+    saveFailed = true;
   }
+  return !saveFailed;
+}
+
+export function useSaveFailed(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => saveFailed,
+    () => false,
+  );
 }
 
 /*
@@ -308,10 +329,12 @@ function getServerSnapshot(): AppState {
   return EMPTY_STATE;
 }
 
-export function update(mutate: (current: AppState) => AppState): void {
+/** 저장까지 됐으면 true. */
+export function update(mutate: (current: AppState) => AppState): boolean {
   state = mutate(state);
-  persist();
+  const saved = persist();
   emit();
+  return saved;
 }
 
 export function useAppState(): { state: AppState; hydrated: boolean } {
@@ -372,12 +395,12 @@ export function useActions() {
     update((current) => ({ ...current, settings: { ...current.settings, ...settings } }));
   }, []);
 
-  const replaceAll = useCallback((next: unknown) => {
-    update(() => normalise(next));
-  }, []);
+  /** 저장까지 됐으면 true. 불러오기는 실패하면 되돌려야 하므로 결과를 돌려준다. */
+  const replaceAll = useCallback((next: unknown): boolean => update(() => normalise(next)), []);
 
+  // 기록만 지운다. 언어·테마·톤은 기록이 아니라 이 기기의 취향이다.
   const clearAll = useCallback(() => {
-    update(() => EMPTY_STATE);
+    update((current) => ({ ...EMPTY_STATE, settings: current.settings }));
   }, []);
 
   return {

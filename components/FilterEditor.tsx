@@ -1,5 +1,6 @@
 "use client";
 
+import NumberInput from "@/components/NumberInput";
 import { defineCopy, tr } from "@/lib/i18n";
 import { filterPresets } from "@/lib/presets";
 import type { CalcFilter } from "@/lib/types";
@@ -11,8 +12,8 @@ const COPY = defineCopy({
     freqUp: (n: number) => `빈도 ${n}% 증가`,
     decayDown: (n: number) => `매년 ${n}%씩 감소`,
     decayUp: (n: number) => `매년 ${n}%씩 증가`,
-    fromToEnd: (from: number) => `${from}년차부터 끝까지`,
-    fromTo: (from: number, to: number) => `${from}~${to}년차`,
+    fromToEnd: (from: number) => `${from}년 뒤부터 끝까지`,
+    fromTo: (from: number, to: number) => `지금부터 ${from}년 뒤 ~ ${to}년 뒤`,
     except: (range: string) => `${range} 제외`,
     only: (range: string) => `${range}만 포함`,
     cap: (n: number) => `최대 ${n}번`,
@@ -28,11 +29,12 @@ const COPY = defineCopy({
     windowAria: "구간 포함 여부",
     windowOnly: "이 구간만",
     windowExcept: "이 구간 제외",
-    fromAria: "시작 연차",
-    fromAfter: "년차부터",
+    fromAria: "시작(몇 년 뒤)",
+    fromAfter: "년 뒤부터",
     toEnd: "끝까지",
-    toAria: "종료 연차",
-    toAfter: "년차까지",
+    toAria: "끝(몇 년 뒤)",
+    toAfter: "년 뒤까지",
+    emptyRange: "시작이 끝보다 늦어 이 구간은 비어 있습니다.",
     capBefore: "아무리 많아도",
     capAria: "최대 횟수",
     capAfter: "번까지",
@@ -45,8 +47,8 @@ const COPY = defineCopy({
     freqUp: (n) => `${n}% more often`,
     decayDown: (n) => `${n}% less each year`,
     decayUp: (n) => `${n}% more each year`,
-    fromToEnd: (from) => `from year ${from} on`,
-    fromTo: (from, to) => `years ${from}–${to}`,
+    fromToEnd: (from) => `from ${from} years from now on`,
+    fromTo: (from, to) => `from ${from} to ${to} years from now`,
     except: (range) => `Skip ${range}`,
     only: (range) => `Only ${range}`,
     cap: (n) => `At most ${n} ${n === 1 ? "time" : "times"}`,
@@ -62,11 +64,12 @@ const COPY = defineCopy({
     windowAria: "Include or skip this range",
     windowOnly: "Only this range",
     windowExcept: "Skip this range",
-    fromAria: "Start year",
+    fromAria: "Start (years from now)",
     fromAfter: "to",
     toEnd: "end",
-    toAria: "End year",
-    toAfter: "(years from now)",
+    toAria: "End (years from now)",
+    toAfter: "years from now",
+    emptyRange: "The start is after the end, so this range is empty.",
     capBefore: "No more than",
     capAria: "Maximum count",
     capAfter: "times",
@@ -79,8 +82,8 @@ const COPY = defineCopy({
     freqUp: (n) => `頻度${n}%増`,
     decayDown: (n) => `毎年${n}%ずつ減少`,
     decayUp: (n) => `毎年${n}%ずつ増加`,
-    fromToEnd: (from) => `${from}年目から最後まで`,
-    fromTo: (from, to) => `${from}〜${to}年目`,
+    fromToEnd: (from) => `今から${from}年後以降ずっと`,
+    fromTo: (from, to) => `今から${from}年後〜${to}年後`,
     except: (range) => `${range}を除く`,
     only: (range) => `${range}のみ`,
     cap: (n) => `最大${n}回`,
@@ -96,11 +99,12 @@ const COPY = defineCopy({
     windowAria: "期間を含めるか",
     windowOnly: "この期間のみ",
     windowExcept: "この期間を除く",
-    fromAria: "開始年目",
-    fromAfter: "年目から",
+    fromAria: "開始（何年後）",
+    fromAfter: "年後から",
     toEnd: "最後まで",
-    toAria: "終了年目",
-    toAfter: "年目まで",
+    toAria: "終了（何年後）",
+    toAfter: "年後まで",
+    emptyRange: "開始が終了より後なので、この期間は空です。",
     capBefore: "多くても",
     capAria: "最大回数",
     capAfter: "回まで",
@@ -113,8 +117,8 @@ const COPY = defineCopy({
     freqUp: (n) => `${n}% más a menudo`,
     decayDown: (n) => `${n}% menos cada año`,
     decayUp: (n) => `${n}% más cada año`,
-    fromToEnd: (from) => `desde el año ${from} en adelante`,
-    fromTo: (from, to) => `años ${from}–${to}`,
+    fromToEnd: (from) => `desde dentro de ${from} años en adelante`,
+    fromTo: (from, to) => `de ${from} a ${to} años desde hoy`,
     except: (range) => `Excluir ${range}`,
     only: (range) => `Solo ${range}`,
     cap: (n) => `Como máximo ${n} ${n === 1 ? "vez" : "veces"}`,
@@ -130,11 +134,12 @@ const COPY = defineCopy({
     windowAria: "Incluir o excluir este periodo",
     windowOnly: "Solo este periodo",
     windowExcept: "Excluir este periodo",
-    fromAria: "Año de inicio",
+    fromAria: "Inicio (años desde hoy)",
     fromAfter: "a",
     toEnd: "final",
-    toAria: "Año final",
-    toAfter: "(años desde hoy)",
+    toAria: "Fin (años desde hoy)",
+    toAfter: "años desde hoy",
+    emptyRange: "El inicio es posterior al final, así que el periodo está vacío.",
     capBefore: "Como mucho",
     capAria: "Número máximo",
     capAfter: "veces",
@@ -147,8 +152,8 @@ const COPY = defineCopy({
     freqUp: (n) => `频率提高${n}%`,
     decayDown: (n) => `每年减少${n}%`,
     decayUp: (n) => `每年增加${n}%`,
-    fromToEnd: (from) => `第${from}年起到最后`,
-    fromTo: (from, to) => `第${from}~${to}年`,
+    fromToEnd: (from) => `从现在起${from}年后到最后`,
+    fromTo: (from, to) => `从现在起${from}年后~${to}年后`,
     except: (range) => `排除${range}`,
     only: (range) => `仅限${range}`,
     cap: (n) => `最多${n}次`,
@@ -164,11 +169,12 @@ const COPY = defineCopy({
     windowAria: "包含或排除该区间",
     windowOnly: "仅此区间",
     windowExcept: "排除此区间",
-    fromAria: "开始年份",
-    fromAfter: "年起",
+    fromAria: "开始（几年后）",
+    fromAfter: "年后起",
     toEnd: "到最后",
-    toAria: "结束年份",
-    toAfter: "年止",
+    toAria: "结束（几年后）",
+    toAfter: "年后止",
+    emptyRange: "开始晚于结束，该区间为空。",
     capBefore: "最多不超过",
     capAria: "最多次数",
     capAfter: "次",
@@ -187,7 +193,8 @@ function describe(filter: CalcFilter): string {
       return factor < 1 ? t.freqDown(delta) : t.freqUp(delta);
     }
     case "decay": {
-      const rate = Math.round((filter.ratePerYear ?? 0) * 1000) / 10;
+      // 계산은 ±100%에서 막는다(lib/calc.ts). 설명도 같은 값을 말해야 한다.
+      const rate = Math.round(Math.min(1, Math.max(-1, filter.ratePerYear ?? 0)) * 1000) / 10;
       return rate >= 0 ? t.decayDown(rate) : t.decayUp(Math.abs(rate));
     }
     case "window": {
@@ -239,13 +246,13 @@ function FilterRow({
         {filter.kind === "multiplier" && (
           <>
             <span>{t.multBefore}</span>
-            <input
+            <NumberInput
               className="input w-20 py-1"
-              type="number"
               min={0}
+              max={10}
               step="0.05"
               value={filter.factor ?? 1}
-              onChange={(e) => onChange({ ...filter, factor: Number(e.target.value) })}
+              onChange={(factor) => onChange({ ...filter, factor })}
               aria-label={t.multAria}
             />
             {t.multAfter && <span>{t.multAfter}</span>}
@@ -255,13 +262,13 @@ function FilterRow({
         {filter.kind === "decay" && (
           <>
             <span>{t.decayBefore}</span>
-            <input
+            <NumberInput
               className="input w-20 py-1"
-              type="number"
               step="0.5"
+              min={-50}
               max={100}
               value={Math.round((filter.ratePerYear ?? 0) * 1000) / 10}
-              onChange={(e) => onChange({ ...filter, ratePerYear: Number(e.target.value) / 100 })}
+              onChange={(percent) => onChange({ ...filter, ratePerYear: percent / 100 })}
               aria-label={t.decayAria}
             />
             <span>{t.decayAfter}</span>
@@ -279,44 +286,43 @@ function FilterRow({
               <option value="only">{t.windowOnly}</option>
               <option value="except">{t.windowExcept}</option>
             </select>
-            <input
+            <NumberInput
               className="input w-20 py-1"
-              type="number"
               min={0}
+              max={150}
               step="0.5"
               value={filter.fromYear ?? 0}
-              onChange={(e) => onChange({ ...filter, fromYear: Number(e.target.value) })}
+              onChange={(fromYear) => onChange({ ...filter, fromYear })}
               aria-label={t.fromAria}
             />
             <span>{t.fromAfter}</span>
-            <input
+            <NumberInput
               className="input w-20 py-1"
-              type="number"
               min={0}
+              max={150}
               step="0.5"
-              value={filter.toYear ?? ""}
+              value={filter.toYear}
               placeholder={t.toEnd}
-              onChange={(e) =>
-                onChange({
-                  ...filter,
-                  toYear: e.target.value === "" ? undefined : Number(e.target.value),
-                })
-              }
+              onChange={(toYear) => onChange({ ...filter, toYear })}
+              onEmpty={() => onChange({ ...filter, toYear: undefined })}
               aria-label={t.toAria}
             />
             <span>{t.toAfter}</span>
+            {filter.toYear !== undefined && (filter.fromYear ?? 0) > filter.toYear && (
+              <span className="w-full text-[11px] text-ink-600">{t.emptyRange}</span>
+            )}
           </>
         )}
 
         {filter.kind === "cap" && (
           <>
             <span>{t.capBefore}</span>
-            <input
+            <NumberInput
               className="input w-24 py-1"
-              type="number"
               min={0}
+              max={1_000_000}
               value={filter.maxTotal ?? 0}
-              onChange={(e) => onChange({ ...filter, maxTotal: Number(e.target.value) })}
+              onChange={(maxTotal) => onChange({ ...filter, maxTotal })}
               aria-label={t.capAria}
             />
             <span>{t.capAfter}</span>

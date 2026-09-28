@@ -18,7 +18,7 @@ export default function EmptyState({
         <p className="mt-1 text-sm text-ink-400">{body}</p>
       </div>
       {actionHref && actionLabel && (
-        <Link href={actionHref} className="btn-primary">
+        <Link href={actionHref} className="btn-primary" prefetch={false}>
           {actionLabel}
         </Link>
       )}

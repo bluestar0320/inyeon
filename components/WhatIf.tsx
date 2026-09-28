@@ -7,6 +7,7 @@ import FrequencyInput from "@/components/FrequencyInput";
 import { formatCount, formatFrequency } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { newId } from "@/lib/presets";
+import { offerUndo } from "@/lib/undo";
 import type { CalcFilter, Frequency, Scenario } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -16,7 +17,8 @@ const COPY = defineCopy({
     intro: "빈도와 조건을 바꿔 숫자가 어떻게 달라지는지 봅니다. 저장된 값은 그대로입니다.",
     frequency: "만약 이 빈도라면",
     compare: (now: string, saved: string) => `지금 ${now}번 · 저장된 값은 ${saved}번`,
-    revert: "되돌리기",
+    revert: "원래 값으로",
+    removed: (label: string) => `시나리오 "${label}"을 지웠습니다.`,
     apply: "이대로 저장",
     namePlaceholder: "이름 (예: 매달 2번 만나면)",
     nameAria: "시나리오 이름",
@@ -32,7 +34,8 @@ const COPY = defineCopy({
     intro: "Change the frequency and conditions to see how the number moves. Your saved values stay the same.",
     frequency: "What if it were",
     compare: (now, saved) => `Now ${now} · saved ${saved}`,
-    revert: "Revert",
+    revert: "Back to saved",
+    removed: (label) => `Deleted scenario "${label}".`,
     apply: "Save this",
     namePlaceholder: "Name (e.g. twice a month)",
     nameAria: "Scenario name",
@@ -48,7 +51,8 @@ const COPY = defineCopy({
     intro: "頻度や条件を変えると、数字がどう変わるかを見られます。保存した値はそのままです。",
     frequency: "もしこの頻度なら",
     compare: (now, saved) => `いま${now}回 · 保存した値は${saved}回`,
-    revert: "元に戻す",
+    revert: "保存した値に戻す",
+    removed: (label) => `シナリオ「${label}」を削除しました。`,
     apply: "このまま保存",
     namePlaceholder: "名前(例：月に2回会えたら)",
     nameAria: "シナリオ名",
@@ -64,7 +68,8 @@ const COPY = defineCopy({
     intro: "Cambia la frecuencia y las condiciones para ver cómo varía el número. Lo guardado no cambia.",
     frequency: "Y si fuera con esta frecuencia",
     compare: (now, saved) => `Ahora ${now} · guardado ${saved}`,
-    revert: "Deshacer cambios",
+    revert: "Volver a lo guardado",
+    removed: (label) => `Escenario "${label}" eliminado.`,
     apply: "Guardar así",
     namePlaceholder: "Nombre (p. ej., dos veces al mes)",
     nameAria: "Nombre del escenario",
@@ -80,7 +85,8 @@ const COPY = defineCopy({
     intro: "改变频率和条件，看看数字会怎么变。已保存的数值不会改变。",
     frequency: "如果是这个频率",
     compare: (now, saved) => `现在${now}次 · 已保存的是${saved}次`,
-    revert: "还原",
+    revert: "恢复保存值",
+    removed: (label) => `已删除方案"${label}"。`,
     apply: "就这样保存",
     namePlaceholder: "名称（例：每月见2次）",
     nameAria: "方案名称",
@@ -206,7 +212,12 @@ export default function WhatIf({
                     type="button"
                     className="btn-quiet shrink-0"
                     aria-label={t.removeAria(scenario.label)}
-                    onClick={() => onScenarios(scenarios.filter((s) => s.id !== scenario.id))}
+                    onClick={() => {
+                      // 확인 없이 바로 지우는 대신, 다른 삭제처럼 잠깐 되돌릴 길을 남긴다.
+                      const before = scenarios;
+                      onScenarios(scenarios.filter((s) => s.id !== scenario.id));
+                      offerUndo(t.removed(scenario.label), () => onScenarios(before));
+                    }}
                   >
                     {t.remove}
                   </button>

@@ -143,7 +143,7 @@ export default function MomentsPage() {
           <h1 className="text-xl font-semibold tracking-tight text-ink-900">{t.title}</h1>
           <p className="mt-1 text-sm text-ink-400">{t.subtitle}</p>
         </div>
-        <Link href="/moments/new" className="btn-primary">
+        <Link href="/moments/new" className="btn-primary" prefetch={false}>
           {t.add}
         </Link>
       </div>

@@ -63,14 +63,17 @@ export default function SinceField({
   value,
   frequency,
   onChange,
+  maxYears,
 }: {
   value: string | undefined;
   frequency: Frequency;
   onChange: (next: string | undefined) => void;
+  /** 거슬러 셀 수 있는 한도(두 사람 중 어린 쪽의 나이). */
+  maxYears?: number | null;
 }) {
   const t = tr(COPY);
   const id = useId();
-  const past = computePast(frequency, value);
+  const past = computePast(frequency, value, undefined, maxYears);
 
   return (
     <div>

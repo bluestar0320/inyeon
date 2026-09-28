@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 
 import MomentEditor from "@/components/MomentEditor";
 import { defineCopy, tr } from "@/lib/i18n";
@@ -46,7 +46,14 @@ function Edit() {
   const t = tr(COPY);
   const id = useSearchParams().get("id");
   const { state, hydrated } = useAppState();
-  const moment = state.moments.find((m) => m.id === id);
+  const found = state.moments.find((m) => m.id === id);
+  /*
+   * 편집 중에 다른 창에서 지워져도 이 화면을 치우지 않는다. 치우면 적던 내용이 날아간다.
+   * 마지막으로 본 판을 붙들고, 편집기가 "지워졌다"고 알린다(EditConflict).
+   */
+  const last = useRef(found);
+  if (found) last.current = found;
+  const moment = found ?? (last.current?.id === id ? last.current : undefined);
 
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;

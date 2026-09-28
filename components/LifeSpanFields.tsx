@@ -3,6 +3,7 @@
 import { useId } from "react";
 
 import HealthFields from "@/components/HealthFields";
+import NumberInput from "@/components/NumberInput";
 import { healthAgeOffset } from "@/lib/health";
 import { resolveAge } from "@/lib/calc";
 import { formatAge, formatYears } from "@/lib/format";
@@ -34,6 +35,7 @@ const COPY = defineCopy({
       "생명표에서 이 나이·국가·성별에 맞는 값을 가져오고, 위에서 고른 생활 습관을 반영했습니다. 언제든 직접 바꿀 수 있어요.",
     fromTable: "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요.",
     remaining: (years: string) => ` · 남은 기간 약 ${years}`,
+    belowAge: "예상 수명이 지금 나이보다 적어 남은 시간이 0으로 계산됩니다.",
   },
   en: {
     sex: { all: "Not specified", female: "Female", male: "Male" },
@@ -55,6 +57,7 @@ const COPY = defineCopy({
       "Taken from life tables for this age, country and sex, adjusted for the habits above. You can change it anytime.",
     fromTable: "Taken from life tables for this age, country and sex. You can change it anytime.",
     remaining: (years) => ` · about ${years} ahead`,
+    belowAge: "Life expectancy is at or below the current age, so the time left counts as 0.",
   },
   ja: {
     sex: { all: "指定なし", female: "女性", male: "男性" },
@@ -76,6 +79,7 @@ const COPY = defineCopy({
       "生命表からこの年齢・国・性別に合った値を取り、上で選んだ生活習慣を反映しました。いつでも自分で変えられます。",
     fromTable: "生命表からこの年齢・国・性別に合った値を取ります。いつでも自分で変えられます。",
     remaining: (years) => ` · 残り約${years}`,
+    belowAge: "予想寿命が今の年齢以下なので、残り時間は0として計算されます。",
   },
   es: {
     sex: { all: "Sin especificar", female: "Mujer", male: "Hombre" },
@@ -97,6 +101,7 @@ const COPY = defineCopy({
       "Tomado de las tablas de vida para esta edad, país y sexo, con los hábitos de arriba. Puedes cambiarlo cuando quieras.",
     fromTable: "Tomado de las tablas de vida para esta edad, país y sexo. Puedes cambiarlo cuando quieras.",
     remaining: (years) => ` · unos ${years} por delante`,
+    belowAge: "La esperanza de vida no supera la edad actual, así que el tiempo restante cuenta como 0.",
   },
   zh: {
     sex: { all: "不区分", female: "女", male: "男" },
@@ -117,6 +122,7 @@ const COPY = defineCopy({
     fromTableWithHealth: "取自生命表中与该年龄、国家、性别相符的值，并反映了上面选择的生活习惯。随时可以自己修改。",
     fromTable: "取自生命表中与该年龄、国家、性别相符的值。随时可以自己修改。",
     remaining: (years) => ` · 大约还有${years}`,
+    belowAge: "预期寿命不高于现在的年龄，剩余时间按0计算。",
   },
 });
 
@@ -185,23 +191,17 @@ export default function LifeSpanFields<T extends LifeSpan>({
           <label className="label" htmlFor={`${ids}-age`}>
             {ageLabel ?? t.age}
           </label>
-          <input
+          <NumberInput
             id={`${ids}-age`}
             className="input"
-            type="number"
             min={0}
-            max={130}
-            value={value.ageYears ?? ""}
+            max={120}
+            value={value.ageYears}
             disabled={Boolean(value.birthDate)}
             placeholder={t.agePlaceholder}
-            onChange={(e) => {
-              // 적어 넣은 날짜를 같이 남겨야 나이가 시간과 함께 늙는다.
-              const next = e.target.value === "" ? undefined : Number(e.target.value);
-              patch({
-                ageYears: next,
-                ageAsOf: next === undefined ? undefined : todayISO(),
-              });
-            }}
+            // 적어 넣은 날짜를 같이 남겨야 나이가 시간과 함께 늙는다.
+            onChange={(next) => patch({ ageYears: next, ageAsOf: todayISO() })}
+            onEmpty={() => patch({ ageYears: undefined, ageAsOf: undefined })}
           />
           <p className="mt-1 text-[11px] text-ink-400">
             {value.birthDate
@@ -259,20 +259,15 @@ export default function LifeSpanFields<T extends LifeSpan>({
           {t.lifeExpectancy}
         </label>
         <div className="flex items-center gap-2">
-          <input
+          <NumberInput
             id={`${ids}-expectancy`}
             className="input w-28"
-            type="number"
             min={1}
             max={130}
             step="0.1"
             value={value.lifeExpectancy}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                lifeExpectancy: Number(e.target.value),
-                lifeExpectancyManual: true,
-              } as T)
+            onChange={(lifeExpectancy) =>
+              onChange({ ...value, lifeExpectancy, lifeExpectancyManual: true } as T)
             }
           />
           <span className="text-sm text-ink-400">{t.ageUnit}</span>
@@ -302,6 +297,9 @@ export default function LifeSpanFields<T extends LifeSpan>({
                 : t.fromTable}
           {remaining !== null && t.remaining(formatYears(remaining))}
         </p>
+        {value.lifeExpectancyManual && age !== null && value.lifeExpectancy <= age && (
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-600">{t.belowAge}</p>
+        )}
       </div>
     </div>
   );

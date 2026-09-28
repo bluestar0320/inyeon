@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
-import { DAYS_PER_YEAR, computeMoment, computePast, toPerYear } from "@/lib/calc";
+import { DAYS_PER_YEAR, computeMoment, computePast, resolveAge, toPerYear } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
@@ -149,7 +149,7 @@ export default function MomentView({ moment }: { moment: Moment }) {
       <ResultPanel
         label={copy.momentLabel}
         result={result}
-        sentence={copy.momentSentence(moment.title, Math.round(result.total).toLocaleString(locale()))}
+        sentence={copy.momentSentence(moment.title, formatCount(result.total))}
         unknownMessage={result.horizonYears === null ? t.unknown : undefined}
         share={{
           emoji: moment.emoji,
@@ -160,7 +160,12 @@ export default function MomentView({ moment }: { moment: Moment }) {
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.horizonYears)}`,
         }}
         shareFileName={[moment.title, t.times(formatCount(result.total))]}
-        past={state.settings.showPast ? computePast(moment.frequency, moment.since) : null}
+        past={state.settings.showPast ? computePast(
+                moment.frequency,
+                moment.since,
+                undefined,
+                state.profile ? resolveAge(state.profile) : null,
+              ) : null}
         stats={[
           { label: t.interval, value: formatInterval(perYear > 0 ? DAYS_PER_YEAR / perYear : null) },
         ]}

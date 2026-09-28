@@ -80,6 +80,11 @@
 @layer base {
   html,
   body {
+    /*
+     * 띄어쓰기 없는 긴 영문 이름("mmmm…" 30자)이 카드 밖으로 밀고 나가 화면이 옆으로
+     * 흔들렸다. 한글은 음절마다 끊기지만 라틴 문자는 단어 단위라, 어디서든 끊게 한다.
+     */
+    overflow-wrap: anywhere;
     background-color: rgb(var(--page));
     color: rgb(var(--ink-800));
     /*

@@ -90,10 +90,21 @@ export interface PastResult {
  * 지나간 시간에 소급할 근거가 없다(벚꽃이 30년 뒤 사라진다는 가정을 과거에
  * 적용할 수는 없다).
  */
+/** 거슬러 셀 수 있는 한도: 알려진 나이 중 가장 어린 것. 모르면 null(한도 없음). */
+export function pastLimit(...ages: (number | null)[]): number | null {
+  const known = ages.filter((age): age is number => age !== null && Number.isFinite(age));
+  return known.length ? Math.min(...known) : null;
+}
+
 export function computePast(
   frequency: Frequency,
   since: string | undefined,
   now: Date = new Date(),
+  /**
+   * 거슬러 셀 수 있는 가장 긴 햇수. 두 사람 중 어린 쪽의 나이다 — 태어나기 전부터
+   * 만났을 수는 없다. 예전에는 25세 친구의 시작점에 1990년을 넣으면 37년을 셌다.
+   */
+  maxYears?: number | null,
 ): PastResult | null {
   if (!since) return null;
   const start = new Date(`${since}T00:00:00`);
@@ -101,7 +112,10 @@ export function computePast(
   // 하루 단위로 끊는다. resolveAge와 같은 이유다 — 시작한 날 당일은 0번이어야 한다.
   const days = Math.floor((now.getTime() - start.getTime()) / 86_400_000);
   if (days < 0) return null;
-  const years = days / DAYS_PER_YEAR;
+  const years =
+    typeof maxYears === "number" && Number.isFinite(maxYears)
+      ? Math.min(days / DAYS_PER_YEAR, Math.max(0, maxYears))
+      : days / DAYS_PER_YEAR;
   return { count: Math.max(0, toPerYear(frequency) * years), years };
 }
 
@@ -162,6 +176,9 @@ function overlapFraction(sliceStart: number, sliceSpan: number, from: number, to
  */
 export const MAX_YEARS = 150;
 
+/** 조건을 다 걸었을 때 한 해의 빈도가 커질 수 있는 한도(적어 둔 빈도의 몇 배). */
+export const MAX_FACTOR = 10;
+
 /**
  * 필터 값은 입력 칸과 불러온 파일에서 온다. "1e999"를 치면 Infinity, 망가진 파일이면
  * NaN이 들어오는데, 하나만 섞여도 합계 전체가 NaN이 되어 화면에 "-"만 남았다.
@@ -206,7 +223,9 @@ export function countOccurrences(input: CountInput): CountResult {
       }
     }
 
-    const adjusted = Math.max(0, baseline * factor);
+    // 증가 조건을 겹겹이 걸면 수십 년 뒤 수조 번이 나왔다. 한 해에 적어 둔 빈도의
+    // 열 배까지만 센다. 그 너머는 계획이 아니라 입력 실수다.
+    const adjusted = Math.max(0, baseline * Math.min(factor, MAX_FACTOR));
     slices.push({ index: i, span, baseline, adjusted });
     baselineTotal += baseline;
     total += adjusted;
@@ -242,6 +261,8 @@ export interface RelationshipResult extends CountResult {
   intervalDays: number | null;
   /** 남은 만남을 다 합치면 며칠인지. hoursPerMeeting이 있을 때만. */
   togetherDays: number | null;
+  /** "내가 n세 될 때까지"의 n이 이미 지났는지. 0번의 이유를 화면에서 밝힌다. */
+  horizonPassed: boolean;
 }
 
 /** 목표 시점까지 남은 기간. horizon이 life면 상한이 없으므로 null. */
@@ -305,7 +326,8 @@ export function computeRelationship(
   const hours = person.hoursPerMeeting;
   const togetherDays =
     typeof hours === "number" && Number.isFinite(hours) && hours > 0
-      ? (counted.total * hours) / 24
+      ? // 함께 보내는 날이 함께할 기간을 넘을 수는 없다(하루 24시간 넘게 적은 경우 등).
+        Math.min((counted.total * hours) / 24, sharedYears * DAYS_PER_YEAR)
       : null;
 
   return {
@@ -317,23 +339,34 @@ export function computeRelationship(
     horizonYears,
     intervalDays,
     togetherDays,
+    horizonPassed:
+      person.horizon?.kind === "untilMyAge" &&
+      profile !== null &&
+      (resolveAge(profile, now) ?? 0) >= person.horizon.age,
   };
 }
 
+/*
+ * 순간과 결혼 계획은 "내가" 하는 일이라 내 남은 시간을 넘길 수 없다.
+ * 예전에는 "200세까지"나 "앞으로 300년"을 그대로 세서, 30세가 결혼 계획에 200을 넣으면
+ * "1,800번 · 목표까지 170년"이 나왔다. 인연은 이미 수명으로 자르고 있었다.
+ */
 export function horizonYears(
   horizon: MomentHorizon,
   profile: Profile | null,
   now: Date = new Date(),
 ): number | null {
+  const mine = profile ? remainingYears(profile, now) : null;
+  const capped = (years: number) => (mine === null ? years : Math.min(years, mine));
   if (horizon.kind === "years") {
-    return Number.isFinite(horizon.years) ? Math.max(0, horizon.years) : null;
+    return Number.isFinite(horizon.years) ? capped(Math.max(0, horizon.years)) : null;
   }
   if (horizon.kind === "untilAge") {
     const age = profile ? resolveAge(profile, now) : null;
     if (age === null) return null;
-    return Math.max(0, horizon.age - age);
+    return capped(Math.max(0, horizon.age - age));
   }
-  return profile ? remainingYears(profile, now) : null;
+  return mine;
 }
 
 export interface MomentResult extends CountResult {

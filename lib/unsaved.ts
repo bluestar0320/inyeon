@@ -49,6 +49,11 @@ let dirty = false;
 let leaving = false;
 
 
+/** 편집 중인 화면에 저장하지 않은 게 있는지. */
+export function isDirty(): boolean {
+  return dirty;
+}
+
 /** 지금 나가도 되는지 묻는다. 안 저장된 게 없으면 묻지 않는다. */
 export function confirmLeave(): boolean {
   if (!dirty) return true;
@@ -64,6 +69,21 @@ export function clearDirty(): void {
 
 /** 뒤로 가기를 한 번 받아내려고 심어 두는 히스토리 항목의 표식. */
 const SENTINEL = "rc-unsaved-guard";
+
+/**
+ * 편집을 끝내고(저장·삭제·취소) 다른 화면으로 간다.
+ *
+ * 편집 중에는 뒤로 가기를 받아내려고 같은 주소의 히스토리 항목을 하나 더 심어 둔다.
+ * 그 위에서 push로 떠나면 편집 화면이 히스토리에 두 번 남아, 나중에 뒤로 가기를 한 번
+ * 누르면 같은 화면으로 가서 아무 일도 없는 것처럼 보였다. 심어 둔 항목 위에 서 있으면
+ * 그 자리를 목적지로 바꿔 친다.
+ */
+export function leaveTo(router: { push: (href: string) => void; replace: (href: string) => void }, href: string): void {
+  clearDirty();
+  const state = window.history.state as Record<string, unknown> | null;
+  if (state?.[SENTINEL] === true) router.replace(href);
+  else router.push(href);
+}
 
 /**
  * 편집기가 쓰는 훅. changed가 true인 동안 나가기를 확인하고, 탭을 닫거나

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import InstallButton from "@/components/InstallButton";
+import { todayISO } from "@/lib/format";
 import { LANGS, defineCopy, locale, tr } from "@/lib/i18n";
 import { LIFE_TABLE_YEAR } from "@/lib/lifeTable";
 import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
@@ -47,6 +48,8 @@ const COPY = defineCopy({
     readFailed: "파일을 읽지 못했습니다. 내보내기로 만든 JSON인지 확인해 주세요.",
     notBackup: "이 앱에서 내보낸 파일이 아닙니다. 지금 기록은 그대로 두었습니다.",
     imported: "불러왔습니다.",
+    filePrefix: "몇번더",
+    tooLarge: "파일이 너무 커서 이 기기에 저장하지 못했습니다. 지금 기록은 그대로 두었습니다.",
     overwritten: (n: number) => `${n}개를 덮어썼습니다.`,
     feedbackTitle: "의견 보내기",
     feedbackHint:
@@ -103,6 +106,8 @@ const COPY = defineCopy({
     readFailed: "Couldn't read the file. Make sure it's a JSON file made with Export.",
     notBackup: "This file wasn't exported from this app. Your current records are untouched.",
     imported: "Imported.",
+    filePrefix: "how-many-more",
+    tooLarge: "The file is too large to save on this device. Your current records are unchanged.",
     overwritten: (n: number) => `Replaced ${n} ${n === 1 ? "item" : "items"}.`,
     feedbackTitle: "Send feedback",
     feedbackHint:
@@ -160,6 +165,8 @@ const COPY = defineCopy({
     readFailed: "ファイルを読み込めませんでした。エクスポートで作ったJSONか確認してください。",
     notBackup: "このアプリからエクスポートしたファイルではありません。今の記録はそのままです。",
     imported: "インポートしました。",
+    filePrefix: "あと何回",
+    tooLarge: "ファイルが大きすぎて、この端末に保存できませんでした。今の記録はそのままです。",
     overwritten: (n: number) => `${n}件を上書きしました。`,
     feedbackTitle: "ご意見を送る",
     feedbackHint:
@@ -216,6 +223,8 @@ const COPY = defineCopy({
     readFailed: "No se pudo leer el archivo. Comprueba que sea el JSON creado con Exportar.",
     notBackup: "Este archivo no se exportó desde esta app. Tus registros actuales siguen igual.",
     imported: "Importado.",
+    filePrefix: "cuantas-veces-mas",
+    tooLarge: "El archivo es demasiado grande para guardarlo en este dispositivo. Tus registros no han cambiado.",
     overwritten: (n: number) => `Se reemplazaron ${n} ${n === 1 ? "elemento" : "elementos"}.`,
     feedbackTitle: "Enviar comentarios",
     feedbackHint:
@@ -272,6 +281,8 @@ const COPY = defineCopy({
     readFailed: "无法读取文件。请确认它是用“导出”生成的 JSON。",
     notBackup: "这不是从本应用导出的文件。现有记录保持不变。",
     imported: "已导入。",
+    filePrefix: "还有几次",
+    tooLarge: "文件太大，无法保存到此设备。当前记录保持不变。",
     overwritten: (n: number) => `已覆盖 ${n} 条记录。`,
     feedbackTitle: "发送意见",
     feedbackHint: "卡住的地方、奇怪的数字、希望有的功能——什么都可以。会打开邮件应用，发送前可以删改。",
@@ -340,7 +351,8 @@ export default function SettingsPage() {
     const snapshot = JSON.parse(exportState());
     snapshot.settings.lastBackupAt = at;
     const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
-    const fileName = `몇번더-${new Date().toISOString().slice(0, 10)}.json`;
+    // 오늘은 기기 시간대 기준으로(UTC면 한국 오전 9시 전에 어제 날짜가 붙었다).
+    const fileName = `${t.filePrefix}-${todayISO()}.json`;
     if (isNativeApp()) {
       try {
         await shareFileNatively(blob, fileName);
@@ -378,9 +390,15 @@ export default function SettingsPage() {
     }
     const before = JSON.parse(exportState());
     const had = state.people.length + state.moments.length;
-    replaceAll(parsed);
+    if (!replaceAll(parsed)) {
+      // 화면에만 들어가고 저장은 안 된 상태로 두면 "불러왔습니다"가 거짓말이 된다.
+      replaceAll(before);
+      setMessage(t.tooLarge);
+      return;
+    }
     setMessage(t.imported);
-    if (had > 0) {
+    // 인연·순간이 없어도 내 정보나 결혼 계획은 덮어써진다. 뭐든 있었으면 되돌릴 길을 남긴다.
+    if (had > 0 || state.profile || state.marriage) {
       offerUndo(t.overwritten(had), () => replaceAll(before));
     }
   }
@@ -423,6 +441,7 @@ export default function SettingsPage() {
               <button
                 key={tone}
                 type="button"
+                aria-pressed={active}
                 onClick={() => saveSettings({ tone })}
                 className={`w-full rounded-xl border px-4 py-3 text-left transition ${
                   active ? "border-ink-800 bg-ink-800 text-onInk" : "border-ink-200 hover:border-ink-400"
@@ -474,6 +493,7 @@ export default function SettingsPage() {
             <button
               key={theme}
               type="button"
+              aria-pressed={state.settings.theme === theme}
               className={`chip ${state.settings.theme === theme ? "chip-active" : ""}`}
               onClick={() => saveSettings({ theme })}
             >

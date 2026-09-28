@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 
+import NumberInput from "@/components/NumberInput";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
@@ -14,7 +15,7 @@ import { meetingFrequencyPresets } from "@/lib/presets";
 import { emptyMarriage, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
 import type { Frequency, MarriagePlan } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -188,8 +189,7 @@ export default function MarriageEditor() {
 
   function leave(): void {
     if (!confirmLeave()) return;
-    clearDirty();
-    router.push("/");
+    leaveTo(router, "/");
   }
 
   if (!hydrated) {
@@ -211,7 +211,7 @@ export default function MarriageEditor() {
         result={result}
         sentence={copy.marriageSentence(
           draft.targetAge,
-          Math.round(result.total).toLocaleString(locale()),
+          formatCount(result.total),
         )}
         unknownMessage={unknownMessage}
         share={{
@@ -236,14 +236,13 @@ export default function MarriageEditor() {
             {t.targetLabel}
           </label>
           <div className="flex items-center gap-2">
-            <input
+            <NumberInput
               id={`${ids}-target`}
               className="input w-24"
-              type="number"
               min={18}
               max={100}
               value={draft.targetAge}
-              onChange={(e) => setDraft({ ...draft, targetAge: Number(e.target.value) })}
+              onChange={(targetAge) => setDraft({ ...draft, targetAge })}
             />
             <span className="text-sm text-ink-400">{t.ageUntil}</span>
           </div>
@@ -259,9 +258,12 @@ export default function MarriageEditor() {
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-ink-400">
-            {t.yearsToGo(formatYears(result.yearsLeft))}
-          </p>
+          {/* 이미 지났으면 위에서 그렇게 말했다. "목표까지 0년"을 또 붙이지 않는다. */}
+          {!result.targetPassed && (
+            <p className="mt-2 text-[11px] text-ink-400">
+              {t.yearsToGo(formatYears(result.yearsLeft))}
+            </p>
+          )}
         </div>
       </div>
 
@@ -319,8 +321,7 @@ export default function MarriageEditor() {
           className="btn-primary"
           onClick={() => {
             saveMarriage({ ...draft, updatedAt: new Date().toISOString() });
-            clearDirty();
-            router.push("/");
+            leaveTo(router, "/");
           }}
         >
           {saved ? t.save : t.create}
@@ -338,8 +339,7 @@ export default function MarriageEditor() {
               if (previous) {
                 offerUndo(t.removed, () => saveMarriage(previous));
               }
-              clearDirty();
-              router.push("/");
+              leaveTo(router, "/");
             }}
           >
             {t.remove}

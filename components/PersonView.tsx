@@ -8,7 +8,7 @@ import GrowthCalendar from "@/components/GrowthCalendar";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
-import { computeGrowth, computePast, computeRelationship, resolveAge } from "@/lib/calc";
+import { computeGrowth, computePast, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
 import {
   formatAge,
   formatCount,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
-import { copyFor } from "@/lib/tone";
+import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Person } from "@/lib/types";
 
@@ -182,8 +182,16 @@ export default function PersonView({ person }: { person: Person }) {
   const growth = useMemo(() => computeGrowth(person), [person]);
   // 설정을 끄면 시작점이 있어도 안 보인다. 어림값이라 끌 수 있어야 한다.
   const past = useMemo(
-    () => (state.settings.showPast ? computePast(person.frequency, person.since) : null),
-    [person.frequency, person.since, state.settings.showPast],
+    () =>
+      state.settings.showPast
+        ? computePast(
+            person.frequency,
+            person.since,
+            undefined,
+            pastLimit(resolveAge(person), state.profile ? resolveAge(state.profile) : null),
+          )
+        : null,
+    [person, state.profile, state.settings.showPast],
   );
 
   const age = resolveAge(person);
@@ -199,7 +207,7 @@ export default function PersonView({ person }: { person: Person }) {
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
-        sentence={copy.meetingSentence(person.name, Math.round(result.total).toLocaleString(locale()))}
+        sentence={copy.meetingSentence(person.name, formatCount(result.total))}
         share={{
           emoji: person.emoji ?? "🫧",
           title: person.name,
@@ -222,7 +230,9 @@ export default function PersonView({ person }: { person: Person }) {
       />
 
       <p className="px-1 text-xs text-ink-400">
-        {copy.limitedBySentence(result.limitedBy, person.name)}
+        {result.horizonPassed && person.horizon?.kind === "untilMyAge"
+          ? horizonPassedSentence(person.horizon.age)
+          : copy.limitedBySentence(result.limitedBy, person.name)}
       </p>
 
       <div className="card">

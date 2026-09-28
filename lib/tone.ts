@@ -418,3 +418,16 @@ export const TONE_ORDER: Tone[] = ["calm", "warm", "aware"];
 export function copyFor(tone: Tone): ToneCopy {
   return (BY_TONE[tone] ?? BY_TONE.calm)[getLang()];
 }
+
+const HORIZON_PASSED = {
+  ko: (age: number) => `이미 만 ${age}세를 지나서 0번입니다. 세는 기간을 다시 정해 주세요.`,
+  en: (age: number) => `You're already past ${age}, so this is 0. Choose a new period to count.`,
+  ja: (age: number) => `すでに${age}歳を過ぎているため0回です。数える期間を決め直してください。`,
+  es: (age: number) => `Ya has pasado los ${age}, así que es 0. Elige otro periodo para contar.`,
+  zh: (age: number) => `你已经过了${age}岁，所以是0次。请重新设定计算期间。`,
+} satisfies Record<Lang, (age: number) => string>;
+
+/** "내가 n세 될 때까지"의 n이 이미 지났을 때. 톤과 상관없이 사실만 말한다. */
+export function horizonPassedSentence(age: number): string {
+  return HORIZON_PASSED[getLang()](age);
+}

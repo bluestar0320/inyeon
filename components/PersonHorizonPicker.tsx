@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 
+import NumberInput from "@/components/NumberInput";
 import { formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import type { PersonHorizon } from "@/lib/types";
@@ -114,14 +115,13 @@ export default function PersonHorizonPicker({
 
         {value.kind === "untilMyAge" && (
           <span className="flex items-center gap-2">
-            <input
+            <NumberInput
               id={`${ids}-age`}
               className="input w-20 py-1"
-              type="number"
-              min={0}
-              max={130}
+              min={1}
+              max={120}
               value={value.age}
-              onChange={(e) => onChange({ kind: "untilMyAge", age: Number(e.target.value) })}
+              onChange={(age) => onChange({ kind: "untilMyAge", age })}
               aria-label={t.targetAge}
             />
             <span className="text-sm text-ink-400">{t.ageUntil}</span>
@@ -130,13 +130,13 @@ export default function PersonHorizonPicker({
 
         {value.kind === "years" && (
           <span className="flex items-center gap-2">
-            <input
+            <NumberInput
               id={`${ids}-years`}
               className="input w-20 py-1"
-              type="number"
-              min={0}
+              min={1}
+              max={150}
               value={value.years}
-              onChange={(e) => onChange({ kind: "years", years: Number(e.target.value) })}
+              onChange={(years) => onChange({ kind: "years", years })}
               aria-label={t.yearsLabel}
             />
             <span className="text-sm text-ink-400">{t.yearsFor}</span>

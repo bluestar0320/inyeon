@@ -9,6 +9,7 @@ const COPY = defineCopy({
     months: (n: number) => `${n}개월`,
     years: (n: string) => `${n}년`,
     age: (n: number) => `만 ${n}세`,
+    everyMinutes: (n: number) => `${n}분마다`,
     everyHours: (n: number) => `${n}시간마다`,
     everyDays: (n: number) => `${n}일마다`,
     everyWeeks: (n: number) => `${n}주마다`,
@@ -24,11 +25,12 @@ const COPY = defineCopy({
     months: (n) => `${n} ${n === 1 ? "month" : "months"}`,
     years: (n) => `${n} ${n === "1" || n === "1.0" ? "year" : "years"}`,
     age: (n) => `age ${n}`,
+    everyMinutes: (n) => `every ${n} ${n === 1 ? "minute" : "minutes"}`,
     everyHours: (n) => `every ${n} ${n === 1 ? "hour" : "hours"}`,
     everyDays: (n) => (n === 1 ? "every day" : `every ${n} days`),
     everyWeeks: (n) => (n === 1 ? "every week" : `every ${n} weeks`),
     everyMonths: (n) => (n === 1 ? "every month" : `every ${n} months`),
-    everyYears: (n) => `every ${n} years`,
+    everyYears: (n) => (n === "1" ? "every year" : `every ${n} years`),
     hours: (n) => `${n} ${n === 1 ? "hour" : "hours"}`,
     days: (n) => `${n} ${n === 1 ? "day" : "days"}`,
   },
@@ -39,6 +41,7 @@ const COPY = defineCopy({
     months: (n) => `${n}か月`,
     years: (n) => `${n}年`,
     age: (n) => `${n}歳`,
+    everyMinutes: (n) => `${n}分ごと`,
     everyHours: (n) => `${n}時間ごと`,
     everyDays: (n) => `${n}日ごと`,
     everyWeeks: (n) => `${n}週間ごと`,
@@ -54,11 +57,12 @@ const COPY = defineCopy({
     months: (n) => `${n} ${n === 1 ? "mes" : "meses"}`,
     years: (n) => `${n} ${n === "1" || n === "1.0" ? "año" : "años"}`,
     age: (n) => `${n} años`,
+    everyMinutes: (n) => `cada ${n} ${n === 1 ? "minuto" : "minutos"}`,
     everyHours: (n) => `cada ${n} ${n === 1 ? "hora" : "horas"}`,
     everyDays: (n) => (n === 1 ? "cada día" : `cada ${n} días`),
     everyWeeks: (n) => (n === 1 ? "cada semana" : `cada ${n} semanas`),
     everyMonths: (n) => (n === 1 ? "cada mes" : `cada ${n} meses`),
-    everyYears: (n) => `cada ${n} años`,
+    everyYears: (n) => (n === "1" ? "cada año" : `cada ${n} años`),
     hours: (n) => `${n} ${n === 1 ? "hora" : "horas"}`,
     days: (n) => `${n} ${n === 1 ? "día" : "días"}`,
   },
@@ -69,6 +73,7 @@ const COPY = defineCopy({
     months: (n) => `${n}个月`,
     years: (n) => `${n}年`,
     age: (n) => `${n}岁`,
+    everyMinutes: (n) => `每${n}分钟`,
     everyHours: (n) => `每${n}小时`,
     everyDays: (n) => `每${n}天`,
     everyWeeks: (n) => `每${n}周`,
@@ -101,6 +106,8 @@ export function formatCount(value: number | null | undefined): string {
 export function formatYears(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "-";
   const t = tr(COPY);
+  // 0은 0이다. "1개월 미만"이라고 하면 아직 조금 남은 것처럼 읽힌다(목표가 이미 지난 경우).
+  if (value <= 0) return t.years("0");
   if (value < 1) {
     const months = Math.round(value * 12);
     return months <= 0 ? t.lessThanMonth : t.months(months);
@@ -117,11 +124,16 @@ export function formatAge(value: number | null | undefined): string {
 export function formatInterval(days: number | null | undefined): string {
   if (days === null || days === undefined || Number.isNaN(days) || days <= 0) return "-";
   const t = tr(COPY);
+  // 반올림한 값이 0이 되면 한 단계 작은 단위로(하루 1000번이 "0시간마다"로 나왔다),
+  // 12개월이 되면 한 단계 큰 단위로(연 1회가 "12개월마다"로 나왔다) 옮긴다.
+  if (days * 24 < 1) return t.everyMinutes(Math.max(1, Math.round(days * 1440)));
   if (days < 1) return t.everyHours(Math.round(days * 24));
   if (days < 14) return t.everyDays(Math.round(days));
   if (days < 60) return t.everyWeeks(Math.round(days / 7));
-  if (days < 730) return t.everyMonths(Math.round(days / 30.44));
-  return t.everyYears((days / 365.2425).toFixed(1));
+  const months = Math.round(days / 30.44);
+  if (months < 12) return t.everyMonths(months);
+  const years = days / 365.2425;
+  return t.everyYears(Number.isInteger(Math.round(years * 10) / 10) ? String(Math.round(years)) : years.toFixed(1));
 }
 
 export function formatDays(days: number | null | undefined): string {

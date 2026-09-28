@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useRef } from "react";
 
+import NumberInput from "@/components/NumberInput";
+import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
@@ -15,7 +17,7 @@ import { momentPresets } from "@/lib/presets";
 import { momentFrom, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
 import { DAYS_PER_YEAR, toPerYear } from "@/lib/calc";
 import type { Moment, MomentHorizon } from "@/lib/types";
 
@@ -164,6 +166,11 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
   const { state } = useAppState();
   const { saveMoment, removeMoment } = useActions();
   const ids = useId();
+  // 편집을 시작할 때 저장돼 있던 판(새로 만드는 중이면 null). 다른 창에서 고치거나
+  // 지웠는지 견주는 기준이다(components/EditConflict.tsx).
+  const [startedAt] = useState(
+    () => state.moments.find((m) => m.id === initial.id)?.updatedAt ?? null,
+  );
   const [draft, setDraft] = useState<Moment>(initial);
   // 프리셋 안내 문구. 화면에만 뜨고 사용자의 메모에는 저장하지 않는다.
   const [hint, setHint] = useState<string | null>(null);
@@ -192,6 +199,9 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
   }
 
   const saved = state.moments.find((m) => m.id === draft.id);
+  // 방금 여기서 저장한 것은 충돌이 아니다(떠나기 전 한 번 그려질 때 알림이 번쩍인다).
+  const savedHere = useRef(false);
+  const conflict = savedHere.current ? null : detectConflict(startedAt, saved);
   const dirty = saved
     ? JSON.stringify({ ...saved, updatedAt: "" }) !== JSON.stringify({ ...draft, updatedAt: "" })
     : draft.title.trim() !== "" || draft.filters.length > 0;
@@ -203,22 +213,23 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
 
   function leave(): void {
     if (!confirmLeave()) return;
-    clearDirty();
-    router.push(backTo);
+    leaveTo(router, backTo);
   }
 
   function save(): void {
+    if (!confirmOverwrite(conflict)) return;
+    savedHere.current = true;
     saveMoment({ ...draft, title: draft.title.trim(), updatedAt: new Date().toISOString() });
-    clearDirty();
-    router.push(backTo);
+    leaveTo(router, backTo);
   }
 
   return (
     <div className="space-y-5">
+      <EditConflict conflict={conflict} />
       <ResultPanel
         label={copy.momentLabel}
         result={result}
-        sentence={copy.momentSentence(title, Math.round(result.total).toLocaleString(locale()))}
+        sentence={copy.momentSentence(title, formatCount(result.total))}
         unknownMessage={result.horizonYears === null ? t.unknown : undefined}
         share={{
           // 목록에서는 "◦"로 자리를 채우지만 카드에서는 비워 둔다. 빈 동그라미가
@@ -331,6 +342,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
         <SinceField
           value={draft.since}
           frequency={draft.frequency}
+          maxYears={myAge}
           onChange={(since) => setDraft({ ...draft, since })}
         />
 
@@ -350,15 +362,12 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
 
             {draft.horizon.kind === "untilAge" && (
               <span className="flex items-center gap-2">
-                <input
+                <NumberInput
                   className="input w-20 py-1"
-                  type="number"
-                  min={0}
-                  max={130}
+                  min={1}
+                  max={120}
                   value={draft.horizon.age}
-                  onChange={(e) =>
-                    setDraft({ ...draft, horizon: { kind: "untilAge", age: Number(e.target.value) } })
-                  }
+                  onChange={(age) => setDraft({ ...draft, horizon: { kind: "untilAge", age } })}
                   aria-label={t.targetAge}
                 />
                 <span className="text-sm text-ink-400">{t.untilAgeSuffix}</span>
@@ -367,14 +376,12 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
 
             {draft.horizon.kind === "years" && (
               <span className="flex items-center gap-2">
-                <input
+                <NumberInput
                   className="input w-20 py-1"
-                  type="number"
-                  min={0}
+                  min={1}
+                  max={150}
                   value={draft.horizon.years}
-                  onChange={(e) =>
-                    setDraft({ ...draft, horizon: { kind: "years", years: Number(e.target.value) } })
-                  }
+                  onChange={(years) => setDraft({ ...draft, horizon: { kind: "years", years } })}
                   aria-label={t.yearsLabel}
                 />
                 <span className="text-sm text-ink-400">{t.yearsSuffix}</span>
@@ -425,8 +432,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
               if (saved) {
                 offerUndo(t.removed(saved.title), () => saveMoment(saved));
               }
-              clearDirty();
-              router.push("/moments");
+              leaveTo(router, "/moments");
             }}
           >
             {t.remove}

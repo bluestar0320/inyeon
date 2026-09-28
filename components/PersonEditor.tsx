@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useRef } from "react";
 
+import NumberInput from "@/components/NumberInput";
+import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import SinceField from "@/components/SinceField";
@@ -11,14 +13,14 @@ import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
-import { computeGrowth, computeRelationship, resolveAge } from "@/lib/calc";
+import { computeGrowth, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { relationPresets } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
-import { copyFor } from "@/lib/tone";
+import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { clearDirty, confirmLeave, useUnsavedGuard } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo } from "@/lib/unsaved";
 import type { GrowthSetup, Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -186,6 +188,11 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const { state } = useAppState();
   const { savePerson, removePerson } = useActions();
   const ids = useId();
+  // 편집을 시작할 때 저장돼 있던 판(새로 만드는 중이면 null). 다른 창에서 고치거나
+  // 지웠는지 견주는 기준이다(components/EditConflict.tsx).
+  const [startedAt] = useState(
+    () => state.people.find((p) => p.id === initial.id)?.updatedAt ?? null,
+  );
   const [draft, setDraft] = useState<Person>(initial);
 
   const t = tr(COPY);
@@ -207,6 +214,9 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   // 값과 달라진 순간부터 "안 저장됨"으로 본다. updatedAt은 저장할 때만 바뀌므로
   // 비교에서 뺀다.
   const saved = state.people.find((p) => p.id === draft.id);
+  // 방금 여기서 저장한 것은 충돌이 아니다(떠나기 전 한 번 그려질 때 알림이 번쩍인다).
+  const savedHere = useRef(false);
+  const conflict = savedHere.current ? null : detectConflict(startedAt, saved);
   const dirty = saved
     ? JSON.stringify({ ...saved, updatedAt: "" }) !== JSON.stringify({ ...draft, updatedAt: "" })
     : draft.name.trim() !== "" || draft.filters.length > 0;
@@ -226,22 +236,23 @@ export default function PersonEditor({ initial }: { initial: Person }) {
 
   function leave(): void {
     if (!confirmLeave()) return;
-    clearDirty();
-    router.push(backTo);
+    leaveTo(router, backTo);
   }
 
   function save(): void {
+    if (!confirmOverwrite(conflict)) return;
+    savedHere.current = true;
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
-    clearDirty();
-    router.push(isNew ? afterAdd : `/people/detail?id=${draft.id}`);
+    leaveTo(router, isNew ? afterAdd : `/people/detail?id=${draft.id}`);
   }
 
   return (
     <div className="space-y-5">
+      <EditConflict conflict={conflict} />
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
-        sentence={copy.meetingSentence(nameForCopy, Math.round(result.total).toLocaleString(locale()))}
+        sentence={copy.meetingSentence(nameForCopy, formatCount(result.total))}
         unknownMessage={
           ageMissing ? t.ageMissing : undefined
         }
@@ -268,7 +279,9 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       />
 
       {!ageMissing && (
-        <p className="px-1 text-xs text-ink-400">{copy.limitedBySentence(result.limitedBy, nameForCopy)}</p>
+        <p className="px-1 text-xs text-ink-400">{result.horizonPassed && draft.horizon?.kind === "untilMyAge"
+            ? horizonPassedSentence(draft.horizon.age)
+            : copy.limitedBySentence(result.limitedBy, nameForCopy)}</p>
       )}
 
       <div className="card space-y-4">
@@ -337,6 +350,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         <SinceField
           value={draft.since}
           frequency={draft.frequency}
+          maxYears={pastLimit(theirAge, state.profile ? resolveAge(state.profile) : null)}
           onChange={(since) => setDraft({ ...draft, since })}
         />
         <PersonHorizonPicker
@@ -352,20 +366,16 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           <label className="label" htmlFor={`${ids}-hours`}>
             {t.hours}
           </label>
-          <input
+          <NumberInput
             id={`${ids}-hours`}
             className="input w-28"
-            type="number"
             min={0}
+            max={24}
             step="0.5"
-            value={draft.hoursPerMeeting ?? ""}
+            value={draft.hoursPerMeeting}
             placeholder={t.hoursPlaceholder}
-            onChange={(e) =>
-              setDraft({
-                ...draft,
-                hoursPerMeeting: e.target.value === "" ? undefined : Number(e.target.value),
-              })
-            }
+            onChange={(hoursPerMeeting) => setDraft({ ...draft, hoursPerMeeting })}
+            onEmpty={() => setDraft({ ...draft, hoursPerMeeting: undefined })}
           />
           <p className="mt-1 text-[11px] text-ink-400">
             {t.hoursHint}
@@ -443,8 +453,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
                 offerUndo(t.removed(saved.name), () => savePerson(saved));
               }
               // 지우기로 한 이상 편집 중이던 내용은 물어볼 것이 없다.
-              clearDirty();
-              router.push("/people");
+              leaveTo(router, "/people");
             }}
           >
             {t.remove}

@@ -5,8 +5,15 @@ import { useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
 import ListControls, { type SortOption } from "@/components/ListControls";
-import { computeRelationship } from "@/lib/calc";
-import { formatCount, formatDays, formatFrequency, formatInterval, formatYears } from "@/lib/format";
+import { computeRelationship, resolveAge } from "@/lib/calc";
+import {
+  formatAge,
+  formatCount,
+  formatDays,
+  formatFrequency,
+  formatInterval,
+  formatYears,
+} from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -235,7 +242,7 @@ export default function PeoplePage() {
           <h1 className="text-xl font-semibold tracking-tight text-ink-900">{t.title}</h1>
           <p className="mt-1 text-sm text-ink-400">{t.sortHint[sort]}</p>
         </div>
-        <Link href="/people/new" className="btn-primary">
+        <Link href="/people/new" className="btn-primary" prefetch={false}>
           {t.add}
         </Link>
       </div>
@@ -313,7 +320,15 @@ export default function PeoplePage() {
                       </span>
                     )}
                   </span>
+                  {/*
+                    같은 이름이 여럿일 수 있다(어머니 둘, 아버지 여럿). 관계와 나이가 있어야
+                    목록에서 서로를 구분한다.
+                  */}
                   <span className="block text-xs text-ink-400">
+                    {[person.relation, formatAge(resolveAge(person))]
+                      .filter((part) => part && part !== "-")
+                      .map((part) => `${part} · `)
+                      .join("")}
                     {formatFrequency(person.frequency)}
                     {result.intervalDays !== null && ` · ${formatInterval(result.intervalDays)}`}
                     {horizonLabel(person.horizon) && ` · ${horizonLabel(person.horizon)}`}
