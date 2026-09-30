@@ -38,14 +38,24 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
   const t = tr(COPY);
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  // 부드럽게 넘어가는 중에 한 번 더 누르면, 아직 도착하지 않은 장에서 이어 센다.
+  const heading = useRef<number | null>(null);
   const many = cards.length > 1;
 
-  const go = (next: number) => {
+  /*
+   * 번호는 스크롤 위치만 정한다(onScroll). 여기서 먼저 올려 두면 부드러운 스크롤의 첫
+   * 이벤트들이 옛 위치로 되돌려 "2 → 1 → 2"로 깜빡이고, 화면 낭독기가 틀린 번호를 읽는다.
+   * 움직임을 줄인 사람에게는 부드러운 스크롤을 쓰지 않는다 — behavior를 적으면 CSS의
+   * scroll-behavior 규칙이 이기지 못한다.
+   */
+  const go = (step: number) => {
     const el = track.current;
     if (!el) return;
-    const clamped = Math.max(0, Math.min(cards.length - 1, next));
-    el.scrollTo({ left: clamped * el.clientWidth, behavior: "smooth" });
-    setIndex(clamped);
+    const from = heading.current ?? Math.round(el.scrollLeft / el.clientWidth);
+    const target = Math.max(0, Math.min(cards.length - 1, from + step));
+    heading.current = target;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollTo({ left: target * el.clientWidth, behavior: still ? "auto" : "smooth" });
   };
 
   return (
@@ -61,7 +71,9 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
         className="relative flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={(e) => {
           const el = e.currentTarget;
-          setIndex(Math.round(el.scrollLeft / el.clientWidth));
+          const at = el.scrollLeft / el.clientWidth;
+          if (heading.current !== null && Math.abs(at - heading.current) < 0.01) heading.current = null;
+          setIndex(Math.round(at));
         }}
       >
         {cards.map((card, i) => (
@@ -81,15 +93,19 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
           </div>
         ))}
       </div>
+      {/*
+        끝에 닿아도 단추를 disabled로 끄지 않는다. 끄면 키보드 초점이 단추에서 떨어져
+        페이지 맨 위로 사라진다. aria-disabled로 알리고, 눌러도 아무 일도 하지 않는다.
+      */}
       {many && (
         <div className="mt-1 flex items-center justify-center gap-4">
-          <button type="button" className="btn-quiet px-3 text-base" aria-label={t.prev} disabled={index === 0} onClick={() => go(index - 1)}>
+          <button type="button" className="btn-quiet min-h-11 min-w-11 text-base aria-disabled:cursor-default aria-disabled:opacity-40" aria-label={t.prev} aria-disabled={index === 0} onClick={() => index > 0 && go(-1)}>
             ‹
           </button>
           <span className="text-xs tabular-nums text-ink-600" aria-live="polite">
             {index + 1} / {cards.length}
           </span>
-          <button type="button" className="btn-quiet px-3 text-base" aria-label={t.next} disabled={index === cards.length - 1} onClick={() => go(index + 1)}>
+          <button type="button" className="btn-quiet min-h-11 min-w-11 text-base aria-disabled:cursor-default aria-disabled:opacity-40" aria-label={t.next} aria-disabled={index === cards.length - 1} onClick={() => index < cards.length - 1 && go(1)}>
             ›
           </button>
         </div>

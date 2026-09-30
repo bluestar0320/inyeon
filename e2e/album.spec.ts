@@ -60,3 +60,41 @@ test("사진을 바꾸면 저장되고 다시 열어도 그대로", async ({ pag
   await page.getByRole("link", { name: "수정하기" }).click();
   await expect(page.getByRole("radio", { name: "기찻길" })).toBeChecked();
 });
+
+async function threePeople(page: Page) {
+  await setUpProfile(page, 30);
+  await addPerson(page, "엄마", "60");
+  await addPerson(page, "할머니", "85");
+  await addPerson(page, "아빠", "62");
+  await page.goto("/");
+  return page.getByRole("region", { name: "인연" });
+}
+
+test("다음을 빠르게 두 번 누르면 두 장 넘어가고, 번호가 뒤로 깜빡이지 않는다", async ({ page }) => {
+  const stack = await threePeople(page);
+  const next = stack.getByRole("button", { name: "다음" });
+  await next.click();
+  await next.click();
+  await expect(stack.getByText("3 / 3")).toBeVisible();
+});
+
+test.describe("움직임 줄이기", () => {
+  test.use({ reducedMotion: "reduce" });
+  test("넘길 때 부드러운 스크롤 없이 바로 간다", async ({ page }) => {
+    const stack = await threePeople(page);
+    await stack.getByRole("button", { name: "다음" }).click();
+    const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / el.clientWidth);
+    expect(at).toBe(1);
+  });
+});
+
+test("키보드로 끝까지 넘겨도 초점이 단추에 남는다", async ({ page }) => {
+  const stack = await threePeople(page);
+  const next = stack.getByRole("button", { name: "다음" });
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await expect(stack.getByText("2 / 3")).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(stack.getByText("3 / 3")).toBeVisible();
+  await expect(next).toBeFocused();
+});
