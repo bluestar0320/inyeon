@@ -3,9 +3,8 @@
 import { defineCopy, tr } from "@/lib/i18n";
 
 /*
- * 개인정보 안내. 동의 화면과 /privacy가 같이 쓴다.
- * 실제 동작과 한 글자도 어긋나면 안 된다. 이 문구를 바꾸면 lib/consent.ts의
- * CONSENT_VERSION을 올린다.
+ * 개인정보 안내(약관). 저장 단추 아래의 「약관 보기」가 여는 /privacy에 쓴다.
+ * 실제 동작과 한 글자도 어긋나면 안 된다.
  */
 const COPY = defineCopy<{ title: string; body: string }[]>({
   ko: [

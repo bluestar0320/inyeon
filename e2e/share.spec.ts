@@ -57,7 +57,9 @@ test("성장 캘린더는 남은 여름을 카드로 내보낸다", async ({ pag
   await page.getByRole("button", { name: "🧸 자녀" }).click();
   await page.getByLabel("이름").fill("도윤");
   await page.getByLabel("나이", { exact: true }).fill("7");
-  await page.waitForTimeout(300);
+  // 성장 캘린더는 입력 화면이 아니라 상세에 저절로 뜬다.
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/detail/);
 
   const downloadPromise = page.waitForEvent("download");
   // 결과 패널에도 단추가 있으므로 캘린더 안의 것을 고른다.

@@ -4,13 +4,12 @@ import { expect, test, type Page } from "@playwright/test";
 import { STORAGE_KEY, clearState, readState } from "./helpers";
 
 /*
- * 사진첩·동의 화면을 사람이 할 법한 이상한 방식으로 두드려 본다.
+ * 사진첩과 입력 화면을 사람이 할 법한 이상한 방식으로 두드려 본다.
  * 기록을 손으로 고친 백업, 다른 창에서의 삭제, 화면 돌리기, 연타, 개발자 도구로
  * 망가뜨린 동의 기록, 스크립트가 든 이름 같은 것들.
  */
 
 const now = new Date().toISOString();
-const CONSENT = JSON.stringify({ version: 1, at: "2026-01-01T00:00:00.000Z" });
 
 function person(id: string, name: string, extra: Record<string, unknown> = {}) {
   return {
@@ -55,80 +54,8 @@ async function noSideScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-test.describe("동의하지 않은 사람", () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("깊은 주소로 바로 와도 먼저 묻고, 동의하면 그 화면이 그대로 뜬다", async ({ page }) => {
-    await seed(page, { people: [person("a", "엄마")] });
-    await page.goto("/people/detail?id=a");
-    await expect(page.getByRole("heading", { name: "시작하기 전에" })).toBeVisible();
-    await expect(page.getByText("엄마와", { exact: false })).toHaveCount(0);
-    await page.getByLabel("위 내용을 확인했고 동의합니다").check();
-    await page.getByLabel("만 14세 이상입니다").check();
-    await page.getByRole("button", { name: "동의하고 시작하기" }).click();
-    await expect(page.getByRole("heading", { name: "엄마", level: 1 })).toBeVisible();
-  });
 
-  test("체크했다가 풀면 다시 잠긴다", async ({ page }) => {
-    await page.goto("/");
-    const agree = page.getByLabel("위 내용을 확인했고 동의합니다");
-    const start = page.getByRole("button", { name: "동의하고 시작하기" });
-    await agree.check();
-    await page.getByLabel("만 14세 이상입니다").check();
-    await expect(start).toBeEnabled();
-    await agree.uncheck();
-    await expect(start).toBeDisabled();
-  });
-
-  test("키보드만으로 동의할 수 있다", async ({ page }) => {
-    await page.goto("/");
-    await page.getByLabel("위 내용을 확인했고 동의합니다").focus();
-    await page.keyboard.press("Space");
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Space");
-    await page.keyboard.press("Tab");
-    await expect(page.getByRole("button", { name: "동의하고 시작하기" })).toBeFocused();
-    await page.keyboard.press("Enter");
-    await expect(page.getByRole("heading", { name: "시작하기 전에" })).toHaveCount(0);
-  });
-
-  test("누가 동의 기록을 망가뜨려도 멈추지 않고 다시 묻는다 — 기록은 그대로", async ({ page }) => {
-    await seed(page, { people: [person("a", "엄마")] });
-    for (const bad of ["{", "null", '{"version":1,"at":"어제"}', '{"version":999,"at":"2026-01-01"}']) {
-      await page.evaluate((v) => localStorage.setItem("inyeon.consent", v), bad);
-      await page.goto("/");
-      await expect(page.getByRole("heading", { name: "시작하기 전에" }), bad).toBeVisible();
-    }
-    expect(((await readState(page))!.people as unknown[]).length).toBe(1);
-  });
-
-  test("동의 화면에서 위쪽 메뉴를 눌러도 동의 화면에 머문다", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: "설정" }).first().click();
-    await expect(page.getByRole("heading", { name: "시작하기 전에" })).toBeVisible();
-  });
-});
-
-test.describe("영어 기기", () => {
-  test.use({ storageState: { cookies: [], origins: [] }, locale: "en-US" });
-
-  test("동의 화면도 기기 언어로 말한다", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Before you start" })).toBeVisible();
-    await expect(page.getByText("Only on this device", { exact: false })).toBeVisible();
-  });
-});
-
-test("전체 삭제를 해도 동의를 다시 묻지 않는다", async ({ page }) => {
-  await seed(page, { people: [person("a", "엄마")] });
-  await page.goto("/settings/");
-  await page.getByRole("button", { name: "전체 삭제" }).first().click();
-  await page.getByRole("button", { name: "정말 지우기" }).click();
-  await expect.poll(async () => ((await readState(page))!.people as unknown[]).length).toBe(0);
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "시작하기 전에" })).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.getItem("inyeon.consent"))).not.toBeNull();
-});
 
 test("손으로 고친 백업의 이상한 사진 값에도 깨진 사진이 없다", async ({ page }) => {
   const weird = ["zzz", 123, "__proto__", "constructor", "../../etc/passwd", null, "", { a: 1 }, "RAILWAY"];
@@ -274,17 +201,8 @@ test("사진을 고른 사람을 지웠다 되돌리면 사진도 돌아온다",
   await expect.poll(async () => ((await readState(page))!.people as { photo?: string }[])[0]?.photo).toBe("railway");
 });
 
-test("사진만 바꾸고 저장하지 않고 나가려 하면 묻는다", async ({ page }) => {
-  await seed(page, { people: [person("a", "엄마")] });
-  await page.goto("/people/edit?id=a");
-  await page.getByTitle("기찻길").click();
-  page.once("dialog", (d) => d.dismiss());
-  await page.getByRole("link", { name: "홈" }).first().click();
-  await expect(page).toHaveURL(/edit/);
-  await expect(page.getByRole("radio", { name: "기찻길" })).toBeChecked();
-});
 
-test("어두운 모드에서 사진 고르기·더미·상세에 접근성 위반이 없다", async ({ page }) => {
+test("어두운 모드에서 입력 화면·더미·상세에 접근성 위반이 없다", async ({ page }) => {
   await seed(page, {
     people: [person("a", "엄마"), person("b", "아빠")],
     moments: [moment("m", "벚꽃")],
@@ -344,7 +262,7 @@ test("내보냈다 전부 지우고 다시 불러와도 고른 사진이 남는�
     .toEqual(["railway", "snow"]);
 });
 
-test("가장 작은 폰(320px)에서도 더미·사진 고르기·동의 안내가 옆으로 밀리지 않는다", async ({ page }) => {
+test("가장 작은 폰(320px)에서도 더미·입력 화면·약관이 옆으로 밀리지 않는다", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await seed(page, { people: [person("a", "엄마"), person("b", "아빠")], moments: [moment("m", "벚꽃")] });
   for (const path of ["/", "/people/edit?id=a", "/moments/new", "/privacy/", "/people/detail?id=a"]) {
@@ -361,56 +279,9 @@ test("언어를 바꾸면 더미의 단추와 안내도 그 언어로", async ({
   });
   await page.goto("/");
   await expect(page.getByRole("button", { name: "次へ" })).toBeVisible();
-  await page.goto("/people/edit?id=a");
-  await expect(page.getByRole("radio", { name: "線路" })).toHaveCount(1);
   await page.goto("/privacy/");
   await expect(page.getByRole("heading", { name: "個人情報について" })).toBeVisible();
 });
 
-test.describe("처음 온 사람의 연타", () => {
-  test.use({ storageState: { cookies: [], origins: [] } });
 
-  test("동의 단추를 두 번 눌러도 한 번만 기록되고 오류가 없다", async ({ page }) => {
-    const errors: string[] = [];
-    page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("/");
-    await page.getByLabel("위 내용을 확인했고 동의합니다").check();
-    await page.getByLabel("만 14세 이상입니다").check();
-    await page.getByRole("button", { name: "동의하고 시작하기" }).dblclick();
-    await expect(page.getByRole("heading", { name: "시작하기 전에" })).toHaveCount(0);
-    const raw = await page.evaluate(() => localStorage.getItem("inyeon.consent"));
-    expect(JSON.parse(raw!).version).toBe(1);
-    expect(errors).toEqual([]);
-  });
 
-  test("동의하고 뒤로 가기를 눌러도 다시 묻지 않는다", async ({ page }) => {
-    await page.goto("/settings/");
-    await page.getByLabel("위 내용을 확인했고 동의합니다").check();
-    await page.getByLabel("만 14세 이상입니다").check();
-    await page.getByRole("button", { name: "동의하고 시작하기" }).click();
-    await page.goto("/people/");
-    await page.goBack();
-    await expect(page.getByRole("heading", { name: "시작하기 전에" })).toHaveCount(0);
-  });
-});
-
-test("사진을 스물네 장 다 눌러 보고 저장하면 마지막 것이 남는다", async ({ page }) => {
-  await seed(page, { people: [person("a", "엄마")] });
-  await page.goto("/people/edit?id=a");
-  const radios = page.locator('input[type="radio"]');
-  const n = await radios.count();
-  expect(n).toBe(24);
-  for (let i = 0; i < n; i++) await page.locator("fieldset label").nth(i).click();
-  await page.getByRole("button", { name: "저장하기" }).click();
-  await expect.poll(async () => ((await readState(page))!.people as { photo?: string }[])[0].photo).toBe("railway");
-});
-
-test("자동으로 걸린 사진을 그대로 눌러도 '내가 고른 사진'으로 남는다", async ({ page }) => {
-  await seed(page, { people: [person("a", "엄마")] });
-  await page.goto("/people/edit?id=a");
-  const current = page.locator('input[type="radio"]:checked');
-  const key = await current.getAttribute("value");
-  await page.locator("fieldset label", { has: current }).click();
-  await page.getByRole("button", { name: "저장하기" }).click();
-  await expect.poll(async () => ((await readState(page))!.people as { photo?: string }[])[0].photo).toBe(key);
-});

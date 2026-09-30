@@ -3,6 +3,7 @@ import type {
   CalcFilter,
   Frequency,
   FrequencyUnit,
+  GrowthSetup,
   LifeSpan,
   MarriagePlan,
   Moment,
@@ -459,14 +460,22 @@ export interface GrowthResult {
  * 것이라(예: 매년 5%씩 덜 만남) 계절이나 생일에 곱하면 0.95번 같은 값이 나온다.
  * 캘린더는 아이 나이만으로 정해지는 값이어야 읽는 사람이 숫자를 믿을 수 있다.
  */
+/** 따로 정하지 않았을 때의 성장 캘린더. 성인 나이와 저녁 식사 빈도. */
+export const DEFAULT_GROWTH: GrowthSetup = { adultAge: 20, dinners: { count: 5, unit: "week" } };
+
+/*
+ * 성장 캘린더는 켜는 칸을 두지 않는다. 상대가 아직 미성년자면 저절로 센다 — 아이를
+ * 넣은 사람에게 "켜기"를 한 번 더 누르게 할 이유가 없다. 상세 화면에서 성인 나이와
+ * 저녁 빈도를 고치면 그 값(person.growth)을 쓴다.
+ */
 export function computeGrowth(
   person: Person,
   now: Date = new Date(),
 ): GrowthResult | null {
-  const setup = person.growth;
+  const childAge = resolveAge(person, now);
+  const setup = person.growth ?? (childAge !== null && childAge < DEFAULT_GROWTH.adultAge ? DEFAULT_GROWTH : null);
   if (!setup) return null;
 
-  const childAge = resolveAge(person, now);
   const yearsLeft = childAge === null ? null : Math.max(0, setup.adultAge - childAge);
   const years = yearsLeft ?? 0;
 

@@ -17,9 +17,8 @@ const COPY = defineCopy({
     grownUp: (name: string, age: number) => `${josa(name, "은/는")} 이미 만 ${age}세를 넘었습니다.`,
     until: (name: string, age: number) =>
       `${josa(name, "이/가")} 만 ${age}세가 될 때까지 함께 보낼 수 있는 것들.`,
-    off: "끄기",
     ageMissing: "나이나 생년월일을 채우면 계산됩니다.",
-    grownUpHint: "성인 나이를 더 뒤로 잡거나, 이 사람에게는 캘린더를 꺼 두세요.",
+    grownUpHint: "성인 나이를 더 뒤로 잡으면 다시 셉니다.",
     timeLeftBefore: "함께할 시간이 ",
     timeLeftAfter: " 남았습니다.",
     timesUnit: "번",
@@ -38,9 +37,8 @@ const COPY = defineCopy({
     title: "Growing-up calendar",
     grownUp: (name, age) => `${name} is already past ${age}.`,
     until: (name, age) => `What you can still share until ${name} turns ${age}.`,
-    off: "Turn off",
     ageMissing: "Add an age or birthday to see the count.",
-    grownUpHint: "Set a later adult age, or turn the calendar off for this person.",
+    grownUpHint: "Set a later adult age to count again.",
     timeLeftBefore: "You have ",
     timeLeftAfter: " together.",
     timesUnit: "times",
@@ -59,9 +57,8 @@ const COPY = defineCopy({
     title: "成長カレンダー",
     grownUp: (name, age) => `${name}はもう${age}歳を過ぎています。`,
     until: (name, age) => `${name}が${age}歳になるまでに一緒に過ごせるもの。`,
-    off: "オフ",
     ageMissing: "年齢か誕生日を入れると計算します。",
-    grownUpHint: "大人とみなす年齢を上げるか、この人のカレンダーはオフにしてください。",
+    grownUpHint: "大人とみなす年齢を上げると、また数えます。",
     timeLeftBefore: "一緒に過ごせる時間は、あと",
     timeLeftAfter: "です。",
     timesUnit: "回",
@@ -80,9 +77,8 @@ const COPY = defineCopy({
     title: "Calendario de crecimiento",
     grownUp: (name, age) => `${name} ya ha pasado de los ${age}.`,
     until: (name, age) => `Lo que aún podéis compartir hasta que ${name} cumpla ${age}.`,
-    off: "Desactivar",
     ageMissing: "Añade la edad o la fecha de nacimiento para calcularlo.",
-    grownUpHint: "Sube la edad adulta o desactiva el calendario para esta persona.",
+    grownUpHint: "Sube la edad adulta para volver a contar.",
     timeLeftBefore: "Os quedan ",
     timeLeftAfter: " juntos.",
     timesUnit: "veces",
@@ -101,9 +97,8 @@ const COPY = defineCopy({
     title: "成长日历",
     grownUp: (name, age) => `${name}已经过了${age}岁。`,
     until: (name, age) => `到${name}${age}岁之前，还能一起度过的这些。`,
-    off: "关闭",
     ageMissing: "填写年龄或生日后即可计算。",
-    grownUpHint: "把成年年龄调大一些，或者为这个人关闭日历。",
+    grownUpHint: "把成年年龄调大一些，就会重新计算。",
     timeLeftBefore: "还能一起度过",
     timeLeftAfter: "。",
     timesUnit: "次",
@@ -131,13 +126,11 @@ export default function GrowthCalendar({
   setup,
   result,
   onChange,
-  onDisable,
 }: {
   name: string;
   setup: GrowthSetup;
   result: GrowthResult;
   onChange: (next: GrowthSetup) => void;
-  onDisable: () => void;
 }) {
   const t = tr(COPY);
   const ids = useId();
@@ -154,9 +147,6 @@ export default function GrowthCalendar({
               : t.until(name, setup.adultAge)}
           </p>
         </div>
-        <button type="button" className="btn-quiet shrink-0" onClick={onDisable}>
-          {t.off}
-        </button>
       </div>
 
       {result.yearsLeft === null ? (

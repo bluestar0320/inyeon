@@ -356,8 +356,20 @@ function child(overrides = {}) {
 
 const itemCount = (result, key) => result.items.find((i) => i.key === key).count;
 
-test("growth calendar is off unless the person opts in", () => {
+test("어른에게는 성장 캘린더가 없다", () => {
   assert.equal(computeGrowth(person(), NOW), null);
+});
+
+test("미성년자면 켜지 않아도 성인이 될 때까지 저절로 센다", () => {
+  const { growth, ...noSetup } = child();
+  const result = computeGrowth(noSetup, NOW);
+  assert.equal(result.yearsLeft, 13);
+  assert.equal(result.adultAge, 20);
+});
+
+test("나이를 모르면 저절로 켜지 않는다", () => {
+  const { growth, ...noSetup } = child({ ageYears: undefined, birthDate: undefined });
+  assert.equal(computeGrowth(noSetup, NOW), null);
 });
 
 test("the concept example: 7세 아이가 20세가 될 때까지 함께 보낼 계절과 방학", () => {

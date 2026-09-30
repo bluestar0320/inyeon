@@ -6,7 +6,6 @@ import { useId, useMemo, useState, useRef } from "react";
 import NumberInput from "@/components/NumberInput";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
-import PhotoPicker from "@/components/PhotoPicker";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
 import SinceField from "@/components/SinceField";
@@ -14,7 +13,6 @@ import YearBreakdown from "@/components/YearBreakdown";
 import { computeMoment, resolveAge } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
-import { photoFor } from "@/lib/photos";
 import { momentPresets } from "@/lib/presets";
 import { momentFrom, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -46,7 +44,6 @@ const COPY = defineCopy({
     yearsSuffix: "년 동안",
     span: "계산 기간",
     byYear: "연도별 추이",
-    note: "메모 (선택)",
     add: "추가하기",
     save: "저장하기",
     cancel: "취소",
@@ -73,7 +70,6 @@ const COPY = defineCopy({
     yearsSuffix: "years",
     span: "Time span",
     byYear: "Year by year",
-    note: "Note (optional)",
     add: "Add",
     save: "Save",
     cancel: "Cancel",
@@ -100,7 +96,6 @@ const COPY = defineCopy({
     yearsSuffix: "年間",
     span: "計算期間",
     byYear: "年ごとの推移",
-    note: "メモ(任意)",
     add: "追加する",
     save: "保存する",
     cancel: "キャンセル",
@@ -127,7 +122,6 @@ const COPY = defineCopy({
     yearsSuffix: "años",
     span: "Periodo",
     byYear: "Año por año",
-    note: "Nota (opcional)",
     add: "Añadir",
     save: "Guardar",
     cancel: "Cancelar",
@@ -154,7 +148,6 @@ const COPY = defineCopy({
     yearsSuffix: "年内",
     span: "计算期间",
     byYear: "逐年变化",
-    note: "备注（可选）",
     add: "添加",
     save: "保存",
     cancel: "取消",
@@ -288,7 +281,6 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
             />
           </div>
         </div>
-        <PhotoPicker value={photoFor(draft)} onChange={(photo) => setDraft({ ...draft, photo })} />
 
         <div className="flex flex-wrap gap-1.5">
           {momentPresets().map((preset) => (
@@ -420,17 +412,6 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
         <YearBreakdown slices={result.slices} />
       </div>
 
-      <div className="card space-y-2">
-        <label className="label" htmlFor={`${ids}-note`}>
-          {t.note}
-        </label>
-        <textarea
-          id={`${ids}-note`}
-          className="input min-h-20"
-          value={draft.note ?? ""}
-          onChange={(e) => setDraft({ ...draft, note: e.target.value || undefined })}
-        />
-      </div>
 
       <div className="flex items-center gap-2">
         <button type="submit" className="btn-primary" disabled={!draft.title.trim()}>

@@ -4,26 +4,24 @@ import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, useRef } from "react";
 
 import NumberInput from "@/components/NumberInput";
+import ConsentNote from "@/components/ConsentNote";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
-import PhotoPicker from "@/components/PhotoPicker";
 import FrequencyInput from "@/components/FrequencyInput";
 import SinceField from "@/components/SinceField";
-import GrowthCalendar from "@/components/GrowthCalendar";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
-import { computeGrowth, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
+import { computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
-import { photoFor } from "@/lib/photos";
 import { relationPresets } from "@/lib/presets";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
-import type { GrowthSetup, Person } from "@/lib/types";
+import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
   ko: {
@@ -46,11 +44,6 @@ const COPY = defineCopy({
     hoursPlaceholder: "예: 6",
     hoursHint: "채우면 남은 만남을 합쳐 실제로 몇 시간이 남았는지 보여줍니다.",
     byYear: "연도별 추이",
-    growthOn: "성장 캘린더 켜기",
-    growthSuggest: (name: string) =>
-      `${josa(name, "이/가")} 성인이 될 때까지 함께 보낼 계절·방학·저녁 식사를 세어 봅니다.`,
-    growthHint: "자녀처럼 성인이 되기까지 시간이 남은 경우에 씁니다.",
-    note: "메모 (선택)",
     add: "추가하기",
     save: "저장하기",
     cancel: "취소",
@@ -77,11 +70,6 @@ const COPY = defineCopy({
     hoursPlaceholder: "e.g. 6",
     hoursHint: "Fill this in to see how many hours you still have together.",
     byYear: "Year by year",
-    growthOn: "Turn on the growing-up calendar",
-    growthSuggest: (name) =>
-      `Count the seasons, school breaks and dinners you'll share until ${name} grows up.`,
-    growthHint: "For someone, like a child, who still has years before adulthood.",
-    note: "Note (optional)",
     add: "Add",
     save: "Save",
     cancel: "Cancel",
@@ -108,10 +96,6 @@ const COPY = defineCopy({
     hoursPlaceholder: "例: 6",
     hoursHint: "入れると、これから会える時間が合わせて何時間あるかを表示します。",
     byYear: "年ごとの推移",
-    growthOn: "成長カレンダーをオンにする",
-    growthSuggest: (name) => `${name}が大人になるまでに一緒に過ごす季節・休み・夕食を数えます。`,
-    growthHint: "子どものように、大人になるまで時間がある人に使います。",
-    note: "メモ（任意）",
     add: "追加する",
     save: "保存する",
     cancel: "キャンセル",
@@ -138,11 +122,6 @@ const COPY = defineCopy({
     hoursPlaceholder: "p. ej. 6",
     hoursHint: "Si lo rellenas, verás cuántas horas os quedan juntos.",
     byYear: "Año a año",
-    growthOn: "Activar el calendario de crecimiento",
-    growthSuggest: (name) =>
-      `Cuenta las estaciones, vacaciones y cenas que compartiréis hasta que ${name} sea adulto.`,
-    growthHint: "Para alguien, como un hijo, a quien aún le faltan años para ser adulto.",
-    note: "Nota (opcional)",
     add: "Añadir",
     save: "Guardar",
     cancel: "Cancelar",
@@ -169,10 +148,6 @@ const COPY = defineCopy({
     hoursPlaceholder: "例如：6",
     hoursHint: "填写后，会显示还能见面的时间加起来一共有多少小时。",
     byYear: "逐年变化",
-    growthOn: "开启成长日历",
-    growthSuggest: (name) => `数一数${name}长大成人之前，你们一起度过的季节、假期和晚餐。`,
-    growthHint: "适用于像孩子这样，离成年还有一段时间的人。",
-    note: "备注（选填）",
     add: "添加",
     save: "保存",
     cancel: "取消",
@@ -180,10 +155,6 @@ const COPY = defineCopy({
     removed: (name) => `已删除${name}。`,
   },
 });
-
-function defaultGrowth(): GrowthSetup {
-  return { adultAge: 20, dinners: { count: 5, unit: "week" } };
-}
 
 export default function PersonEditor({ initial }: { initial: Person }) {
   const router = useRouter();
@@ -207,10 +178,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const nameForCopy = draft.name.trim() || draft.relation || t.thisPerson;
   const ageMissing = result.theirYears === null;
 
-  const growth = useMemo(() => computeGrowth(draft), [draft]);
   // 아직 어린 사람이면 캘린더를 먼저 권한다. 켜는 건 어디까지나 사용자가 정한다.
   const theirAge = resolveAge(draft);
-  const suggestGrowth = theirAge !== null && theirAge < 20;
 
   // 새로 만드는 중이면 이름을 한 글자라도 적은 순간부터, 고치는 중이면 저장된
   // 값과 달라진 순간부터 "안 저장됨"으로 본다. updatedAt은 저장할 때만 바뀌므로
@@ -326,7 +295,6 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             />
           </div>
         </div>
-        <PhotoPicker value={photoFor(draft)} onChange={(photo) => setDraft({ ...draft, photo })} />
 
         <div className="flex flex-wrap gap-1.5">
           {relationPresets().map((preset) => (
@@ -342,8 +310,6 @@ export default function PersonEditor({ initial }: { initial: Person }) {
                   name: draft.name || preset.relation,
                   frequency: preset.frequency,
                   hoursPerMeeting: preset.hoursPerMeeting,
-                  // 자녀 프리셋은 성장 캘린더까지 한 번에 켠다. 이미 켜 둔 설정은 건드리지 않는다.
-                  growth: preset.withGrowth ? (draft.growth ?? defaultGrowth()) : draft.growth,
                 })
               }
             >
@@ -412,44 +378,6 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         <YearBreakdown slices={result.slices} />
       </div>
 
-      {growth !== null && draft.growth ? (
-        <GrowthCalendar
-          name={nameForCopy}
-          setup={draft.growth}
-          result={growth}
-          onChange={(setup) => setDraft({ ...draft, growth: setup })}
-          onDisable={() => setDraft({ ...draft, growth: undefined })}
-        />
-      ) : (
-        <button
-          type="button"
-          className="card flex w-full items-center justify-between border-dashed text-left transition hover:border-ink-400"
-          onClick={() => setDraft({ ...draft, growth: defaultGrowth() })}
-        >
-          <span>
-            <span className="block text-sm font-semibold text-ink-800">{t.growthOn}</span>
-            <span className="mt-1 block text-xs text-ink-400">
-              {suggestGrowth
-                ? t.growthSuggest(nameForCopy)
-                : t.growthHint}
-            </span>
-          </span>
-          <span className="shrink-0 pl-3 text-xl">🧸</span>
-        </button>
-      )}
-
-      <div className="card space-y-2">
-        <label className="label" htmlFor={`${ids}-note`}>
-          {t.note}
-        </label>
-        <textarea
-          id={`${ids}-note`}
-          className="input min-h-20"
-          value={draft.note ?? ""}
-          onChange={(e) => setDraft({ ...draft, note: e.target.value || undefined })}
-        />
-      </div>
-
       <div className="flex items-center gap-2">
         <button type="submit" className="btn-primary" disabled={!draft.name.trim()}>
           {isNew ? t.add : t.save}
@@ -476,6 +404,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           </button>
         )}
       </div>
+      {isNew && <ConsentNote />}
     </form>
   );
 }

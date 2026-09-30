@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 
 import BigNumber from "@/components/BigNumber";
 import EmptyState from "@/components/EmptyState";
@@ -32,10 +33,6 @@ import { copyFor } from "@/lib/tone";
 const COPY = defineCopy({
   ko: {
     loading: "불러오는 중…",
-    introTitle: "남은 것을 세어 봅니다",
-    introBody:
-      "이 앱은 할 일을 알려주지 않습니다. 남은 시간과 남은 만남을 횟수로 계산할 뿐입니다. 먼저 내 정보를 채워 주세요.",
-    start: "시작하기",
     lifeSub: (age: string, lifeExpectancy: number) => `${age} · 예상 수명 ${lifeExpectancy}세`,
     progress: (past: string, left: string) => `지나온 ${past} · 남은 ${left}`,
     summers: "남은 여름",
@@ -63,10 +60,6 @@ const COPY = defineCopy({
   },
   en: {
     loading: "Loading…",
-    introTitle: "Let's count what's ahead",
-    introBody:
-      "This app won't tell you what to do. It simply counts your time and your meetings ahead. Start by filling in your details.",
-    start: "Get started",
     lifeSub: (age, lifeExpectancy) => `${age} · life expectancy ${lifeExpectancy}`,
     progress: (past, left) => `${past} behind · ${left} ahead`,
     summers: "Summers ahead",
@@ -95,10 +88,6 @@ const COPY = defineCopy({
   },
   ja: {
     loading: "読み込み中…",
-    introTitle: "これからを数えてみましょう",
-    introBody:
-      "このアプリはやることを教えません。残りの時間と会える回数を数えるだけです。まずは自分の情報を入力してください。",
-    start: "はじめる",
     lifeSub: (age, lifeExpectancy) => `${age} · 予想寿命 ${lifeExpectancy}歳`,
     progress: (past, left) => `過ぎた ${past} · 残り ${left}`,
     summers: "残りの夏",
@@ -126,10 +115,6 @@ const COPY = defineCopy({
   },
   es: {
     loading: "Cargando…",
-    introTitle: "Contemos lo que queda por delante",
-    introBody:
-      "Esta app no te dice qué hacer. Solo cuenta el tiempo y los encuentros que tienes por delante. Empieza rellenando tus datos.",
-    start: "Empezar",
     lifeSub: (age, lifeExpectancy) => `${age} · esperanza de vida ${lifeExpectancy}`,
     progress: (past, left) => `${past} recorrido · ${left} por delante`,
     summers: "Veranos por delante",
@@ -158,9 +143,6 @@ const COPY = defineCopy({
   },
   zh: {
     loading: "加载中…",
-    introTitle: "数一数往后的日子",
-    introBody: "这个应用不会告诉你该做什么，只是把往后的时间和相见算成次数。请先填写你的信息。",
-    start: "开始",
     lifeSub: (age, lifeExpectancy) => `${age} · 预期寿命 ${lifeExpectancy}岁`,
     progress: (past, left) => `已走过 ${past} · 还有 ${left}`,
     summers: "还有的夏天",
@@ -231,26 +213,18 @@ export default function HomePage() {
     [state.people],
   );
 
+  const router = useRouter();
+  useEffect(() => {
+    if (hydrated && !profile) router.replace("/setup");
+  }, [hydrated, profile, router]);
+
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
   }
 
+  // 처음 온 사람에게 소개 화면과 "시작하기" 단추를 한 번 더 거치게 하지 않는다. 바로 적게 한다.
   if (!profile) {
-    return (
-      <div className="space-y-5 py-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
-            {t.introTitle}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed text-ink-600">
-            {t.introBody}
-          </p>
-        </div>
-        <Link href="/setup" className="btn-primary">
-          {t.start}
-        </Link>
-      </div>
-    );
+    return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
   }
 
   const myRemaining = remainingYears(profile);

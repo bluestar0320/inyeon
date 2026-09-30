@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { readState, setUpProfile } from "./helpers";
+import { setUpProfile } from "./helpers";
 
 async function addPerson(page: Page, name: string, age: string) {
   await page.goto("/people/new");
@@ -43,26 +43,6 @@ test("긴 영문 이름이 화면을 옆으로 밀지 않는다", async ({ page 
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test("사진을 바꾸면 저장되고 다시 열어도 그대로", async ({ page }) => {
-  await setUpProfile(page, 30);
-  await addPerson(page, "엄마", "60");
-  await page.goto("/people/");
-  await page.getByRole("link", { name: /엄마/ }).click();
-  await page.getByRole("link", { name: "수정하기" }).click();
-  // 자동으로 걸린 사진과 겹치지 않게, 지금 걸린 것이 기찻길이면 부케를 고른다.
-  const pick = (await page.getByRole("radio", { name: "기찻길" }).isChecked()) ? "부케" : "기찻길";
-  const key = pick === "기찻길" ? "railway" : "bouquet";
-  await page.getByTitle(pick).click();
-  await expect(page.getByRole("radio", { name: pick })).toBeChecked();
-  await page.getByRole("button", { name: "저장하기" }).click();
-  await expect
-    .poll(async () => ((await readState(page))!.people as { photo?: string }[])[0].photo)
-    .toBe(key);
-  await page.goto("/people/");
-  await page.getByRole("link", { name: /엄마/ }).click();
-  await page.getByRole("link", { name: "수정하기" }).click();
-  await expect(page.getByRole("radio", { name: pick })).toBeChecked();
-});
 
 async function threePeople(page: Page) {
   await setUpProfile(page, 30);
@@ -124,15 +104,3 @@ test("상세 화면에서 이름을 화면 낭독기가 두 번 읽지 않는다
   expect(bare, snapshot).toEqual([]);
 });
 
-test("사진 고르기에 키보드로 들어가면 초점 표시가 선택 표시와 다르게 보인다", async ({ page }) => {
-  await setUpProfile(page, 30);
-  await page.goto("/people/new");
-  await page.getByLabel("이름").fill("엄마");
-  await page.getByLabel("이름").focus();
-  const radio = page.locator('input[type="radio"]:checked');
-  await radio.focus();
-  await page.keyboard.press("ArrowRight");
-  const img = page.locator('input[type="radio"]:checked + img');
-  const outline = await img.evaluate((el) => getComputedStyle(el).outlineStyle);
-  expect(outline).not.toBe("none");
-});

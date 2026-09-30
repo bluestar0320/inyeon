@@ -52,11 +52,13 @@ test("결혼 계획: 목표 나이를 지나면 0번 대신 다시 잡으라고 
   await expect(page.getByText("목표 나이를 지금보다 뒤로 잡아 보세요")).toBeVisible();
 });
 
-test("성장 캘린더는 자녀 프리셋 한 번으로 켜지고 아이 나이를 따라간다", async ({ page }) => {
+test("성장 캘린더는 켜지 않아도 아이를 넣으면 상세에 뜨고 아이 나이를 따라간다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
   await page.getByRole("button", { name: "🧸 자녀" }).click();
   await page.getByLabel("나이", { exact: true }).fill("7");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/detail/);
 
   const calendar = page.locator(".card").filter({ hasText: "성장 캘린더" });
   await expect(calendar.getByText("🌻 여름")).toBeVisible();
@@ -73,6 +75,8 @@ test("만남 필터는 성장 캘린더를 건드리지 않는다", async ({ pag
   await page.goto("/people/new");
   await page.getByRole("button", { name: "🧸 자녀" }).click();
   await page.getByLabel("나이", { exact: true }).fill("7");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/detail/);
 
   const summerBreak = page.locator("div").filter({ hasText: /^🏖️ 여름방학/ }).first();
   const before = await summerBreak.locator("..").innerText();

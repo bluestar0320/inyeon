@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import ConsentNote from "@/components/ConsentNote";
 import EditConflict, { confirmOverwrite, type Conflict } from "@/components/EditConflict";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import { remainingYears } from "@/lib/calc";
@@ -173,6 +174,7 @@ export default function SetupPage() {
           </button>
         )}
       </div>
+      <ConsentNote />
       {remaining === null && (
         <p className="px-1 text-xs text-accent-600">{t.needAge}</p>
       )}

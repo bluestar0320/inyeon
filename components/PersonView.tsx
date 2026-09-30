@@ -9,7 +9,7 @@ import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
-import { computeGrowth, computePast, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
+import { DEFAULT_GROWTH, computeGrowth, computePast, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
 import {
   formatAge,
   formatCount,
@@ -286,16 +286,13 @@ export default function PersonView({ person }: { person: Person }) {
         <YearBreakdown slices={result.slices} />
       </div>
 
-      {growth && person.growth && (
+      {growth && (
         <GrowthCalendar
           name={person.name}
-          setup={person.growth}
+          setup={person.growth ?? DEFAULT_GROWTH}
           result={growth}
           onChange={(setup) =>
             savePerson({ ...person, growth: setup, updatedAt: new Date().toISOString() })
-          }
-          onDisable={() =>
-            savePerson({ ...person, growth: undefined, updatedAt: new Date().toISOString() })
           }
         />
       )}
