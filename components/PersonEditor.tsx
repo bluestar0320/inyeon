@@ -5,6 +5,7 @@ import { useId, useMemo, useState, useRef } from "react";
 
 import NumberInput from "@/components/NumberInput";
 import ConsentNote from "@/components/ConsentNote";
+import { hintFor } from "@/components/DecayHint";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
@@ -13,7 +14,7 @@ import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
-import { computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
+import { computeRelationship, pastLimit, resolveAge, toPerYear } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { relationPresets } from "@/lib/presets";
@@ -369,6 +370,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         <FilterEditor
           filters={draft.filters}
           onChange={(filters) => setDraft({ ...draft, filters })}
+          basePerYear={toPerYear(draft.frequency)}
+          hint={hintFor(draft.emoji, "person")}
         />
         <div className="space-y-2 border-t border-ink-200/70 pt-4">
           <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>

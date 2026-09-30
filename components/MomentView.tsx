@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { hintFor } from "@/components/DecayHint";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
@@ -209,6 +210,7 @@ export default function MomentView({ moment }: { moment: Moment }) {
       </div>
 
       <WhatIf
+        hint={hintFor(moment.emoji, "moment")}
         draft={draftSetup}
         onDraft={setDraftSetup}
         saved={{ frequency: moment.frequency, filters: moment.filters }}

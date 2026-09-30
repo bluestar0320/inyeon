@@ -85,7 +85,7 @@ const oneOf = <T,>(value: unknown, allowed: readonly string[], fallback: T): T =
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const SEXES = ["male", "female", "all"];
 const LEVELS = ["good", "mid", "bad"];
-const FILTER_NUMBERS = ["factor", "ratePerYear", "fromYear", "toYear", "maxTotal"] as const;
+const FILTER_NUMBERS = ["factor", "ratePerYear", "anchorYears", "fromYear", "toYear", "maxTotal"] as const;
 
 function frequencyOk(value: unknown): boolean {
   return isObject(value) && finite(value.count) && UNITS.includes(value.unit as string);

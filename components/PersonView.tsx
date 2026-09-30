@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import GrowthCalendar from "@/components/GrowthCalendar";
+import { hintFor } from "@/components/DecayHint";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
@@ -272,6 +273,7 @@ export default function PersonView({ person }: { person: Person }) {
       </div>
 
       <WhatIf
+        hint={hintFor(person.emoji, "person")}
         draft={draftSetup}
         onDraft={setDraftSetup}
         saved={{ frequency: person.frequency, filters: person.filters }}

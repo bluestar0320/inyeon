@@ -4,6 +4,8 @@ import { test } from "node:test";
 import {
   DAYS_PER_YEAR,
   computeGrowth,
+  decayRateFor,
+  perYearAfter,
   computeMarriage,
   computeMoment,
   computeRelationship,
@@ -548,4 +550,28 @@ test("생일 당일 새벽이면 이미 한 살을 먹었다", () => {
 test("윤년 언저리에서 생일 전날에 나이를 먹지 않는다", () => {
   const age = resolveAge({ birthDate: "2020-03-01" }, new Date("2024-02-29T23:30:00"));
   assert.equal(Math.floor(age), 3);
+});
+
+test("N년 뒤 빈도로 감소율을 구하고, 되돌리면 같은 빈도가 나온다", () => {
+  // 1년에 12번 → 20년 뒤 1년에 4번
+  const rate = decayRateFor(12, 4, 20);
+  assert.ok(rate > 0 && rate < 1);
+  assert.ok(Math.abs(perYearAfter(12, rate, 20) - 4) < 1e-9);
+  assert.ok(Math.abs(perYearAfter(12, rate, 0) - 12) < 1e-9);
+});
+
+test("늘어나는 쪽도 된다 — 뒤의 빈도가 더 크면 음수 감소율", () => {
+  const rate = decayRateFor(12, 24, 10);
+  assert.ok(rate < 0);
+  assert.ok(Math.abs(perYearAfter(12, rate, 10) - 24) < 1e-9);
+});
+
+test("0번이 되면 감소율 100%, 지금이 0번이면 셀 수 없으니 0", () => {
+  assert.equal(decayRateFor(12, 0, 20), 1);
+  assert.equal(decayRateFor(0, 5, 20), 0);
+  assert.equal(decayRateFor(12, 4, 0), 0);
+});
+
+test("늘어남은 계산과 같은 한도(-100%)에서 멈춘다", () => {
+  assert.equal(decayRateFor(1, 1_000_000, 1), -1);
 });

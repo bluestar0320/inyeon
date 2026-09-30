@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 
+import type { HintKey } from "@/components/DecayHint";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
+import { toPerYear } from "@/lib/calc";
 import { formatCount, formatFrequency } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { newId } from "@/lib/presets";
@@ -119,7 +121,10 @@ export default function WhatIf({
   scenarios,
   onScenarios,
   onApply,
+  hint,
 }: {
+  /** 「헷갈리세요?」에 보여 줄 통계 종류. */
+  hint?: HintKey;
   draft: Setup;
   onDraft: (next: Setup) => void;
   saved: Setup;
@@ -189,7 +194,12 @@ export default function WhatIf({
         </div>
       )}
 
-      <FilterEditor filters={draft.filters} onChange={(filters) => onDraft({ ...draft, filters })} />
+      <FilterEditor
+        filters={draft.filters}
+        onChange={(filters) => onDraft({ ...draft, filters })}
+        basePerYear={toPerYear(draft.frequency)}
+        hint={hint}
+      />
 
       {scenarios.length > 0 && (
         <div className="space-y-2 border-t border-ink-200/60 pt-3">

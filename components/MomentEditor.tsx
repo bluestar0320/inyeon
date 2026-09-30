@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, useRef } from "react";
 
 import NumberInput from "@/components/NumberInput";
+import { hintFor } from "@/components/DecayHint";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
@@ -406,7 +407,12 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
 
       {/* 조건과 그 결과(연도별 추이)는 한 카드에. 걸면 바로 아래에서 달라지는 게 보인다. */}
       <div className="card space-y-4">
-        <FilterEditor filters={draft.filters} onChange={(filters) => setDraft({ ...draft, filters })} />
+        <FilterEditor
+          filters={draft.filters}
+          onChange={(filters) => setDraft({ ...draft, filters })}
+          basePerYear={toPerYear(draft.frequency)}
+          hint={hintFor(draft.emoji, "moment")}
+        />
         <div className="space-y-2 border-t border-ink-200/70 pt-4">
           <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>
           <YearBreakdown slices={result.slices} />

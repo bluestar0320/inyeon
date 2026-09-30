@@ -312,6 +312,7 @@ export default function MarriageEditor() {
         <FilterEditor
           filters={draft.filters}
           onChange={(filters) => setDraft({ ...draft, filters })}
+          basePerYear={toPerYear(draft.frequency)}
         />
       </div>
 

@@ -23,6 +23,8 @@ export interface CalcFilter {
   factor?: number;
   /** decay: 매년 줄어드는 비율(0.05 = 매년 5%씩 감소). 음수면 매년 증가. */
   ratePerYear?: number;
+  /** decay: 화면에서 "N년 뒤엔 몇 번"으로 보여 줄 때의 N. 계산에는 쓰지 않는다. */
+  anchorYears?: number;
   /** window: 지금으로부터 n년 뒤부터 / n년 뒤까지. mode로 포함/제외를 고른다. */
   fromYear?: number;
   toYear?: number;

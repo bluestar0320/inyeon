@@ -1,6 +1,8 @@
 "use client";
 
+import DecayHint, { type HintKey } from "@/components/DecayHint";
 import NumberInput from "@/components/NumberInput";
+import { decayRateFor, perYearAfter } from "@/lib/calc";
 import { defineCopy, tr } from "@/lib/i18n";
 import { filterPresets } from "@/lib/presets";
 import type { CalcFilter } from "@/lib/types";
@@ -23,6 +25,14 @@ const COPY = defineCopy({
     multBefore: "빈도에",
     multAria: "배수",
     multAfter: "배",
+    decayYearsAria: "몇 년 뒤",
+    decayYearsAfter: "년 뒤에는 1년에",
+    decayTargetAria: "그때 1년에 몇 번",
+    decayTargetAfter: "번쯤",
+    decayPreview: (now: number, midY: number, mid: number, y: number, end: number) =>
+      `올해 ${now}번 · ${midY}년 뒤 ${mid}번 · ${y}년 뒤 ${end}번`,
+    decayPlain: (y: number, n: number) => `${y}년 뒤 1년에 ${n}번쯤`,
+    decayNoBase: "지금 빈도가 0번이라 달라질 것이 없어요.",
     decayBefore: "매년",
     decayAria: "연간 감소율(%)",
     decayAfter: "%씩 감소 (음수면 증가)",
@@ -58,6 +68,13 @@ const COPY = defineCopy({
     multBefore: "Frequency ×",
     multAria: "Multiplier",
     multAfter: "",
+    decayYearsAria: "Years from now",
+    decayYearsAfter: "years from now, about",
+    decayTargetAria: "Times a year by then",
+    decayTargetAfter: "times a year",
+    decayPreview: (now, midY, mid, y, end) => `This year ${now} · in ${midY} yrs ${mid} · in ${y} yrs ${end}`,
+    decayPlain: (y, n) => `About ${n} a year in ${y} years`,
+    decayNoBase: "It's 0 times now, so there's nothing to change.",
     decayBefore: "Each year,",
     decayAria: "Yearly decrease (%)",
     decayAfter: "% less (negative means more)",
@@ -93,6 +110,13 @@ const COPY = defineCopy({
     multBefore: "頻度を",
     multAria: "倍率",
     multAfter: "倍",
+    decayYearsAria: "何年後",
+    decayYearsAfter: "年後には年に",
+    decayTargetAria: "そのころ年に何回",
+    decayTargetAfter: "回くらい",
+    decayPreview: (now, midY, mid, y, end) => `今年${now}回 · ${midY}年後${mid}回 · ${y}年後${end}回`,
+    decayPlain: (y, n) => `${y}年後に年${n}回くらい`,
+    decayNoBase: "いまの頻度が0回なので、変わるものがありません。",
     decayBefore: "毎年",
     decayAria: "年間の減少率(%)",
     decayAfter: "%ずつ減少(マイナスなら増加)",
@@ -128,6 +152,13 @@ const COPY = defineCopy({
     multBefore: "Frecuencia ×",
     multAria: "Multiplicador",
     multAfter: "",
+    decayYearsAria: "Dentro de cuántos años",
+    decayYearsAfter: "años, unas",
+    decayTargetAria: "Veces al año entonces",
+    decayTargetAfter: "veces al año",
+    decayPreview: (now, midY, mid, y, end) => `Este año ${now} · en ${midY} años ${mid} · en ${y} años ${end}`,
+    decayPlain: (y, n) => `Unas ${n} al año dentro de ${y} años`,
+    decayNoBase: "Ahora son 0 veces, así que no hay nada que cambiar.",
     decayBefore: "Cada año,",
     decayAria: "Disminución anual (%)",
     decayAfter: "% menos (negativo = más)",
@@ -163,6 +194,13 @@ const COPY = defineCopy({
     multBefore: "频率乘以",
     multAria: "倍数",
     multAfter: "倍",
+    decayYearsAria: "几年后",
+    decayYearsAfter: "年后，一年",
+    decayTargetAria: "那时一年几次",
+    decayTargetAfter: "次左右",
+    decayPreview: (now, midY, mid, y, end) => `今年${now}次 · ${midY}年后${mid}次 · ${y}年后${end}次`,
+    decayPlain: (y, n) => `${y}年后一年约${n}次`,
+    decayNoBase: "现在是0次，没有可变化的。",
     decayBefore: "每年",
     decayAria: "每年减少率(%)",
     decayAfter: "%递减（负数为递增）",
@@ -183,7 +221,15 @@ const COPY = defineCopy({
   },
 });
 
-function describe(filter: CalcFilter): string {
+/** "해마다 달라짐"을 몇 년 뒤 기준으로 보여 줄지. 적어 두지 않았으면 20년. */
+const DEFAULT_ANCHOR = 20;
+
+/** 1년에 몇 번. 10번 아래는 소수 한 자리까지(1년에 0.5번 = 2년에 한 번). */
+function roundCount(n: number): number {
+  return n < 10 ? Math.round(n * 10) / 10 : Math.round(n);
+}
+
+function describe(filter: CalcFilter, basePerYear?: number): string {
   const t = tr(COPY);
   switch (filter.kind) {
     case "multiplier": {
@@ -193,6 +239,10 @@ function describe(filter: CalcFilter): string {
       return factor < 1 ? t.freqDown(delta) : t.freqUp(delta);
     }
     case "decay": {
+      if (basePerYear !== undefined && basePerYear > 0) {
+        const years = filter.anchorYears ?? DEFAULT_ANCHOR;
+        return t.decayPlain(years, roundCount(perYearAfter(basePerYear, filter.ratePerYear ?? 0, years)));
+      }
       // 계산은 ±100%에서 막는다(lib/calc.ts). 설명도 같은 값을 말해야 한다.
       const rate = Math.round(Math.min(1, Math.max(-1, filter.ratePerYear ?? 0)) * 1000) / 10;
       return rate >= 0 ? t.decayDown(rate) : t.decayUp(Math.abs(rate));
@@ -214,10 +264,14 @@ function FilterRow({
   filter,
   onChange,
   onRemove,
+  basePerYear,
+  hint,
 }: {
   filter: CalcFilter;
   onChange: (next: CalcFilter) => void;
   onRemove: () => void;
+  basePerYear?: number;
+  hint: HintKey;
 }) {
   const t = tr(COPY);
   return (
@@ -259,7 +313,11 @@ function FilterRow({
           </>
         )}
 
-        {filter.kind === "decay" && (
+        {filter.kind === "decay" && basePerYear !== undefined && (
+          <DecayFields filter={filter} onChange={onChange} basePerYear={basePerYear} hint={hint} />
+        )}
+
+        {filter.kind === "decay" && basePerYear === undefined && (
           <>
             <span>{t.decayBefore}</span>
             <NumberInput
@@ -330,17 +388,76 @@ function FilterRow({
         )}
       </div>
 
-      <p className="mt-2 pl-6 text-[11px] text-ink-400">{describe(filter)}</p>
+      <p className="mt-2 pl-6 text-[11px] text-ink-400">{describe(filter, basePerYear)}</p>
     </div>
+  );
+}
+
+/*
+ * "해마다 달라짐"을 두 지점으로 적는다: 지금 빈도(이미 적어 둔 값)와 "N년 뒤엔 1년에 몇 번쯤".
+ * 사람은 "매년 5% 감소"로 생각하지 않는다. 저장은 여전히 ratePerYear(+ 기준 햇수)다.
+ */
+function DecayFields({
+  filter,
+  onChange,
+  basePerYear,
+  hint,
+}: {
+  filter: CalcFilter;
+  onChange: (next: CalcFilter) => void;
+  basePerYear: number;
+  hint: HintKey;
+}) {
+  const t = tr(COPY);
+  if (!(basePerYear > 0)) return <span className="text-xs text-ink-600">{t.decayNoBase}</span>;
+  const years = filter.anchorYears ?? DEFAULT_ANCHOR;
+  const rate = filter.ratePerYear ?? 0;
+  const at = (y: number) => perYearAfter(basePerYear, rate, y);
+  const mid = Math.max(1, Math.round(years / 2));
+  return (
+    <>
+      <NumberInput
+        className="input w-14 px-2 py-1 text-center"
+        min={1}
+        max={80}
+        value={years}
+        // 햇수를 바꾸면 그때의 빈도는 그대로 두고 비율을 다시 구한다 — "20년 뒤 4번"을 "30년 뒤 4번"으로.
+        onChange={(y) => {
+          if (y > 0) onChange({ ...filter, anchorYears: y, ratePerYear: decayRateFor(basePerYear, at(years), y) });
+        }}
+        aria-label={t.decayYearsAria}
+      />
+      <span>{t.decayYearsAfter}</span>
+      <NumberInput
+        className="input w-16 px-2 py-1 text-center"
+        min={0}
+        max={100000}
+        step="0.5"
+        value={roundCount(at(years))}
+        onChange={(n) => onChange({ ...filter, anchorYears: years, ratePerYear: decayRateFor(basePerYear, n, years) })}
+        aria-label={t.decayTargetAria}
+      />
+      <span>{t.decayTargetAfter}</span>
+      <p className="w-full text-xs text-ink-800">
+        {t.decayPreview(Math.round(at(0)), mid, Math.round(at(mid)), years, Math.round(at(years)))}
+      </p>
+      <DecayHint hint={hint} />
+    </>
   );
 }
 
 export default function FilterEditor({
   filters,
   onChange,
+  basePerYear,
+  hint = "person",
 }: {
   filters: CalcFilter[];
   onChange: (next: CalcFilter[]) => void;
+  /** 지금 1년에 몇 번인지. 주면 "해마다 달라짐"을 "N년 뒤 몇 번"으로 적게 한다. */
+  basePerYear?: number;
+  /** 「헷갈리세요?」에 어떤 통계를 보여 줄지. */
+  hint?: HintKey;
 }) {
   const t = tr(COPY);
   return (
@@ -358,6 +475,8 @@ export default function FilterEditor({
               filter={filter}
               onChange={(next) => onChange(filters.map((f) => (f.id === next.id ? next : f)))}
               onRemove={() => onChange(filters.filter((f) => f.id !== filter.id))}
+              basePerYear={basePerYear}
+              hint={hint}
             />
           ))}
         </div>

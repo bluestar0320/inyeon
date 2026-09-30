@@ -366,7 +366,7 @@ test.describe("순간 반복 추가", () => {
 
     await page.getByRole("button", { name: "🪚 만들기" }).click();
     await page.getByLabel("무엇을 세나요").fill("목공방에서 가구 만들기");
-    await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
+    await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
     await page.getByRole("button", { name: "추가하기" }).click();
     await page.waitForURL(/\/moments\/?$/);
 
@@ -444,7 +444,7 @@ test.describe("오프라인", () => {
 
       // 오프라인에서 조건을 걸어 다시 계산한다.
       const before = await headline(page);
-      await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
+      await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
       await expect.poll(() => headline(page)).not.toBe(before);
     } finally {
       await context.setOffline(false);

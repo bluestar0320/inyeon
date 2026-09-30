@@ -34,9 +34,10 @@ test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다",
   await page.getByLabel("예상 수명").fill("80");
   await expect.poll(() => headline(page)).toBe("240번");
 
-  await page.getByRole("button", { name: "+ 해마다 줄어듦" }).click();
+  await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
 
-  await expect.poll(() => headline(page)).toBe("150번");
+  // 기본값은 "20년 뒤엔 지금의 절반". 월 1회를 20년 동안 그렇게 줄이면 173번.
+  await expect.poll(() => headline(page)).toBe("173번");
   await expect(page.getByText(/240번에서 .*% 줄었습니다/)).toBeVisible();
 });
 

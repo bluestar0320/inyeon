@@ -25,8 +25,8 @@ export interface FilterPreset {
  * 프리셋은 "이런 식으로 쓰면 된다"를 보여주는 출발점일 뿐, 값은 전부 수정 가능하다.
  */
 const FILTER_SPECS: Omit<CalcFilter, "id" | "label" | "enabled">[] = [
-  { kind: "decay", ratePerYear: 0.05 }, // 해마다 줄어듦
-  { kind: "decay", ratePerYear: -0.05 }, // 해마다 늘어남
+  // 해마다 달라짐 — 20년 뒤 지금의 절반쯤에서 시작한다. 늘어나는 경우도 같은 칸에서 뒤의 값을 키우면 된다.
+  { kind: "decay", ratePerYear: 1 - 0.5 ** (1 / 20), anchorYears: 20 },
   /*
    * 기후 프리셋.
    *
@@ -46,8 +46,7 @@ const FILTER_SPECS: Omit<CalcFilter, "id" | "label" | "enabled">[] = [
 
 const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
   ko: [
-    ["해마다 줄어듦", "지구온난화로 파도가 줄어드는 서핑처럼, 매년 일정 비율씩 기회가 줄어드는 경우"],
-    ["해마다 늘어남", "은퇴 후처럼 시간이 갈수록 빈도가 늘어나는 경우 (감소율을 음수로 둔 것)"],
+    ["해마다 달라짐", "지금 빈도와 N년 뒤의 빈도를 적으면 그 사이를 자연스럽게 잇습니다. 줄어드는 것도, 은퇴 후처럼 늘어나는 것도 여기서"],
     [
       "벚꽃이 사라짐",
       "온난화가 지금 속도로 이어질 때를 가정한 출발점입니다. 남부부터 개화가 불안정해지는 시점을 대략 30년 뒤로 잡았습니다. 지역과 시나리오에 따라 크게 달라지니 직접 조정하세요.",
@@ -66,8 +65,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
     ["최대 횟수 제한", "무슨 일이 있어도 이 숫자를 넘지 않는다고 볼 때"],
   ],
   en: [
-    ["Fewer each year", "When chances shrink by a set rate every year, like surfing as warming changes the waves"],
-    ["More each year", "When it happens more often over time, like after retiring (a negative decline rate)"],
+    ["Changes over the years", "Set how often now and how often N years from now; the years in between follow smoothly. Works for fewer, or more, like after retiring"],
     [
       "Cherry blossoms fade",
       "A starting point that assumes warming continues at today's pace. It puts blooming becoming unreliable, starting in warmer regions, about 30 years from now. This varies a lot by region and scenario, so adjust it yourself.",
@@ -86,8 +84,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
     ["Set a maximum", "When you're sure it won't go past this number, whatever happens"],
   ],
   ja: [
-    ["年ごとに減る", "温暖化で波が減るサーフィンのように、毎年一定の割合で機会が減っていく場合"],
-    ["年ごとに増える", "退職後のように、時間とともに回数が増えていく場合（減少率をマイナスにしたもの）"],
+    ["年ごとに変わる", "いまの頻度とN年後の頻度を入れると、その間をなめらかにつなぎます。減る場合も、退職後のように増える場合も"],
     [
       "桜が見られなくなる",
       "温暖化が今のペースで続くと仮定した出発点です。暖かい地域から開花が不安定になる時期を、およそ30年後としました。地域やシナリオで大きく変わるので、ご自身で調整してください。",
@@ -106,11 +103,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
     ["最大回数を決める", "何があってもこの回数は超えないと考えるとき"],
   ],
   es: [
-    [
-      "Menos cada año",
-      "Cuando las oportunidades bajan un porcentaje fijo cada año, como el surf cuando el calentamiento cambia las olas",
-    ],
-    ["Más cada año", "Cuando la frecuencia aumenta con el tiempo, como tras jubilarse (una tasa de descenso negativa)"],
+    ["Cambia con los años", "Indica cuántas veces ahora y cuántas dentro de N años; los años intermedios se ajustan solos. Sirve para menos o para más, como tras jubilarse"],
     [
       "Los cerezos dejan de florecer",
       "Un punto de partida que supone que el calentamiento sigue al ritmo actual. Sitúa en unos 30 años el momento en que la floración se vuelve irregular, empezando por las zonas más cálidas. Varía mucho según la región y el escenario, así que ajústalo a tu gusto.",
@@ -132,8 +125,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
     ["Máximo de veces", "Cuando crees que, pase lo que pase, no superará esta cifra"],
   ],
   zh: [
-    ["逐年减少", "像全球变暖让海浪变少的冲浪一样，机会每年按一定比例减少"],
-    ["逐年增加", "像退休以后那样，频率随时间增加（把减少率设为负数）"],
+    ["逐年变化", "填上现在的频率和N年后的频率，中间的年份会平滑衔接。减少或像退休后那样增加都可以"],
     [
       "樱花渐渐消失",
       "假设变暖按现在的速度持续下去的起点。把温暖地区开花开始变得不稳定的时间大致定在30年后。不同地区和情景差别很大，请自行调整。",
@@ -186,7 +178,7 @@ const MOMENT_COPY = defineCopy<[title: string, hint?: string][]>({
     ["해외여행"],
     ["명절에 본가 가기"],
     ["책 한 권 읽기"],
-    ["서핑", "파도 조건이 나빠지는 만큼 해마다 줄어듦 필터를 같이 걸어 보세요."],
+    ["서핑", "파도 조건이 나빠질 것 같다면 해마다 달라짐 조건으로 「20년 뒤엔 몇 번쯤」을 적어 보세요."],
     ["좋아하는 밴드 공연"],
     ["눈 내리는 날"],
     ["강아지 산책"],

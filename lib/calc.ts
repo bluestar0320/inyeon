@@ -25,6 +25,23 @@ const PER_YEAR: Record<FrequencyUnit, number> = {
 };
 
 /** "주 2회" -> 연간 104.35회. 모든 계산은 연 단위 빈도로 정규화해서 한다. */
+/*
+ * "해마다 달라짐"을 두 지점으로 적게 한다. 사람은 "매년 5% 감소"로 생각하지 않고
+ * "20년 뒤엔 1년에 4번쯤"으로 떠올린다. 저장은 여전히 ratePerYear 하나라서, 화면에서
+ * 두 지점 ↔ 비율을 오간다. 비율의 한도는 계산(-100%~100%)과 같다.
+ */
+export function decayRateFor(basePerYear: number, targetPerYear: number, years: number): number {
+  if (!(basePerYear > 0) || !(years > 0) || !(targetPerYear >= 0)) return 0;
+  const rate = 1 - (targetPerYear / basePerYear) ** (1 / years);
+  return Math.min(1, Math.max(-1, rate));
+}
+
+/** 지금 1년에 basePerYear번이 rate로 달라지면, years년 뒤에는 1년에 몇 번인가. */
+export function perYearAfter(basePerYear: number, rate: number, years: number): number {
+  const r = Math.min(1, Math.max(-1, rate));
+  return basePerYear * Math.max(0, (1 - r) ** years);
+}
+
 export function toPerYear(frequency: Frequency): number {
   const count = Number.isFinite(frequency.count) ? frequency.count : 0;
   return Math.max(0, count) * PER_YEAR[frequency.unit];
