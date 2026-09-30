@@ -109,6 +109,18 @@
     color-scheme: dark;
   }
 
+  /*
+   * 아이폰 사파리는 16px보다 작은 입력 칸을 누르면 화면을 확대하고, 그 뒤로 화면 비율이
+   * 어긋난 채 남는다. 폰에서는 입력 칸 글자를 16px로 둔다(.input 밖의 칸까지).
+   */
+  @media (max-width: 639px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
   /* 움직임을 줄이도록 설정한 사람에게는 전환 효과를 끈다. */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -156,7 +168,7 @@
    * 기준(4.5)에 아슬아슬해서 한 단계 진하게 뒀다.
    */
   .btn-quiet {
-    @apply inline-flex items-center justify-center rounded-lg px-2 py-1 text-xs font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900;
+    @apply inline-flex min-h-9 items-center justify-center rounded-lg px-2.5 py-1 text-xs font-medium text-ink-600 transition hover:bg-ink-50 hover:text-ink-900;
   }
 
   .btn-danger {
@@ -164,7 +176,7 @@
   }
 
   .input {
-    @apply w-full rounded-2xl border border-ink-200 bg-surface px-3 py-2 text-sm text-ink-800 transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
+    @apply w-full rounded-2xl border border-ink-200 bg-surface px-3 py-2 text-base text-ink-800 sm:text-sm transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
   }
 
   .label {
@@ -172,7 +184,7 @@
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-ink-200 bg-surface px-3 py-1 text-xs font-medium text-ink-600 transition hover:border-ink-400 hover:text-ink-800;
+    @apply inline-flex min-h-9 items-center gap-1 rounded-full border border-ink-200 bg-surface px-3.5 py-1 text-xs font-medium text-ink-600 transition hover:border-ink-400 hover:text-ink-800;
   }
 
   .chip-active {
@@ -191,7 +203,7 @@
    * 테두리를 걷고 색이 깔린 바닥으로만 구분한다.
    */
   .hero {
-    @apply rounded-3xl bg-hero px-6 py-7 sm:px-8;
+    @apply rounded-3xl bg-hero px-5 py-6 sm:px-8 sm:py-7;
   }
 
   /*

@@ -268,7 +268,29 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             : copy.limitedBySentence(result.limitedBy, nameForCopy)}</p>
       )}
 
+      {/* 한 사람에 대한 것은 한 카드에. 프리셋이 먼저다 — 누르면 대부분이 채워진다. */}
       <div className="card space-y-4">
+        <div className="flex flex-wrap gap-1.5">
+          {relationPresets().map((preset) => (
+            <button
+              key={preset.relation}
+              type="button"
+              className="chip"
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  relation: preset.relation,
+                  emoji: preset.emoji,
+                  name: draft.name || preset.relation,
+                  frequency: preset.frequency,
+                  hoursPerMeeting: preset.hoursPerMeeting,
+                })
+              }
+            >
+              {preset.emoji} {preset.relation}
+            </button>
+          ))}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor={`${ids}-name`}>
@@ -295,32 +317,9 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             />
           </div>
         </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          {relationPresets().map((preset) => (
-            <button
-              key={preset.relation}
-              type="button"
-              className="chip"
-              onClick={() =>
-                setDraft({
-                  ...draft,
-                  relation: preset.relation,
-                  emoji: preset.emoji,
-                  name: draft.name || preset.relation,
-                  frequency: preset.frequency,
-                  hoursPerMeeting: preset.hoursPerMeeting,
-                })
-              }
-            >
-              {preset.emoji} {preset.relation}
-            </button>
-          ))}
+        <div className="border-t border-ink-200/70 pt-4">
+          <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.age} />
         </div>
-      </div>
-
-      <div className="card">
-        <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.age} />
       </div>
 
       <div className="card space-y-4">
@@ -365,17 +364,16 @@ export default function PersonEditor({ initial }: { initial: Person }) {
         </div>
       </div>
 
-      <div className="card">
+      {/* 조건과 그 결과(연도별 추이)는 한 카드에. 걸면 바로 아래에서 달라지는 게 보인다. */}
+      <div className="card space-y-4">
         <FilterEditor
           filters={draft.filters}
           onChange={(filters) => setDraft({ ...draft, filters })}
         />
-      </div>
-
-      {/* 추이는 조건 바로 아래에 둔다. 위에 두면 입력 칸이 화면 밖으로 밀린다. */}
-      <div className="card space-y-2">
-        <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>
-        <YearBreakdown slices={result.slices} />
+        <div className="space-y-2 border-t border-ink-200/70 pt-4">
+          <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>
+          <YearBreakdown slices={result.slices} />
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

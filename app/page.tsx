@@ -394,7 +394,7 @@ export default function HomePage() {
       {marriage === null ? (
         <Link
           href="/marriage"
-          className="block pt-2 text-center text-xs text-ink-400 transition hover:text-ink-600"
+          className="block py-3 text-center text-xs text-ink-400 transition hover:text-ink-600"
         >
           {t.marriageLink}
         </Link>

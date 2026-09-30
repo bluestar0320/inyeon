@@ -67,3 +67,29 @@ test("미성년자를 넣으면 켜지 않아도 성인이 될 때까지를 센�
   await page.waitForURL(/detail/);
   await expect(page.getByText("성장 캘린더")).toHaveCount(0);
 });
+
+test("폰에서 입력 칸을 눌러도 확대되지 않고(16px), 칩은 손가락으로 누를 만하다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  for (const path of ["/setup", "/people/new", "/moments/new"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    const small = await page.evaluate(() =>
+      [...document.querySelectorAll("input:not([type=checkbox]):not([type=radio]), select, textarea")]
+        .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 16)
+        .map((el) => el.outerHTML.slice(0, 60)),
+    );
+    expect(small, path).toEqual([]);
+    const tiny = await page.evaluate(() =>
+      [...document.querySelectorAll(".chip")].filter((el) => el.getBoundingClientRect().height < 36).length,
+    );
+    expect(tiny, path).toBe(0);
+  }
+});
+
+test("아직 셀 수 없을 때 결과 자리는 한 줄로 작게, 입력 칸이 첫 화면에 보인다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people/new");
+  const name = page.getByLabel("이름");
+  const box = await name.boundingBox();
+  expect(box!.y + box!.height).toBeLessThan(page.viewportSize()!.height);
+});

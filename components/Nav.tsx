@@ -43,7 +43,7 @@ export default function Nav() {
           href="/"
           onClick={guard}
           prefetch={false}
-          className="text-sm font-semibold tracking-tight text-ink-900"
+          className="-my-2 py-3 pr-2 text-sm font-semibold tracking-tight text-ink-900"
         >
           {t.brand}
         </Link>

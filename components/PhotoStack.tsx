@@ -102,7 +102,8 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
       >
         {cards.map((card, i) => (
           <div key={card.id} className="w-full shrink-0 snap-center px-[14%] py-3">
-            <Link href={card.href} prefetch={false} className="block">
+            {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. */}
+            <Link href={card.href} prefetch={false} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">
               <Polaroid photo={card.photo} size="md" tilt={TILTS[i % TILTS.length]}>
                 <span className="mt-2 block px-1">
                   <span className="font-album block truncate text-sm text-ink-800">{card.title}</span>

@@ -77,10 +77,15 @@ export default function ResultPanel({
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
 
+  /*
+   * 아직 셀 수 없을 때(나이를 안 넣었을 때)는 한 줄로만 둔다. 큰 "-"가 화면 위 절반을
+   * 차지하면 정작 적어야 할 칸이 폰 화면 밖으로 밀린다.
+   */
   if (unknownMessage) {
     return (
-      <div className="hero">
-        <BigNumber label={label} value="-" muted sub={unknownMessage} />
+      <div className="hero py-4 sm:py-5">
+        <p className="text-xs font-medium tracking-[0.08em] text-ink-600">{label}</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-600">{unknownMessage}</p>
       </div>
     );
   }
