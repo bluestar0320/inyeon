@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import Polaroid from "@/components/Polaroid";
 import ListControls, { type SortOption } from "@/components/ListControls";
 import { computeMoment } from "@/lib/calc";
 import { formatCount, formatFrequency } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
+import { photoFor } from "@/lib/photos";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 
@@ -177,7 +179,7 @@ export default function MomentsPage() {
               key={moment.id}
               href={`/moments/detail?id=${moment.id}`}
               className="card transition hover:border-ink-400" prefetch={false}>
-              <span className="text-2xl">{moment.emoji ?? "◦"}</span>
+              <Polaroid photo={photoFor(moment)} size="sm" />
               <p className="mt-2 text-sm font-medium text-ink-800">{moment.title}</p>
               <p className="text-xs text-ink-400">{formatFrequency(moment.frequency)}</p>
               <p className="numeral mt-2 text-3xl text-ink-900">

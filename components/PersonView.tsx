@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import GrowthCalendar from "@/components/GrowthCalendar";
+import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
@@ -20,6 +21,7 @@ import {
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
+import { photoFor } from "@/lib/photos";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Person } from "@/lib/types";
@@ -204,6 +206,11 @@ export default function PersonView({ person }: { person: Person }) {
 
   return (
     <div className="space-y-5">
+      <div className="flex justify-center pt-2">
+        <Polaroid photo={photoFor(person)} size="lg" tilt={-2}>
+          <span className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
+        </Polaroid>
+      </div>
       <ResultPanel
         label={copy.meetingLabel}
         result={result}

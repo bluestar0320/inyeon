@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
@@ -11,6 +12,7 @@ import { DAYS_PER_YEAR, computeMoment, computePast, resolveAge, toPerYear } from
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
+import { photoFor } from "@/lib/photos";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Moment } from "@/lib/types";
@@ -146,6 +148,11 @@ export default function MomentView({ moment }: { moment: Moment }) {
 
   return (
     <div className="space-y-5">
+      <div className="flex justify-center pt-2">
+        <Polaroid photo={photoFor(moment)} size="lg" tilt={-2}>
+          <span className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{moment.title}</span>
+        </Polaroid>
+      </div>
       <ResultPanel
         label={copy.momentLabel}
         result={result}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import Polaroid from "@/components/Polaroid";
 import ListControls, { type SortOption } from "@/components/ListControls";
 import { computeRelationship, resolveAge } from "@/lib/calc";
 import {
@@ -15,6 +16,7 @@ import {
   formatYears,
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
+import { photoFor } from "@/lib/photos";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import type { Person } from "@/lib/types";
@@ -308,7 +310,7 @@ export default function PeoplePage() {
               href={`/people/detail?id=${person.id}`}
               className="card flex items-center justify-between transition hover:border-ink-400" prefetch={false}>
               <span className="flex min-w-0 items-center gap-3">
-                <span className="text-2xl">{person.emoji ?? "🫧"}</span>
+                <Polaroid photo={photoFor(person)} size="sm" />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium text-ink-800">
                     {person.name}

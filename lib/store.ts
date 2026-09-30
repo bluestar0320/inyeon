@@ -157,6 +157,8 @@ function repairCommon(item: unknown): Loose | null {
     filters: repairFilters(item.filters),
     scenarios: repairScenarios(item.scenarios),
     emoji: text(item.emoji),
+    // 모르는 키는 photoFor가 공용 사진으로 떨어뜨린다. 여기서 걸러 내지 않는다.
+    photo: text(item.photo),
     note: text(item.note),
     since: text(item.since),
     createdAt: text(item.createdAt) ?? "",

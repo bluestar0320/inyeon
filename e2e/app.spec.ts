@@ -179,7 +179,8 @@ test.describe("목록 정렬과 검색", () => {
 
     await page.getByRole("button", { name: "이름순" }).click();
     const names = await page.locator("a.card").allInnerTexts();
-    expect(names.map((t) => t.split("\n")[1])).toEqual(["동생", "삼촌", "어머니"]);
+    // 첫 줄이 이름이다(이모지 자리는 폴라로이드 썸네일이 되어 글자가 없다).
+    expect(names.map((t) => t.split("\n")[0])).toEqual(["동생", "삼촌", "어머니"]);
   });
 
   test("항목이 적으면 검색창을 띄우지 않는다", async ({ page }) => {

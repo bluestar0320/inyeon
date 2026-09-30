@@ -6,6 +6,7 @@ import { useId, useMemo, useState, useRef } from "react";
 import NumberInput from "@/components/NumberInput";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
+import PhotoPicker from "@/components/PhotoPicker";
 import FrequencyInput from "@/components/FrequencyInput";
 import ResultPanel from "@/components/ResultPanel";
 import SinceField from "@/components/SinceField";
@@ -13,6 +14,7 @@ import YearBreakdown from "@/components/YearBreakdown";
 import { computeMoment, resolveAge } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
+import { photoFor } from "@/lib/photos";
 import { momentPresets } from "@/lib/presets";
 import { momentFrom, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -286,6 +288,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
             />
           </div>
         </div>
+        <PhotoPicker value={photoFor(draft)} onChange={(photo) => setDraft({ ...draft, photo })} />
 
         <div className="flex flex-wrap gap-1.5">
           {momentPresets().map((preset) => (

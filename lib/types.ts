@@ -88,6 +88,8 @@ export interface Person extends LifeSpan {
   /** "어머니", "대학 친구" 같은 자유 입력 라벨. */
   relation?: string;
   emoji?: string;
+  /** 폴라로이드 사진 키(lib/photos.ts). 없으면 이모지·id로 고른다. */
+  photo?: string;
   frequency: Frequency;
   /** 한 번 만날 때 함께 보내는 시간(시간 단위). 총 체류 시간 환산에 쓴다. */
   hoursPerMeeting?: number;
@@ -151,6 +153,8 @@ export interface Moment {
   id: string;
   title: string;
   emoji?: string;
+  /** 폴라로이드 사진 키(lib/photos.ts). 없으면 이모지·id로 고른다. */
+  photo?: string;
   frequency: Frequency;
   horizon: MomentHorizon;
   filters: CalcFilter[];

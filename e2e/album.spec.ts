@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { setUpProfile } from "./helpers";
+import { readState, setUpProfile } from "./helpers";
 
 async function addPerson(page: Page, name: string, age: string) {
   await page.goto("/people/new");
@@ -41,4 +41,22 @@ test("긴 영문 이름이 화면을 옆으로 밀지 않는다", async ({ page 
   await page.goto("/");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("사진을 바꾸면 저장되고 다시 열어도 그대로", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await addPerson(page, "엄마", "60");
+  await page.goto("/people/");
+  await page.getByRole("link", { name: /엄마/ }).click();
+  await page.getByRole("link", { name: "수정하기" }).click();
+  await page.getByTitle("기찻길").click();
+  await expect(page.getByRole("radio", { name: "기찻길" })).toBeChecked();
+  await page.getByRole("button", { name: "저장하기" }).click();
+  await expect
+    .poll(async () => ((await readState(page))!.people as { photo?: string }[])[0].photo)
+    .toBe("railway");
+  await page.goto("/people/");
+  await page.getByRole("link", { name: /엄마/ }).click();
+  await page.getByRole("link", { name: "수정하기" }).click();
+  await expect(page.getByRole("radio", { name: "기찻길" })).toBeChecked();
 });
