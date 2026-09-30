@@ -98,3 +98,38 @@ test("키보드로 끝까지 넘겨도 초점이 단추에 남는다", async ({ 
   await expect(stack.getByText("3 / 3")).toBeVisible();
   await expect(next).toBeFocused();
 });
+
+test("홈 카드의 횟수를 화면 낭독기가 한 번만 읽는다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await addPerson(page, "엄마", "60");
+  await page.goto("/");
+  const link = page.getByRole("region", { name: "인연" }).getByRole("link").first();
+  const name = (await link.ariaSnapshot()).split("\n")[0];
+  const count = name.match(/\d+번/g) ?? [];
+  expect(count.length, name).toBe(1);
+});
+
+test("상세 화면에서 이름을 화면 낭독기가 두 번 읽지 않는다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await addPerson(page, "엄마", "60");
+  await page.goto("/people/");
+  await page.getByRole("link", { name: /엄마/ }).click();
+  await page.waitForURL(/detail/);
+  const snapshot = await page.locator("main").ariaSnapshot();
+  // 제목(h1) 말고는 이름만 덩그러니 읽히는 줄이 없어야 한다.
+  const bare = snapshot.split("\n").filter((line) => /^- (text: )?"?엄마"?$/.test(line.trim()));
+  expect(bare, snapshot).toEqual([]);
+});
+
+test("사진 고르기에 키보드로 들어가면 초점 표시가 선택 표시와 다르게 보인다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people/new");
+  await page.getByLabel("이름").fill("엄마");
+  await page.getByLabel("이름").focus();
+  const radio = page.locator('input[type="radio"]:checked');
+  await radio.focus();
+  await page.keyboard.press("ArrowRight");
+  const img = page.locator('input[type="radio"]:checked + img');
+  const outline = await img.evaluate((el) => getComputedStyle(el).outlineStyle);
+  expect(outline).not.toBe("none");
+});

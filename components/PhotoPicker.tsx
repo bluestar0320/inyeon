@@ -44,7 +44,7 @@ export default function PhotoPicker({ value, onChange }: { value: string; onChan
               src={photoSrc(key)}
               alt=""
               loading="lazy"
-              className="aspect-square w-full rounded-md object-cover opacity-70 ring-offset-2 ring-offset-surface transition peer-checked:opacity-100 peer-checked:ring-2 peer-checked:ring-ink-800 peer-focus-visible:ring-2 peer-focus-visible:ring-ink-400"
+              className="aspect-square w-full rounded-md object-cover opacity-70 ring-offset-2 ring-offset-surface transition peer-checked:opacity-100 peer-checked:ring-2 peer-checked:ring-ink-800 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-ink-800"
             />
           </label>
         ))}

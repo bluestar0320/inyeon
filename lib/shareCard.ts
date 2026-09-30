@@ -64,21 +64,21 @@ export function currentTheme(): CardTheme {
   if (typeof window === "undefined") {
     return {
       background: "#f7f1e6",
-      surface: "#ffffff",
-      text: "#15161b",
-      muted: "#6a6c76",
-      accent: "#b05632",
-      border: "#d9dade",
+      surface: "#fffdf8",
+      text: "#2a221c",
+      muted: "#706053",
+      accent: "#a85230",
+      border: "#e2d8ca",
     };
   }
   const s = window.getComputedStyle(document.documentElement);
   return {
     background: readColor(s, "--page", "#f7f1e6"),
-    surface: readColor(s, "--surface", "#ffffff"),
-    text: readColor(s, "--ink-900", "#15161b"),
-    muted: readColor(s, "--ink-400", "#6a6c76"),
-    accent: readColor(s, "--accent-500", "#b05632"),
-    border: readColor(s, "--ink-200", "#d9dade"),
+    surface: readColor(s, "--surface", "#fffdf8"),
+    text: readColor(s, "--ink-900", "#2a221c"),
+    muted: readColor(s, "--ink-400", "#706053"),
+    accent: readColor(s, "--accent-500", "#a85230"),
+    border: readColor(s, "--ink-200", "#e2d8ca"),
   };
 }
 

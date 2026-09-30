@@ -83,7 +83,8 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
                 <span className="mt-2 block px-1">
                   <span className="font-album block truncate text-sm text-ink-800">{card.title}</span>
                   <span className="font-album mt-0.5 block text-xs leading-relaxed text-ink-600">{card.sentence}</span>
-                  <span className="numeral mt-1 block text-4xl leading-none text-ink-900">
+                  {/* 횟수는 바로 위 문장이 이미 말한다. 화면 낭독기가 두 번 읽지 않게 숨긴다. */}
+                  <span aria-hidden="true" className="numeral mt-1 block text-4xl leading-none text-ink-900">
                     {card.count}
                     <span className="ml-1 text-sm font-normal text-ink-600">{card.unit}</span>
                   </span>

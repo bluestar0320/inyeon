@@ -42,3 +42,15 @@ test("이름이 비어도 쓸 수 있는 파일 이름이 나온다", () => {
   assert.equal(safeFileName([]), "카드.png");
   assert.equal(safeFileName(["   ", ""]), "카드.png");
 });
+
+test("화면 밖(서버)에서 쓰는 예비 색도 지금 종이 팔레트다", async () => {
+  const { currentTheme } = await import("../lib/shareCard.ts");
+  assert.deepEqual(currentTheme(), {
+    background: "#f7f1e6",
+    surface: "#fffdf8",
+    text: "#2a221c",
+    muted: "#706053",
+    accent: "#a85230",
+    border: "#e2d8ca",
+  });
+});

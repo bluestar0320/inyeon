@@ -27,3 +27,9 @@ test("동의한 날짜를 돌려준다", () => {
   assert.equal(consentDate(consentRecord(NOW)), "2026-09-30T09:00:00.000Z");
   assert.equal(consentDate("abc"), null);
 });
+
+test("날짜가 망가진 기록은 동의로 보지 않는다", () => {
+  const raw = JSON.stringify({ version: CONSENT_VERSION, at: "garbage" });
+  assert.equal(needsConsent(raw), true);
+  assert.equal(consentDate(raw), null);
+});

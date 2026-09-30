@@ -208,7 +208,7 @@ export default function PersonView({ person }: { person: Person }) {
     <div className="space-y-5">
       <div className="flex justify-center pt-2">
         <Polaroid photo={photoFor(person)} size="lg" tilt={-2}>
-          <span className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
+          <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
         </Polaroid>
       </div>
       <ResultPanel

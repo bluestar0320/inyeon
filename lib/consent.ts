@@ -17,7 +17,7 @@ function parse(raw: string | null): { version: number; at: string } | null {
   if (!raw) return null;
   try {
     const value = JSON.parse(raw);
-    if (value && typeof value === "object" && typeof value.version === "number" && typeof value.at === "string") {
+    if (value && typeof value === "object" && typeof value.version === "number" && typeof value.at === "string" && !Number.isNaN(Date.parse(value.at))) {
       return value;
     }
   } catch {
