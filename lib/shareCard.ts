@@ -63,7 +63,7 @@ function readColor(styles: CSSStyleDeclaration, name: string, fallback: string):
 export function currentTheme(): CardTheme {
   if (typeof window === "undefined") {
     return {
-      background: "#fbfaf8",
+      background: "#f7f1e6",
       surface: "#ffffff",
       text: "#15161b",
       muted: "#6a6c76",
@@ -73,7 +73,7 @@ export function currentTheme(): CardTheme {
   }
   const s = window.getComputedStyle(document.documentElement);
   return {
-    background: readColor(s, "--page", "#fbfaf8"),
+    background: readColor(s, "--page", "#f7f1e6"),
     surface: readColor(s, "--surface", "#ffffff"),
     text: readColor(s, "--ink-900", "#15161b"),
     muted: readColor(s, "--ink-400", "#6a6c76"),

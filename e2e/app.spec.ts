@@ -334,24 +334,24 @@ test.describe("상태바 색", () => {
     const res = await page.request.get("/manifest.webmanifest");
     expect(res.ok()).toBe(true);
     const manifest = (await res.json()) as { theme_color: string; background_color: string };
-    expect(manifest.theme_color).toBe("#121317");
-    expect(manifest.background_color).toBe("#121317");
+    expect(manifest.theme_color).toBe("#1c1612");
+    expect(manifest.background_color).toBe("#1c1612");
   });
 
   // 브라우저 탭에서는 meta가 살아 있어 테마를 따라간다. 설치된 앱과는 다른 경로다.
   test("브라우저에서는 기기가 밝아도 앱을 어둡게 하면 상태바가 따라온다", async ({ page }) => {
     await page.goto("/settings");
-    expect(await bar(page)).toBe("#fbfaf8");
+    expect(await bar(page)).toBe("#f7f1e6");
 
     await page.getByRole("button", { name: "어둡게" }).click();
-    await expect.poll(() => bar(page)).toBe("#121317");
+    await expect.poll(() => bar(page)).toBe("#1c1612");
 
     // 새로고침해도 흰 띠가 한 번 번쩍이지 않아야 한다(인라인 스크립트가 맡는다).
     await page.reload();
-    expect(await bar(page)).toBe("#121317");
+    expect(await bar(page)).toBe("#1c1612");
 
     await page.getByRole("button", { name: "밝게" }).click();
-    await expect.poll(() => bar(page)).toBe("#fbfaf8");
+    await expect.poll(() => bar(page)).toBe("#f7f1e6");
   });
 });
 

@@ -5,8 +5,8 @@
  * layout.tsx에서도 읽어야 한다.
  */
 export const THEME_COLOR = {
-  light: "#fbfaf8",
-  dark: "#121317",
+  light: "#f7f1e6",
+  dark: "#1c1612",
 } as const;
 
 /** 실제로 칠해진 테마에 맞춰 메타 태그를 고친다. 상태바가 이 값을 따라간다. */

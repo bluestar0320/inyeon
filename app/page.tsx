@@ -5,6 +5,7 @@ import { useMemo } from "react";
 
 import BigNumber from "@/components/BigNumber";
 import EmptyState from "@/components/EmptyState";
+import PhotoStack from "@/components/PhotoStack";
 import StatCard from "@/components/StatCard";
 import { backupDue } from "@/lib/backup";
 import {
@@ -24,6 +25,7 @@ import {
   formatYears,
 } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
+import { photoFor } from "@/lib/photos";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 
@@ -46,7 +48,6 @@ const COPY = defineCopy({
     emptyPeopleBody:
       "부모님, 친구, 아이 — 나와 이어진 사람이면 누구든. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 볼 수 있는지 바로 나옵니다.",
     addPerson: "인연 추가",
-    relationFallback: "인연",
     times: "번",
     timesValue: (n: number) => `${n}번`,
     growingTitle: "아이와 남은 것들",
@@ -79,7 +80,6 @@ const COPY = defineCopy({
     emptyPeopleBody:
       "Parents, friends, kids — anyone in your life. With just an age and how often you meet, you'll see how many more times you can be together.",
     addPerson: "Add person",
-    relationFallback: "Person",
     times: "times",
     timesValue: (n) => `${n} ${n === 1 ? "time" : "times"}`,
     growingTitle: "Time with your kids",
@@ -111,7 +111,6 @@ const COPY = defineCopy({
     emptyPeopleBody:
       "両親、友だち、子ども — つながっている人なら誰でも。年齢と会う頻度だけで、あと何回会えるかがすぐにわかります。",
     addPerson: "大切な人を追加",
-    relationFallback: "大切な人",
     times: "回",
     timesValue: (n) => `${n}回`,
     growingTitle: "子どもと過ごせる時間",
@@ -144,7 +143,6 @@ const COPY = defineCopy({
     emptyPeopleBody:
       "Padres, amigos, hijos — cualquiera que forme parte de tu vida. Con su edad y cada cuánto os veis, verás cuántas veces más podéis estar juntos.",
     addPerson: "Añadir persona",
-    relationFallback: "Persona",
     times: "veces",
     timesValue: (n) => `${n} ${n === 1 ? "vez" : "veces"}`,
     growingTitle: "Tiempo con tus hijos",
@@ -175,7 +173,6 @@ const COPY = defineCopy({
     emptyPeopleBody:
       "父母、朋友、孩子 — 只要是和你相连的人都可以。只需年龄和见面频率，就能看到还能见几次。",
     addPerson: "添加亲友",
-    relationFallback: "亲友",
     times: "次",
     timesValue: (n) => `${n}次`,
     growingTitle: "和孩子相处的时光",
@@ -329,40 +326,18 @@ export default function HomePage() {
             actionLabel={t.addPerson}
           />
         ) : (
-          /*
-            카드 네 장을 쌓지 않는다. 같은 테두리를 두른 상자가 줄줄이 서면 어느
-            것이 더 급한지 안 보인다. 선으로만 나누고, 숫자를 키워 그 줄에서
-            제일 먼저 읽히게 한다.
-          */
-          <ul className="divide-y divide-ink-200/70 border-y border-ink-200/70">
-            {people.slice(0, 4).map(({ person, result }) => (
-              <li key={person.id}>
-                <Link
-                  href={`/people/detail?id=${person.id}`}
-                  className="-mx-2 flex items-center justify-between gap-3 rounded-xl px-2 py-3.5 transition hover:bg-ink-50" prefetch={false}>
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span aria-hidden="true" className="text-xl">
-                      {person.emoji ?? "🫧"}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-ink-800">
-                        {person.name}
-                      </span>
-                      <span className="block text-xs text-ink-400">
-                        {person.relation ?? t.relationFallback}
-                      </span>
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-right">
-                    <span className="numeral text-3xl leading-none text-ink-900">
-                      {formatCount(result.total)}
-                    </span>
-                    <span className="ml-1 text-xs text-ink-400">{t.times}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <PhotoStack
+            label={t.people}
+            cards={people.slice(0, 10).map(({ person, result }) => ({
+              id: person.id,
+              href: `/people/detail?id=${person.id}`,
+              photo: photoFor(person),
+              title: person.relation ? `${person.name} · ${person.relation}` : person.name,
+              sentence: copy.meetingSentence(person.name, formatCount(result.total)),
+              count: formatCount(result.total),
+              unit: t.times,
+            }))}
+          />
         )}
       </section>
 
@@ -422,23 +397,18 @@ export default function HomePage() {
             actionLabel={t.addMoment}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {moments.slice(0, 4).map(({ moment, result }) => (
-              <Link
-                key={moment.id}
-                href={`/moments/detail?id=${moment.id}`}
-                className="card py-4 transition hover:border-ink-400" prefetch={false}>
-                <span aria-hidden="true" className="text-xl">
-                  {moment.emoji ?? "◦"}
-                </span>
-                <p className="mt-2 truncate text-sm font-medium text-ink-800">{moment.title}</p>
-                <p className="numeral mt-1 text-3xl leading-none text-ink-900">
-                  {formatCount(result.total)}
-                  <span className="ml-1 text-sm font-normal text-ink-400">{t.times}</span>
-                </p>
-              </Link>
-            ))}
-          </div>
+          <PhotoStack
+            label={t.moments}
+            cards={moments.slice(0, 10).map(({ moment, result }) => ({
+              id: moment.id,
+              href: `/moments/detail?id=${moment.id}`,
+              photo: photoFor(moment),
+              title: moment.title,
+              sentence: copy.momentSentence(moment.title, formatCount(result.total)),
+              count: formatCount(result.total),
+              unit: t.times,
+            }))}
+          />
         )}
       </section>
 

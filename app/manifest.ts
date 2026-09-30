@@ -31,8 +31,8 @@ export default function manifest(): MetadataRoute.Manifest {
      * 브라우저 탭에서는 <meta name="theme-color">가 살아 있어서 테마를 따라간다
      * (lib/themeColor.ts). 그쪽은 이 값과 무관하다.
      */
-    background_color: "#121317",
-    theme_color: "#121317",
+    background_color: "#1c1612",
+    theme_color: "#1c1612",
     lang: "ko",
     orientation: "portrait",
     icons: [

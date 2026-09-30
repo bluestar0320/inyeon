@@ -5,76 +5,78 @@
 /*
  * 팔레트. 다크 모드는 여기 값만 바꾸고 컴포넌트는 건드리지 않는다.
  * ink는 명도 사다리라 어두운 쪽에서 위아래가 뒤집힌다.
+ *
+ * 종이. 따뜻한 크림색 위에 갈색 먹 — 사진첩 한 장을 넘기는 느낌.
+ * 대비 기준은 예전과 같다(보조 글자 4.5:1 이상). axe가 양쪽 테마에서 확인한다.
  */
 :root {
-  --ink-50: 246 246 247;
-  --ink-200: 217 218 222;
-  /*
-   * 보조 텍스트에 두루 쓰는 색이라 대비가 중요하다. 원래 #8b8d97이었는데 흰 바탕에서
-   * 3.3:1밖에 안 나와 WCAG AA(4.5)에 미달했다 — axe로 197곳이 걸렸다.
-   * 지금 값은 흰 바탕 5.2, 페이지 바탕 5.0, ink-50 위 4.9다.
-   */
-  --ink-400: 106 108 118;
-  --ink-600: 75 77 89;
-  --ink-800: 36 37 45;
-  --ink-900: 21 22 27;
+  --ink-50: 240 232 219;
+  --ink-200: 226 216 202;
+  --ink-400: 112 96 83;
+  --ink-600: 88 74 62;
+  --ink-800: 58 47 39;
+  --ink-900: 42 34 28;
 
-  --accent-50: 253 243 239;
-  --accent-100: 249 226 216;
-  --accent-400: 217 128 90;
-  /* 글자에 쓰는 색이라 흰 바탕 기준 4.5:1을 넘겨야 한다. 원래 #c4653e는 3.98이었다. */
-  --accent-500: 176 86 50;
-  --accent-600: 165 80 47;
+  --accent-50: 252 240 232;
+  --accent-100: 247 224 208;
+  --accent-400: 214 130 92;
+  --accent-500: 168 82 48;
+  --accent-600: 150 72 42;
 
-  --surface: 255 255 255;
-  --page: 251 250 248;
-  --on-ink: 255 255 255;
+  --surface: 255 253 248;
+  --page: 247 241 230;
+  --on-ink: 255 253 248;
 
   /*
-   * 주인공 숫자가 앉는 바닥. 이 앱에서 색이 깔리는 자리는 여기 하나뿐이다.
-   * 색을 화면 전체에 옅게 퍼뜨리면 어디에도 시선이 안 간다. 눈이 가야 할 한 곳에만
-   * 모은다. 그 위의 글자는 ink-900과 ink-600만 쓴다(양쪽 테마 모두 7:1 이상).
+   * 주인공 숫자가 앉는 바닥. 색을 화면 전체에 옅게 퍼뜨리면 어디에도 시선이 안 간다.
+   * 눈이 가야 할 한 곳에만 모은다.
    */
-  --hero-bg: 252 241 235;
-  --hero-line: 240 219 208;
+  --hero-bg: 251 233 220;
+  --hero-line: 238 214 196;
 
-  --toast-bg: 21 22 27;
-  --toast-fg: 255 255 255;
+  --toast-bg: 42 34 28;
+  --toast-fg: 255 253 248;
   --toast-accent: 240 178 148;
 
-  --danger-border: 254 202 202;
-  --danger-bg: 254 242 242;
-  --danger-fg: 220 38 38;
+  --danger-border: 240 196 190;
+  --danger-bg: 252 240 236;
+  --danger-fg: 190 40 30;
+
+  /* 폴라로이드 테두리. */
+  --frame: 255 253 248;
 }
 
+/* 밤의 앨범. 짙은 갈색 바탕에 같은 폴라로이드. */
 .dark {
-  --ink-50: 32 33 39;
-  --ink-200: 60 62 71;
-  --ink-400: 146 148 158;
-  --ink-600: 191 193 201;
-  --ink-800: 229 230 234;
-  --ink-900: 245 245 247;
+  --ink-50: 46 38 32;
+  --ink-200: 72 60 50;
+  --ink-400: 166 152 136;
+  --ink-600: 204 192 176;
+  --ink-800: 234 225 212;
+  --ink-900: 247 240 230;
 
-  --accent-50: 56 36 28;
-  --accent-100: 78 50 38;
+  --accent-50: 58 38 28;
+  --accent-100: 80 52 38;
   --accent-400: 226 148 112;
   --accent-500: 233 162 128;
   --accent-600: 240 183 154;
 
-  --surface: 26 27 32;
-  --page: 18 19 23;
-  --on-ink: 18 19 23;
+  --surface: 38 31 26;
+  --page: 28 22 18;
+  --on-ink: 28 22 18;
 
-  --hero-bg: 42 32 28;
-  --hero-line: 66 50 42;
+  --hero-bg: 50 36 28;
+  --hero-line: 74 54 42;
 
-  --toast-bg: 240 240 243;
-  --toast-fg: 21 22 27;
+  --toast-bg: 240 232 219;
+  --toast-fg: 42 34 28;
   --toast-accent: 154 71 38;
 
   --danger-border: 96 44 44;
   --danger-bg: 44 24 24;
   --danger-fg: 248 138 138;
+
+  --frame: 58 49 42;
 }
 
 @layer base {
@@ -138,15 +140,15 @@
  */
 @layer components {
   .card {
-    @apply rounded-2xl border border-ink-200/70 bg-surface p-5 shadow-[0_1px_2px_rgba(21,22,27,0.04)];
+    @apply rounded-3xl border border-ink-200/70 bg-surface p-5 shadow-[0_1px_2px_rgba(21,22,27,0.04)];
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-ink-800 px-4 py-2 text-sm font-medium text-onInk transition hover:bg-ink-900 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex items-center justify-center rounded-2xl bg-ink-800 px-4 py-2 text-sm font-medium text-onInk transition hover:bg-ink-900 disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-ink-200 bg-surface px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50;
+    @apply inline-flex items-center justify-center rounded-2xl border border-ink-200 bg-surface px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-50;
   }
 
   /*
@@ -158,11 +160,11 @@
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center rounded-xl border border-danger-border bg-surface px-4 py-2 text-sm font-medium text-danger-fg transition hover:bg-danger-bg;
+    @apply inline-flex items-center justify-center rounded-2xl border border-danger-border bg-surface px-4 py-2 text-sm font-medium text-danger-fg transition hover:bg-danger-bg;
   }
 
   .input {
-    @apply w-full rounded-xl border border-ink-200 bg-surface px-3 py-2 text-sm text-ink-800 transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
+    @apply w-full rounded-2xl border border-ink-200 bg-surface px-3 py-2 text-sm text-ink-800 transition focus:border-ink-400 focus:outline-none focus:ring-1 focus:ring-ink-400;
   }
 
   .label {
@@ -200,6 +202,20 @@
   .numeral-hero {
     @apply leading-none text-ink-900;
     animation: number-in 320ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* 폴라로이드. 각진 모서리, 아래가 넓은 테두리, 종이 그림자. */
+  .polaroid {
+    @apply block bg-[rgb(var(--frame))] p-2 pb-3 shadow-[0_4px_12px_rgba(42,34,28,0.16)];
+  }
+
+  .polaroid img {
+    @apply block aspect-square w-full object-cover;
+  }
+
+  /* 사진 아래 이름과 문장. 웹폰트 없이 기기의 명조를 부른다. */
+  .font-album {
+    font-family: "Nanum Myeongjo", "AppleMyungjo", "Batang", "Hiragino Mincho ProN", "Songti SC", Georgia, serif;
   }
 
   @keyframes number-in {
