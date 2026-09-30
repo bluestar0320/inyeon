@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 
 import InstallButton from "@/components/InstallButton";
@@ -51,6 +52,7 @@ const COPY = defineCopy({
     filePrefix: "몇번더",
     tooLarge: "파일이 너무 커서 이 기기에 저장하지 못했습니다. 지금 기록은 그대로 두었습니다.",
     overwritten: (n: number) => `${n}개를 덮어썼습니다.`,
+    privacyLink: "개인정보 안내",
     feedbackTitle: "의견 보내기",
     feedbackHint:
       "쓰다가 막힌 곳, 이상한 숫자, 있었으면 하는 것 — 뭐든 좋습니다. 메일 앱이 열리고, 보내기 전에 지우거나 고칠 수 있습니다.",
@@ -109,6 +111,7 @@ const COPY = defineCopy({
     filePrefix: "how-many-more",
     tooLarge: "The file is too large to save on this device. Your current records are unchanged.",
     overwritten: (n: number) => `Replaced ${n} ${n === 1 ? "item" : "items"}.`,
+    privacyLink: "Privacy",
     feedbackTitle: "Send feedback",
     feedbackHint:
       "Where you got stuck, a number that looked off, something you wish it had — anything helps. Your mail app opens, and you can edit or delete anything before sending.",
@@ -168,6 +171,7 @@ const COPY = defineCopy({
     filePrefix: "あと何回",
     tooLarge: "ファイルが大きすぎて、この端末に保存できませんでした。今の記録はそのままです。",
     overwritten: (n: number) => `${n}件を上書きしました。`,
+    privacyLink: "個人情報について",
     feedbackTitle: "ご意見を送る",
     feedbackHint:
       "迷ったところ、おかしな数字、あったらいいもの — なんでも歓迎です。メールアプリが開き、送る前に消したり直したりできます。",
@@ -226,6 +230,7 @@ const COPY = defineCopy({
     filePrefix: "cuantas-veces-mas",
     tooLarge: "El archivo es demasiado grande para guardarlo en este dispositivo. Tus registros no han cambiado.",
     overwritten: (n: number) => `Se reemplazaron ${n} ${n === 1 ? "elemento" : "elementos"}.`,
+    privacyLink: "Privacidad",
     feedbackTitle: "Enviar comentarios",
     feedbackHint:
       "Dónde te atascaste, un número raro, algo que echas en falta: todo sirve. Se abrirá tu app de correo y podrás borrar o cambiar lo que quieras antes de enviar.",
@@ -284,6 +289,7 @@ const COPY = defineCopy({
     filePrefix: "还有几次",
     tooLarge: "文件太大，无法保存到此设备。当前记录保持不变。",
     overwritten: (n: number) => `已覆盖 ${n} 条记录。`,
+    privacyLink: "隐私说明",
     feedbackTitle: "发送意见",
     feedbackHint: "卡住的地方、奇怪的数字、希望有的功能——什么都可以。会打开邮件应用，发送前可以删改。",
     feedbackSubject: "[还有几次] 意见",
@@ -567,6 +573,9 @@ export default function SettingsPage() {
           {t.feedbackTitle}
         </a>
       </section>
+      <Link href="/privacy" className="btn-secondary w-full">
+        {t.privacyLink}
+      </Link>
       <section className="card space-y-3">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.clearTitle}</p>

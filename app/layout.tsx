@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import LangRoot from "@/components/LangRoot";
+import ConsentGate from "@/components/ConsentGate";
 import Nav from "@/components/Nav";
 import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
@@ -76,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             id="main"
             className="mx-auto max-w-3xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"
           >
-            {children}
+            <ConsentGate>{children}</ConsentGate>
           </main>
           <UndoBar />
         </LangRoot>
