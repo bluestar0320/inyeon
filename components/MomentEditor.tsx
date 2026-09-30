@@ -15,6 +15,7 @@ import { formatCount, formatFrequency, formatInterval, formatYears, josa } from 
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { momentPresets } from "@/lib/presets";
 import { momentFrom, useActions, useAppState } from "@/lib/store";
+import { photoFor, photoSrc } from "@/lib/photos";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
@@ -243,6 +244,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
           // 목록에서는 "◦"로 자리를 채우지만 카드에서는 비워 둔다. 빈 동그라미가
           // 크게 찍히면 뜻 없는 자국이 된다.
           emoji: draft.emoji,
+          photo: photoSrc(photoFor(draft)),
           title,
           subtitle: copy.momentLabel,
           value: formatCount(result.total),

@@ -12,7 +12,7 @@ import { DAYS_PER_YEAR, computeMoment, computePast, resolveAge, toPerYear } from
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
-import { photoFor } from "@/lib/photos";
+import { photoFor, photoSrc } from "@/lib/photos";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Moment } from "@/lib/types";
@@ -160,6 +160,7 @@ export default function MomentView({ moment }: { moment: Moment }) {
         unknownMessage={result.horizonYears === null ? t.unknown : undefined}
         share={{
           emoji: moment.emoji,
+          photo: photoSrc(photoFor(moment)),
           title: moment.title,
           subtitle: copy.momentLabel,
           value: formatCount(result.total),

@@ -95,3 +95,28 @@ test("계산이 안 되는 상태에서는 저장 단추를 띄우지 않는다"
   await page.waitForTimeout(300);
   await expect(page.getByTestId("share-card")).toHaveCount(0);
 });
+
+test("순간 카드에는 그 순간의 사진이 들어간다", async ({ page }) => {
+  await page.goto("/moments/new");
+  await page.getByRole("button", { name: "🌸 벚꽃 보기" }).click();
+  await page.waitForTimeout(300);
+  const photo = page.waitForRequest((r) => /\/photos\/blossom(-\d)?\.webp/.test(r.url()));
+  const download = page.waitForEvent("download");
+  await page.getByTestId("share-card").first().click();
+  await photo;
+  const png = await (await download).path();
+  const { size } = await import("node:fs").then((fs) => fs.statSync(png!));
+  // 사진이 들어간 카드는 글자만 있는 카드보다 훨씬 무겁다.
+  expect(size).toBeGreaterThan(200_000);
+});
+
+test("내 사진으로 카드를 만들 수 있고, 그 사진은 어디에도 저장되지 않는다", async ({ page }) => {
+  await page.goto("/moments/new");
+  await page.getByRole("button", { name: "🌊 여름 바다" }).click();
+  await page.waitForTimeout(300);
+  const before = await page.evaluate(() => JSON.stringify(localStorage));
+  const download = page.waitForEvent("download");
+  await page.getByTestId("own-photo").setInputFiles("public/photos/railway.webp");
+  expect((await download).suggestedFilename()).toMatch(/^여름-바다-\d+번\.png$/);
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).toBe(before);
+});

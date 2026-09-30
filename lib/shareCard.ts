@@ -36,6 +36,8 @@ export interface ShareSpec {
   unit: string;
   /** 근거 한 줄. "한 달에 1번 · 19년" 같은 것. */
   caption?: string;
+  /** 카드 위쪽 폴라로이드에 넣을 사진 주소. 있으면 이모지 대신 사진이 들어간다. */
+  photo?: string;
 }
 
 export interface CardTheme {
@@ -131,6 +133,7 @@ export function drawCard(
   spec: ShareSpec,
   theme: CardTheme,
   wordmark: string,
+  image?: CanvasImageSource & { width: number; height: number },
 ): void {
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
@@ -155,19 +158,53 @@ export function drawCard(
 
   ctx.textBaseline = "middle";
 
-  if (spec.emoji) {
+  /*
+   * 사진이 있으면 위쪽에 살짝 기운 폴라로이드로 걸고, 글자와 숫자를 그만큼 아래로 내린다.
+   * 없으면 예전처럼 이모지 한 개.
+   */
+  const y = image
+    ? { title: 728, subtitle: 782, baseline: 1012, caption: 1074, maxSize: 220 }
+    : { title: 460, subtitle: 530, baseline: 830, caption: 940, maxSize: Infinity };
+
+  if (image) {
+    const side = 420;
+    const pad = 22;
+    ctx.save();
+    ctx.translate(cx, 150 + (side + pad * 3) / 2);
+    ctx.rotate((-2 * Math.PI) / 180);
+    ctx.shadowColor = "rgba(42, 34, 28, 0.18)";
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 8;
+    ctx.fillStyle = "#fffdf8";
+    ctx.fillRect(-side / 2 - pad, -(side + pad * 3) / 2, side + pad * 2, side + pad * 4);
+    ctx.shadowColor = "transparent";
+    // 가운데를 정사각형으로 잘라 넣는다(내 사진은 세로·가로 제각각이다).
+    const crop = Math.min(image.width, image.height);
+    ctx.drawImage(
+      image,
+      (image.width - crop) / 2,
+      (image.height - crop) / 2,
+      crop,
+      crop,
+      -side / 2,
+      -(side + pad * 3) / 2 + pad,
+      side,
+      side,
+    );
+    ctx.restore();
+  } else if (spec.emoji) {
     ctx.font = `120px ${FONT_STACK}`;
     ctx.fillText(spec.emoji, cx, 320);
   }
 
   ctx.fillStyle = theme.text;
   ctx.font = `700 56px ${FONT_STACK}`;
-  ctx.fillText(truncateToWidth(ctx, spec.title, inner), cx, 460);
+  ctx.fillText(truncateToWidth(ctx, spec.title, inner), cx, y.title);
 
   if (spec.subtitle) {
     ctx.fillStyle = theme.muted;
     ctx.font = `34px ${FONT_STACK}`;
-    ctx.fillText(truncateToWidth(ctx, spec.subtitle, inner), cx, 530);
+    ctx.fillText(truncateToWidth(ctx, spec.subtitle, inner), cx, y.subtitle);
   }
 
   /*
@@ -179,7 +216,7 @@ export function drawCard(
    * 자릿수만 보고 크기를 고르면 단위 폭을 못 본다. "3,614 times"·"3614 veces"처럼
    * 단위가 긴 언어에서는 카드 밖으로 나갔다. 숫자+단위를 실제로 재어 보고 넘치면 줄인다.
    */
-  let size = valueFontSize(spec.value);
+  let size = Math.min(valueFontSize(spec.value), y.maxSize);
   const gap = 18;
   const measure = (s: number) => {
     ctx.font = `700 ${s}px ${FONT_STACK}`;
@@ -197,7 +234,7 @@ export function drawCard(
   const unitWidth = widths.unit;
   const unitSize = Math.round(size * 0.34);
   const startX = cx - (valueWidth + gap + unitWidth) / 2;
-  const baselineY = 830;
+  const baselineY = y.baseline;
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
@@ -214,7 +251,7 @@ export function drawCard(
   if (spec.caption) {
     ctx.fillStyle = theme.muted;
     ctx.font = `34px ${FONT_STACK}`;
-    ctx.fillText(truncateToWidth(ctx, spec.caption, inner), cx, 940);
+    ctx.fillText(truncateToWidth(ctx, spec.caption, inner), cx, y.caption);
   }
 
   ctx.strokeStyle = theme.border;
@@ -245,4 +282,14 @@ export function safeFileName(parts: string[]): string {
   // 글자(코드포인트) 단위로 자르므로 한글·이모지 중간에서 깨지지 않는다.
   const short = Array.from(joined).slice(0, 60).join("");
   return `${short || tr(FALLBACK_NAME)}.png`;
+}
+
+/** 사진을 불러온다. 못 불러오면 null — 카드는 사진 없이도 그려져야 한다. */
+export function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }

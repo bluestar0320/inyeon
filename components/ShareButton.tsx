@@ -7,6 +7,7 @@ import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
 import {
   currentTheme,
   drawCard,
+  loadImage,
   safeFileName,
   toBlob,
   type ShareSpec,
@@ -25,6 +26,7 @@ type Status = "idle" | "working" | "shared" | "saved" | "failed";
 const COPY = defineCopy({
   ko: {
     wordmark: "몇번더?",
+    ownPhoto: "내 사진으로",
     label: {
       idle: "이미지로 저장",
       working: "만드는 중…",
@@ -35,18 +37,22 @@ const COPY = defineCopy({
   },
   en: {
     wordmark: "How many more?",
+    ownPhoto: "Use my photo",
     label: { idle: "Save as image", working: "Creating…", shared: "Shared", saved: "Saved", failed: "Something went wrong" },
   },
   ja: {
     wordmark: "あと何回？",
+    ownPhoto: "自分の写真で",
     label: { idle: "画像で保存", working: "作成中…", shared: "共有しました", saved: "保存しました", failed: "うまくいきませんでした" },
   },
   es: {
     wordmark: "¿Cuántas veces más?",
+    ownPhoto: "Con mi foto",
     label: { idle: "Guardar como imagen", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "No se pudo" },
   },
   zh: {
     wordmark: "还有几次？",
+    ownPhoto: "用我的照片",
     label: { idle: "保存为图片", working: "生成中…", shared: "已分享", saved: "已保存", failed: "未能完成" },
   },
 });
@@ -62,12 +68,20 @@ export default function ShareButton({
   const [status, setStatus] = useState<Status>("idle");
   const t = tr(COPY);
 
-  async function run(): Promise<void> {
+  /*
+   * own: 사람이 고른 사진. 카드를 그리는 데만 쓰고 어디에도 저장하지 않는다(기기 밖으로도,
+   * 저장소에도). 그래서 고를 때마다 새로 고른다.
+   */
+  async function run(own?: File): Promise<void> {
     setStatus("working");
+    let ownUrl: string | null = null;
     try {
       const canvas = canvasRef.current ?? document.createElement("canvas");
       canvasRef.current = canvas;
-      drawCard(canvas, spec, currentTheme(), t.wordmark);
+      if (own) ownUrl = URL.createObjectURL(own);
+      const src = ownUrl ?? spec.photo;
+      const image = src ? await loadImage(src) : null;
+      drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined);
 
       const blob = await toBlob(canvas);
       if (!blob) throw new Error("이미지를 만들지 못했습니다.");
@@ -109,18 +123,38 @@ export default function ShareButton({
       setStatus("saved");
     } catch {
       setStatus("failed");
+    } finally {
+      if (ownUrl) URL.revokeObjectURL(ownUrl);
     }
   }
 
   return (
-    <button
-      type="button"
-      className="w-full rounded-xl border border-hero-line px-4 py-2.5 text-sm font-medium text-ink-600 transition hover:bg-hero-line/60 disabled:opacity-50"
-      onClick={() => void run()}
-      disabled={status === "working"}
-      data-testid="share-card"
-    >
-      {t.label[status]}
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        className="w-full rounded-xl border border-hero-line px-4 py-2.5 text-sm font-medium text-ink-600 transition hover:bg-hero-line/60 disabled:opacity-50"
+        onClick={() => void run()}
+        disabled={status === "working"}
+        data-testid="share-card"
+      >
+        {t.label[status]}
+      </button>
+      {spec.photo && (
+        <label className="btn-quiet shrink-0 cursor-pointer whitespace-nowrap">
+          {t.ownPhoto}
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            data-testid="own-photo"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void run(file);
+            }}
+          />
+        </label>
+      )}
+    </div>
   );
 }
