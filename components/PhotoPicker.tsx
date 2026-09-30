@@ -37,6 +37,10 @@ export default function PhotoPicker({ value, onChange }: { value: string; onChan
               value={key}
               checked={value === key}
               onChange={() => onChange(key)}
+              // 이미 걸린 사진(이모지·id로 자동으로 고른 것)을 다시 눌러도 onChange는 나지 않는다.
+              // 그래도 "이걸로 하겠다"는 선택이므로 적어 둔다. 안 그러면 나중에 이모지를 바꿀 때
+              // 사진이 말없이 따라 바뀐다.
+              onClick={() => onChange(key)}
               className="peer sr-only"
               aria-label={names[i]}
             />

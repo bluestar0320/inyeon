@@ -49,16 +49,19 @@ test("사진을 바꾸면 저장되고 다시 열어도 그대로", async ({ pag
   await page.goto("/people/");
   await page.getByRole("link", { name: /엄마/ }).click();
   await page.getByRole("link", { name: "수정하기" }).click();
-  await page.getByTitle("기찻길").click();
-  await expect(page.getByRole("radio", { name: "기찻길" })).toBeChecked();
+  // 자동으로 걸린 사진과 겹치지 않게, 지금 걸린 것이 기찻길이면 부케를 고른다.
+  const pick = (await page.getByRole("radio", { name: "기찻길" }).isChecked()) ? "부케" : "기찻길";
+  const key = pick === "기찻길" ? "railway" : "bouquet";
+  await page.getByTitle(pick).click();
+  await expect(page.getByRole("radio", { name: pick })).toBeChecked();
   await page.getByRole("button", { name: "저장하기" }).click();
   await expect
     .poll(async () => ((await readState(page))!.people as { photo?: string }[])[0].photo)
-    .toBe("railway");
+    .toBe(key);
   await page.goto("/people/");
   await page.getByRole("link", { name: /엄마/ }).click();
   await page.getByRole("link", { name: "수정하기" }).click();
-  await expect(page.getByRole("radio", { name: "기찻길" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: pick })).toBeChecked();
 });
 
 async function threePeople(page: Page) {

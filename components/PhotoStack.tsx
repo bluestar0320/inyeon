@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Polaroid from "@/components/Polaroid";
 import { defineCopy, tr } from "@/lib/i18n";
@@ -41,6 +41,27 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
   // 부드럽게 넘어가는 중에 한 번 더 누르면, 아직 도착하지 않은 장에서 이어 센다.
   const heading = useRef<number | null>(null);
   const many = cards.length > 1;
+  // 지금 보이는 장. 화면을 돌려 폭이 바뀌면 이 장으로 다시 맞춘다.
+  const shown = useRef(0);
+  const width = useRef(0);
+
+  /*
+   * 화면을 돌리거나 창 크기가 바뀌면 카드 폭이 달라지는데 스크롤 위치(px)는 그대로 남아,
+   * 보던 장이 어중간하게 걸치거나 다른 장으로 넘어간다. 폭이 바뀌면 보던 장으로 되돌린다.
+   */
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    width.current = el.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth === width.current) return;
+      width.current = el.clientWidth;
+      heading.current = null;
+      el.scrollTo({ left: shown.current * el.clientWidth, behavior: "auto" });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   /*
    * 번호는 스크롤 위치만 정한다(onScroll). 여기서 먼저 올려 두면 부드러운 스크롤의 첫
@@ -71,9 +92,12 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
         className="relative flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         onScroll={(e) => {
           const el = e.currentTarget;
+          // 폭이 바뀌는 중에 나는 스크롤은 옛 위치의 흔적이다. 번호를 믿지 않는다.
+          if (el.clientWidth !== width.current) return;
           const at = el.scrollLeft / el.clientWidth;
           if (heading.current !== null && Math.abs(at - heading.current) < 0.01) heading.current = null;
-          setIndex(Math.round(at));
+          shown.current = Math.min(cards.length - 1, Math.round(at));
+          setIndex(shown.current);
         }}
       >
         {cards.map((card, i) => (
