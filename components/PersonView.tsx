@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import GrowthCalendar from "@/components/GrowthCalendar";
 import { hintFor } from "@/components/DecayHint";
+import MeetingLog from "@/components/MeetingLog";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import WhatIf from "@/components/WhatIf";
@@ -212,6 +213,7 @@ export default function PersonView({ person }: { person: Person }) {
           <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
         </Polaroid>
       </div>
+      <MeetingLog person={person} />
       <ResultPanel
         label={copy.meetingLabel}
         result={result}

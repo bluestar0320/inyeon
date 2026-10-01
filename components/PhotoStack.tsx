@@ -14,6 +14,8 @@ export type StackCard = {
   sentence: string;
   count: string;
   unit: string;
+  /** 숫자 아래 작은 한 줄. "마지막 만남 23일 전" 같은 것. */
+  note?: string | null;
 };
 
 const COPY = defineCopy({
@@ -113,6 +115,7 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
                     {card.count}
                     <span className="ml-1 text-sm font-normal text-ink-600">{card.unit}</span>
                   </span>
+                  {card.note && <span className="mt-1 block text-xs text-ink-600">{card.note}</span>}
                 </span>
               </Polaroid>
             </Link>

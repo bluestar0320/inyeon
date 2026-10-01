@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { SITE_URL } from "@/lib/contact";
 import { defineCopy, tr } from "@/lib/i18n";
 import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
 import {
@@ -81,7 +82,7 @@ export default function ShareButton({
       if (own) ownUrl = URL.createObjectURL(own);
       const src = ownUrl ?? spec.photo;
       const image = src ? await loadImage(src) : null;
-      drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined);
+      drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined, SITE_URL);
 
       const blob = await toBlob(canvas);
       if (!blob) throw new Error("이미지를 만들지 못했습니다.");

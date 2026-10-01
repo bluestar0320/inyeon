@@ -6,6 +6,7 @@ import { useEffect, useMemo } from "react";
 
 import BigNumber from "@/components/BigNumber";
 import EmptyState from "@/components/EmptyState";
+import { lastMetLine } from "@/components/MeetingLog";
 import PhotoStack from "@/components/PhotoStack";
 import StatCard from "@/components/StatCard";
 import { backupDue } from "@/lib/backup";
@@ -310,6 +311,7 @@ export default function HomePage() {
               sentence: copy.meetingSentence(person.name, formatCount(result.total)),
               count: formatCount(result.total),
               unit: t.times,
+              note: lastMetLine(person),
             }))}
           />
         )}
