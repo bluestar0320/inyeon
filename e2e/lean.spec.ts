@@ -132,3 +132,21 @@ test("새 문서 페이지들도 밝게·어둡게 접근성 위반이 없다", 
     }
   }
 });
+
+for (const [locale, terms, read, notice] of [
+  ["en-US", "Terms of Use", "After 65, who do we see most often?", false],
+  ["ja-JP", "利用規約", "65歳を過ぎたら、いちばんよく会うのは誰？", false],
+  ["es-ES", "Terms of Use", "After 65, who do we see most often?", true],
+] as const) {
+  test.describe(`문서 언어 ${locale}`, () => {
+    test.use({ locale });
+    test("약관·읽을거리가 그 언어로(없으면 영어로, 그 사실을 알리고) 나온다", async ({ page }) => {
+      await page.goto("/terms");
+      await expect(page.getByRole("heading", { name: terms, level: 1 })).toBeVisible();
+      await page.goto("/reads/after-65");
+      await expect(page.getByRole("heading", { name: read, level: 1 })).toBeVisible();
+      await expect(page.getByText("59.7%", { exact: false }).first()).toBeVisible();
+      await expect(page.getByText("inglés", { exact: false })).toHaveCount(notice ? 1 : 0);
+    });
+  });
+}

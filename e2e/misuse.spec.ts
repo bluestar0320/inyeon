@@ -281,7 +281,7 @@ test("언어를 바꾸면 더미의 단추와 안내도 그 언어로", async ({
   await page.goto("/");
   await expect(page.getByRole("button", { name: "次へ" })).toBeVisible();
   await page.goto("/privacy/");
-  await expect(page.getByRole("heading", { name: "個人情報について" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "プライバシーポリシー" })).toBeVisible();
 });
 
 
