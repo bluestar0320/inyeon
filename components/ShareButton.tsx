@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { count } from "@/lib/analytics";
 import { SITE_URL } from "@/lib/contact";
 import { defineCopy, tr } from "@/lib/i18n";
 import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
@@ -94,6 +95,7 @@ export default function ShareButton({
       if (isNativeApp()) {
         await shareFileNatively(blob, name);
         setStatus("shared");
+        count({ event: "share-card" });
         return;
       }
 
@@ -104,6 +106,7 @@ export default function ShareButton({
         try {
           await navigator.share({ files: [file] });
           setStatus("shared");
+        count({ event: "share-card" });
           return;
         } catch (error) {
           // 사용자가 공유 시트를 닫은 것뿐이면 실패로 다루지 않는다.
@@ -122,6 +125,7 @@ export default function ShareButton({
       link.click();
       URL.revokeObjectURL(url);
       setStatus("saved");
+      count({ event: "share-card" });
     } catch {
       setStatus("failed");
     } finally {

@@ -221,8 +221,15 @@ test("기록은 이 기기 밖으로 나가지 않는다", async ({ page, contex
    */
   const posted: string[] = [];
   const idsInUrl: string[] = [];
+  const leaked: string[] = [];
   page.on("request", (req) => {
     const url = new URL(req.url());
+    // 다른 곳으로 가는 요청은 방문자 집계(GoatCounter의 /count) 하나뿐이어야 하고,
+    // 거기에는 입력한 이름이 실리면 안 된다.
+    if (url.hostname !== "localhost") {
+      const allowed = url.hostname.endsWith(".goatcounter.com") && url.pathname === "/count";
+      if (!allowed || decodeURIComponent(url.search).includes("우리엄마정순임")) leaked.push(url.href);
+    }
     // 몸통을 실어 보낼 수 있는 것만 본다. GET/HEAD는 정적 파일을 받아 오는 길이다.
     if (!["GET", "HEAD"].includes(req.method())) {
       posted.push(`${req.method()} ${url.pathname}`);
@@ -242,6 +249,7 @@ test("기록은 이 기기 밖으로 나가지 않는다", async ({ page, contex
 
   // 1) 보내는 요청 자체가 없어야 한다. 정적 파일을 받아 오는 GET뿐이다.
   expect(posted).toEqual([]);
+  expect(leaked).toEqual([]);
 
   // 2) 목록을 훑어도 항목 id가 미리받기로 새어 나가지 않아야 한다.
   //    서비스 워커가 이미 전부 받아 두므로 미리받기는 쓸모도 없다.

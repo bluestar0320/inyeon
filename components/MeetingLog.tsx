@@ -1,5 +1,6 @@
 "use client";
 
+import { count } from "@/lib/analytics";
 import { todayISO } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { addMeeting, daysSinceLast, metThisYear } from "@/lib/meetings";
@@ -82,6 +83,7 @@ export default function MeetingLog({ person }: { person: Person }) {
         onClick={() => {
           savePerson({ ...person, meetings: addMeeting(meetings, todayISO()), updatedAt: new Date().toISOString() });
           offerUndo(t.saved, () => savePerson(person));
+          count({ event: "met" });
         }}
       >
         {t.met}

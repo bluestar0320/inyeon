@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import LangRoot from "@/components/LangRoot";
+import Analytics from "@/components/Analytics";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import PaperBackground from "@/components/PaperBackground";
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <ThemeApplier />
         <PaperBackground />
+        <Analytics />
         <ServiceWorker />
         <LangRoot>
           <SkipLink />
