@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import LangRoot from "@/components/LangRoot";
+import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
@@ -74,10 +75,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}
           <main
             id="main"
-            className="mx-auto max-w-3xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"
+            className="mx-auto max-w-3xl px-4 pt-6"
           >
             {children}
           </main>
+          <Footer />
           <UndoBar />
         </LangRoot>
       </body>

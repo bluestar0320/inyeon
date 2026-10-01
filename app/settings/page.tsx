@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 
 import InstallButton from "@/components/InstallButton";
+import { CONTACT_EMAIL } from "@/lib/contact";
 import { todayISO } from "@/lib/format";
 import { LANGS, defineCopy, locale, tr } from "@/lib/i18n";
 import { LIFE_TABLE_YEAR } from "@/lib/lifeTable";
@@ -320,7 +321,7 @@ const COPY = defineCopy({
  *
  * 주의: 이 값은 앱을 여는 누구에게나 보인다(공개 배포이므로 수집 대상이 된다).
  */
-const FEEDBACK_TO = "bluekkyu@gmail.com";
+const FEEDBACK_TO = CONTACT_EMAIL;
 
 const NEWLINE = String.fromCharCode(10);
 

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, useRef } from "react";
 
 import NumberInput from "@/components/NumberInput";
-import ConsentNote from "@/components/ConsentNote";
+import ConsentCheck, { useConsent } from "@/components/ConsentCheck";
 import { hintFor } from "@/components/DecayHint";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
 import FilterEditor from "@/components/FilterEditor";
@@ -211,8 +211,11 @@ export default function PersonEditor({ initial }: { initial: Person }) {
     leaveTo(router, backTo);
   }
 
+  const consent = useConsent();
+
   function save(): void {
     if (!confirmOverwrite(conflict)) return;
+    consent.commit();
     savedHere.current = true;
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
     leaveTo(router, isNew ? afterAdd : `/people/detail?id=${draft.id}`);
@@ -230,7 +233,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       onKeyDown={blockImeEnter}
       onSubmit={(event) => {
         event.preventDefault();
-        if (draft.name.trim()) save();
+        if (draft.name.trim() && !consent.blocking) save();
       }}
     >
       <EditConflict conflict={conflict} />
@@ -380,7 +383,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="submit" className="btn-primary" disabled={!draft.name.trim()}>
+        <button type="submit" className="btn-primary" disabled={!draft.name.trim() || consent.blocking}>
           {isNew ? t.add : t.save}
         </button>
         <button type="button" className="btn-secondary" onClick={leave}>
@@ -405,7 +408,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           </button>
         )}
       </div>
-      {isNew && <ConsentNote />}
+      {isNew && <ConsentCheck consent={consent} />}
     </form>
   );
 }

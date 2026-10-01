@@ -19,6 +19,11 @@ export default defineConfig({
     locale: "ko-KR",
     timezoneId: "Asia/Seoul",
     trace: "retain-on-failure",
+    // 저장 단추 아래 동의 체크는 e2e/lean.spec.ts가 따로 본다. 나머지는 한 번 동의한 뒤에서 시작한다.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: "http://localhost:3123", localStorage: [{ name: "inyeon.consent", value: "2026-01-01T00:00:00.000Z" }] }],
+    },
   },
   projects: [
     { name: "mobile", use: { ...devices["Pixel 5"] } },

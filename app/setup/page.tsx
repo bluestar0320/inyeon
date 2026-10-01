@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import ConsentNote from "@/components/ConsentNote";
+import ConsentCheck, { useConsent } from "@/components/ConsentCheck";
 import EditConflict, { confirmOverwrite, type Conflict } from "@/components/EditConflict";
 import LifeSpanFields from "@/components/LifeSpanFields";
 import { remainingYears } from "@/lib/calc";
@@ -105,8 +105,11 @@ export default function SetupPage() {
         ? "deleted"
         : "changed";
 
+  const consent = useConsent();
+
   function save(): void {
-    if (remaining === null || !confirmOverwrite(conflict)) return;
+    if (remaining === null || consent.blocking || !confirmOverwrite(conflict)) return;
+    consent.commit();
     savedHere.current = true;
     saveProfile(draft);
     /*
@@ -157,7 +160,7 @@ export default function SetupPage() {
         <button
           type="submit"
           className="btn-primary"
-          disabled={remaining === null}
+          disabled={remaining === null || consent.blocking}
         >
           {t.save}
         </button>
@@ -174,7 +177,7 @@ export default function SetupPage() {
           </button>
         )}
       </div>
-      <ConsentNote />
+      <ConsentCheck consent={consent} />
       {remaining === null && (
         <p className="px-1 text-xs text-accent-600">{t.needAge}</p>
       )}

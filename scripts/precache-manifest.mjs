@@ -39,9 +39,6 @@ for (const file of walk(OUT).sort()) {
   const rel = relative(OUT, file).split(sep).join(posix.sep);
   // 서비스 워커 자신은 캐시하지 않는다. 자기를 캐시하면 새 버전이 안 깔린다.
   if (rel === "sw.js") continue;
-  // 순간 사진의 변형(blossom-2.webp …)은 미리 받지 않는다. 한 사람이 보는 건 순간마다 한 장이라,
-  // 55장(약 2.5MB)을 첫 방문에 다 받게 할 이유가 없다. 볼 때 받아 두면(런타임 캐시) 오프라인에서도 남는다.
-  if (/^photos\/[a-z]+-\d\.webp$/.test(rel)) continue;
   hash.update(rel).update(readFileSync(file));
   // index.html은 경로 자체로 요청된다(trailingSlash: true).
   if (rel === "index.html") routes.add("/");
