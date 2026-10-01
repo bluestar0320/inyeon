@@ -4,12 +4,14 @@ import "./globals.css";
 import LangRoot from "@/components/LangRoot";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
+import PaperBackground from "@/components/PaperBackground";
 import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
 import SaveWarning from "@/components/SaveWarning";
 import SkipLink from "@/components/SkipLink";
 import UndoBar from "@/components/UndoBar";
 import { STORAGE_KEY } from "@/lib/storageKey";
+import { PAPER_COUNT } from "@/lib/paper";
 import { THEME_COLOR } from "@/lib/themeColor";
 
 export const metadata: Metadata = {
@@ -58,15 +60,24 @@ const THEME_SCRIPT = `
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", dark ? ${JSON.stringify(THEME_COLOR.dark)} : ${JSON.stringify(THEME_COLOR.light)});
   } catch (e) {}
+  // 배경 종이도 그리기 전에 한 장 골라 둔다(lib/paper.ts와 같은 규칙).
+  var paper = 1 + Math.floor(Math.random() * ${PAPER_COUNT});
+  document.documentElement.dataset.paper = String(paper);
+  document.documentElement.style.setProperty("--paper", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-' + paper + '.webp")');
 })();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
+      <head>
+        {/* 명조 글꼴(사진 아래 글씨). 기기마다 다른 명조 대신 같은 글꼴로 보이게 한다. 못 받으면 기기 명조로 넘어간다. */}
+        <link rel="stylesheet" href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fonts/nanum-myeongjo/font.css`} />
+      </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <ThemeApplier />
+        <PaperBackground />
         <ServiceWorker />
         <LangRoot>
           <SkipLink />

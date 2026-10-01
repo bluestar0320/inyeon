@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 
 import HealthFields from "@/components/HealthFields";
 import NumberInput from "@/components/NumberInput";
@@ -16,6 +16,8 @@ const SEXES: Sex[] = ["all", "female", "male"];
 
 const COPY = defineCopy({
   ko: {
+    more: "더 자세히",
+    moreSummary: (parts: string) => parts,
     sex: { all: "구분 없음", female: "여성", male: "남성" } as Record<Sex, string>,
     age: "나이",
     birthDate: "생년월일",
@@ -38,6 +40,8 @@ const COPY = defineCopy({
     belowAge: "예상 수명이 지금 나이보다 적어 남은 시간이 0으로 계산됩니다.",
   },
   en: {
+    more: "More details",
+    moreSummary: (parts) => parts,
     sex: { all: "Not specified", female: "Female", male: "Male" },
     age: "Age",
     birthDate: "Birthday",
@@ -60,6 +64,8 @@ const COPY = defineCopy({
     belowAge: "Life expectancy is at or below the current age, so the time left counts as 0.",
   },
   ja: {
+    more: "くわしく",
+    moreSummary: (parts) => parts,
     sex: { all: "指定なし", female: "女性", male: "男性" },
     age: "年齢",
     birthDate: "生年月日",
@@ -82,6 +88,8 @@ const COPY = defineCopy({
     belowAge: "予想寿命が今の年齢以下なので、残り時間は0として計算されます。",
   },
   es: {
+    more: "Más detalles",
+    moreSummary: (parts) => parts,
     sex: { all: "Sin especificar", female: "Mujer", male: "Hombre" },
     age: "Edad",
     birthDate: "Fecha de nacimiento",
@@ -104,6 +112,8 @@ const COPY = defineCopy({
     belowAge: "La esperanza de vida no supera la edad actual, así que el tiempo restante cuenta como 0.",
   },
   zh: {
+    more: "更多",
+    moreSummary: (parts) => parts,
     sex: { all: "不区分", female: "女", male: "男" },
     age: "年龄",
     birthDate: "出生日期",
@@ -155,6 +165,12 @@ export default function LifeSpanFields<T extends LifeSpan>({
   // 사람들이 끌어내린 출생 시 평균보다 더 오래 산다.
   const average = lookupLifeExpectancy(value.countryCode, value.sex, age, value.health);
 
+  const [open, setOpen] = useState(() => Boolean(value.birthDate) || value.lifeExpectancyManual);
+  const countryName = COUNTRIES.find((c) => c.code === value.countryCode)?.name;
+  const summary = [countryName, t.sex[value.sex ?? "all"], `${t.lifeExpectancy} ${value.lifeExpectancy}${t.ageUnit}`]
+    .filter(Boolean)
+    .join(" · ");
+
   function patch(changes: Partial<LifeSpan>): void {
     const next = { ...value, ...changes } as T;
     if (!next.lifeExpectancyManual) {
@@ -170,24 +186,7 @@ export default function LifeSpanFields<T extends LifeSpan>({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="label" htmlFor={`${ids}-birth`}>
-            {t.birthDate}
-          </label>
-          <input
-            id={`${ids}-birth`}
-            className="input"
-            type="date"
-            value={value.birthDate ?? ""}
-            max={todayISO()}
-            onChange={(e) => patch({ birthDate: e.target.value || undefined })}
-          />
-          <p className="mt-1 text-[11px] text-ink-400">
-            {value.birthDate ? t.currentAge(formatAge(age)) : t.birthUnknown}
-          </p>
-        </div>
-        <div>
+      <div>
           <label className="label" htmlFor={`${ids}-age`}>
             {ageLabel ?? t.age}
           </label>
@@ -208,99 +207,131 @@ export default function LifeSpanFields<T extends LifeSpan>({
               ? t.ageFromBirth
               : t.ageHint}
           </p>
-        </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="label" htmlFor={`${ids}-country`}>
-            {t.country}
-          </label>
-          <select
-            id={`${ids}-country`}
-            className="input"
-            value={value.countryCode ?? ""}
-            onChange={(e) => patch({ countryCode: e.target.value || undefined })}
-          >
-            {COUNTRIES.map((country) => (
-              <option key={country.code} value={country.code}>
-                {country.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <span className="label">{t.sexLabel}</span>
-          <div className="flex gap-1.5" role="group" aria-label={t.sexLabel}>
-            {SEXES.map((sex) => (
-              <button
-                key={sex}
-                type="button"
-                onClick={() => patch({ sex })}
-                className={`chip ${value.sex === sex ? "chip-active" : ""}`}
-              >
-                {t.sex[sex]}
-              </button>
-            ))}
+      {/*
+        첫 숫자까지 빨리 가게, 나이 하나만 보이고 나머지는 접어 둔다. 접힌 줄에는 지금 값이
+        요약돼 있어 무엇이 들어가 있는지 열지 않아도 안다. 생년월일을 넣었거나 수명을 직접
+        고친 사람에게는 처음부터 펼쳐 둔다(숨긴 값이 계산을 바꾸고 있으면 안 된다).
+      */}
+      <details
+        open={open}
+        onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+        className="rounded-2xl border border-ink-200/70 px-3 py-2"
+      >
+        <summary className="flex min-h-9 cursor-pointer items-center justify-between gap-2 text-xs text-ink-600">
+          <span className="shrink-0 whitespace-nowrap font-medium text-ink-800">{t.more}</span>
+          <span className="truncate">{summary}</span>
+        </summary>
+        <div className="space-y-4 pb-2 pt-3">
+          <div>
+            <label className="label" htmlFor={`${ids}-birth`}>
+              {t.birthDate}
+            </label>
+            <input
+              id={`${ids}-birth`}
+              className="input"
+              type="date"
+              value={value.birthDate ?? ""}
+              max={todayISO()}
+              onChange={(e) => patch({ birthDate: e.target.value || undefined })}
+            />
+            <p className="mt-1 text-[11px] text-ink-400">
+              {value.birthDate ? t.currentAge(formatAge(age)) : t.birthUnknown}
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label" htmlFor={`${ids}-country`}>
+              {t.country}
+            </label>
+            <select
+              id={`${ids}-country`}
+              className="input"
+              value={value.countryCode ?? ""}
+              onChange={(e) => patch({ countryCode: e.target.value || undefined })}
+            >
+              {COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <span className="label">{t.sexLabel}</span>
+            <div className="flex gap-1.5" role="group" aria-label={t.sexLabel}>
+              {SEXES.map((sex) => (
+                <button
+                  key={sex}
+                  type="button"
+                  onClick={() => patch({ sex })}
+                  className={`chip ${value.sex === sex ? "chip-active" : ""}`}
+                >
+                  {t.sex[sex]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {showHealth && (
-        <HealthFields
-          value={value.health}
-          age={age}
-          onChange={(health) => patch({ health })}
-        />
-      )}
-
-      <div>
-        <label className="label" htmlFor={`${ids}-expectancy`}>
-          {t.lifeExpectancy}
-        </label>
-        <div className="flex items-center gap-2">
-          <NumberInput
-            id={`${ids}-expectancy`}
-            className="input w-28"
-            min={1}
-            max={130}
-            step="0.1"
-            value={value.lifeExpectancy}
-            onChange={(lifeExpectancy) =>
-              onChange({ ...value, lifeExpectancy, lifeExpectancyManual: true } as T)
-            }
+        {showHealth && (
+          <HealthFields
+            value={value.health}
+            age={age}
+            onChange={(health) => patch({ health })}
           />
-          <span className="text-sm text-ink-400">{t.ageUnit}</span>
-          {value.lifeExpectancyManual && (
-            <button
-              type="button"
-              className="btn-quiet"
-              onClick={() =>
-                onChange({
-                  ...value,
-                  lifeExpectancy: average,
-                  lifeExpectancyManual: false,
-                } as T)
+        )}
+
+        <div>
+          <label className="label" htmlFor={`${ids}-expectancy`}>
+            {t.lifeExpectancy}
+          </label>
+          <div className="flex items-center gap-2">
+            <NumberInput
+              id={`${ids}-expectancy`}
+              className="input w-28"
+              min={1}
+              max={130}
+              step="0.1"
+              value={value.lifeExpectancy}
+              onChange={(lifeExpectancy) =>
+                onChange({ ...value, lifeExpectancy, lifeExpectancyManual: true } as T)
               }
-            >
-              {t.reset(average)}
-            </button>
+            />
+            <span className="text-sm text-ink-400">{t.ageUnit}</span>
+            {value.lifeExpectancyManual && (
+              <button
+                type="button"
+                className="btn-quiet"
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    lifeExpectancy: average,
+                    lifeExpectancyManual: false,
+                  } as T)
+                }
+              >
+                {t.reset(average)}
+              </button>
+            )}
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-400">
+            {value.lifeExpectancyManual
+              ? t.manual
+              : age === null
+                ? t.needAge
+                : showHealth && healthAgeOffset(value.health) !== 0
+                  ? t.fromTableWithHealth
+                  : t.fromTable}
+            {remaining !== null && t.remaining(formatYears(remaining))}
+          </p>
+          {value.lifeExpectancyManual && age !== null && value.lifeExpectancy <= age && (
+            <p className="mt-1 text-[11px] leading-relaxed text-ink-600">{t.belowAge}</p>
           )}
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-ink-400">
-          {value.lifeExpectancyManual
-            ? t.manual
-            : age === null
-              ? t.needAge
-              : showHealth && healthAgeOffset(value.health) !== 0
-                ? t.fromTableWithHealth
-                : t.fromTable}
-          {remaining !== null && t.remaining(formatYears(remaining))}
-        </p>
-        {value.lifeExpectancyManual && age !== null && value.lifeExpectancy <= age && (
-          <p className="mt-1 text-[11px] leading-relaxed text-ink-600">{t.belowAge}</p>
-        )}
-      </div>
+        </div>
+      </details>
     </div>
   );
 }

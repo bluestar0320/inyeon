@@ -34,8 +34,13 @@ const TILTS = [-1, 2, -2, 1.5, -1.5];
  *
  * 넘기기는 브라우저의 가로 스크롤 + scroll-snap이 한다. 손가락으로 밀면 그대로 되고,
  * 라이브러리가 필요 없다. ‹ › 단추는 키보드·화면 낭독기용이며 같은 스크롤을 움직인다.
- * 뒤로 비치는 두 장은 꾸밈(aria-hidden)이다 — "더 있다"는 느낌만 준다.
+ * 카드는 화면보다 조금 좁다. 다음 장의 가장자리가 옆에 비쳐, 밀면 넘어간다는 걸 말하지 않아도 안다.
  */
+/** 한 장의 폭. 스크롤 위치를 장 번호로 바꿀 때 쓴다(카드는 트랙보다 좁다). */
+function cardWidth(el: HTMLElement): number {
+  return (el.firstElementChild as HTMLElement | null)?.offsetWidth || el.clientWidth;
+}
+
 export default function PhotoStack({ label, cards }: { label: string; cards: StackCard[] }) {
   const t = tr(COPY);
   const track = useRef<HTMLDivElement>(null);
@@ -54,12 +59,12 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
   useEffect(() => {
     const el = track.current;
     if (!el) return;
-    width.current = el.clientWidth;
+    width.current = cardWidth(el);
     const observer = new ResizeObserver(() => {
-      if (el.clientWidth === width.current) return;
-      width.current = el.clientWidth;
+      if (cardWidth(el) === width.current) return;
+      width.current = cardWidth(el);
       heading.current = null;
-      el.scrollTo({ left: shown.current * el.clientWidth, behavior: "auto" });
+      el.scrollTo({ left: shown.current * cardWidth(el), behavior: "auto" });
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -74,36 +79,30 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
   const go = (step: number) => {
     const el = track.current;
     if (!el) return;
-    const from = heading.current ?? Math.round(el.scrollLeft / el.clientWidth);
+    const from = heading.current ?? Math.round(el.scrollLeft / cardWidth(el));
     const target = Math.max(0, Math.min(cards.length - 1, from + step));
     heading.current = target;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollTo({ left: target * el.clientWidth, behavior: still ? "auto" : "smooth" });
+    el.scrollTo({ left: target * cardWidth(el), behavior: still ? "auto" : "smooth" });
   };
 
   return (
     <section role="region" aria-label={label} className="relative">
-      {many && (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[14%] top-4 bottom-12 motion-reduce:hidden">
-          <span className="polaroid absolute inset-0 rotate-[5deg]" />
-          <span className="polaroid absolute inset-0 -rotate-[4deg]" />
-        </div>
-      )}
       <div
         ref={track}
-        className="relative flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`relative flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${many ? "px-[9%]" : ""}`}
         onScroll={(e) => {
           const el = e.currentTarget;
           // 폭이 바뀌는 중에 나는 스크롤은 옛 위치의 흔적이다. 번호를 믿지 않는다.
-          if (el.clientWidth !== width.current) return;
-          const at = el.scrollLeft / el.clientWidth;
+          if (cardWidth(el) !== width.current) return;
+          const at = el.scrollLeft / cardWidth(el);
           if (heading.current !== null && Math.abs(at - heading.current) < 0.01) heading.current = null;
           shown.current = Math.min(cards.length - 1, Math.round(at));
           setIndex(shown.current);
         }}
       >
         {cards.map((card, i) => (
-          <div key={card.id} className="w-full shrink-0 snap-center px-[14%] py-3">
+          <div key={card.id} className={`shrink-0 snap-center py-3 ${many ? "w-full px-[4%]" : "w-full px-[14%]"}`}>
             {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. */}
             <Link href={card.href} prefetch={false} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">
               <Polaroid photo={card.photo} size="md" tilt={TILTS[i % TILTS.length]}>

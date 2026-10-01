@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, useRef } from "react";
 
+import MoreDetails from "@/components/MoreDetails";
 import NumberInput from "@/components/NumberInput";
 import { hintFor } from "@/components/DecayHint";
 import EditConflict, { confirmOverwrite, detectConflict } from "@/components/EditConflict";
@@ -27,6 +28,7 @@ const HORIZON_KINDS: MomentHorizon["kind"][] = ["life", "untilAge", "years"];
 
 const COPY = defineCopy({
   ko: {
+    sinceMore: "언제부터 (선택)",
     horizon: { life: "남은 평생", untilAge: "특정 나이까지", years: "앞으로 n년" } as Record<MomentHorizon["kind"], string>,
     thisThing: "이 일",
     unknown: "내 정보를 먼저 채우면 남은 기간이 계산됩니다.",
@@ -53,6 +55,7 @@ const COPY = defineCopy({
     removed: (title: string) => `${josa(title, "을/를")} 지웠습니다.`,
   },
   en: {
+    sinceMore: "Since when (optional)",
     horizon: { life: "For life", untilAge: "Until an age", years: "For n years" },
     thisThing: "this",
     unknown: "Fill in your details first to see how much time is left.",
@@ -79,6 +82,7 @@ const COPY = defineCopy({
     removed: (title) => `Deleted ${title}.`,
   },
   ja: {
+    sinceMore: "いつから(任意)",
     horizon: { life: "これからずっと", untilAge: "ある年齢まで", years: "これからn年" },
     thisThing: "このこと",
     unknown: "自分の情報を入れると、残りの期間を計算できます。",
@@ -105,6 +109,7 @@ const COPY = defineCopy({
     removed: (title) => `「${title}」を削除しました。`,
   },
   es: {
+    sinceMore: "Desde cuándo (opcional)",
     horizon: { life: "Toda la vida", untilAge: "Hasta cierta edad", years: "Durante n años" },
     thisThing: "esto",
     unknown: "Completa tus datos para calcular el tiempo que queda.",
@@ -131,6 +136,7 @@ const COPY = defineCopy({
     removed: (title) => `Se eliminó ${title}.`,
   },
   zh: {
+    sinceMore: "从何时开始（选填）",
     horizon: { life: "余生", untilAge: "到某个年龄", years: "未来n年" },
     thisThing: "这件事",
     unknown: "先填好我的信息，就能算出剩下的时间。",
@@ -350,12 +356,14 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
           onChange={(frequency) => setDraft({ ...draft, frequency })}
         />
 
-        <SinceField
-          value={draft.since}
-          frequency={draft.frequency}
-          maxYears={myAge}
-          onChange={(since) => setDraft({ ...draft, since })}
-        />
+        <MoreDetails label={t.sinceMore} openWhen={Boolean(draft.since)}>
+          <SinceField
+            value={draft.since}
+            frequency={draft.frequency}
+            maxYears={myAge}
+            onChange={(since) => setDraft({ ...draft, since })}
+          />
+        </MoreDetails>
 
         <div>
           <span className="label">{t.until}</span>
@@ -413,9 +421,10 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
           basePerYear={toPerYear(draft.frequency)}
           hint={hintFor(draft.emoji, "moment")}
         />
-        <div className="space-y-2 border-t border-ink-200/70 pt-4">
-          <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>
-          <YearBreakdown slices={result.slices} />
+        <div className="border-t border-ink-200/70 pt-3">
+          <MoreDetails label={t.byYear} openWhen={draft.filters.length > 0}>
+            <YearBreakdown slices={result.slices} />
+          </MoreDetails>
         </div>
       </div>
 

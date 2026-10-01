@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { AFTER_ADD_PERSON, clearState, headline, setUpProfile } from "./helpers";
+import { AFTER_ADD_PERSON, clearState, headline, setUpProfile, openMore } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await clearState(page);
@@ -11,6 +11,7 @@ test("컨셉의 예시가 화면에 그대로 나온다: 어머니 60세·수명
   await page.goto("/people/new");
   await page.getByRole("button", { name: "🌷 어머니" }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
+  await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
 
   await expect.poll(() => headline(page)).toBe("240번");
@@ -31,6 +32,7 @@ test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다",
   await page.goto("/people/new");
   await page.getByRole("button", { name: "🌷 어머니" }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
+  await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
   await expect.poll(() => headline(page)).toBe("240번");
 
@@ -92,6 +94,7 @@ test("데이트 계산: 목표 나이까지만 세고 그 사실을 밝힌다", 
   await page.getByLabel("이름").fill("연인");
   await page.getByLabel("나이", { exact: true }).fill("29");
 
+  await openMore(page);
   await page.getByRole("button", { name: "내가 n세 될 때까지" }).click();
   await page.getByLabel("목표 나이").fill("35");
 
@@ -103,6 +106,7 @@ test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ pag
   await page.goto("/people/new");
   await page.getByRole("button", { name: "🌷 어머니" }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
+  await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(AFTER_ADD_PERSON);
@@ -125,6 +129,7 @@ test("생활 습관을 고르면 남은 시간이 줄고, 해제하면 그대로
   const expectancy = page.locator('input[type=number][step="0.1"]');
   const before = await expectancy.inputValue();
 
+  await openMore(page);
   await page.getByText("생활 습관 반영하기").click();
   await page.getByRole("button", { name: "피움", exact: true }).click();
   await expect.poll(() => expectancy.inputValue()).not.toBe(before);
@@ -147,6 +152,7 @@ test("생활 습관을 고르면 남은 시간이 줄고, 해제하면 그대로
 test("예상 수명을 직접 고쳤으면 생활 습관이 그 값을 덮어쓰지 않는다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/setup");
+  await openMore(page);
   const expectancy = page.locator('input[type=number][step="0.1"]');
   await expectancy.fill("95");
 

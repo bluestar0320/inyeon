@@ -66,7 +66,7 @@ test.describe("움직임 줄이기", () => {
   test("넘길 때 부드러운 스크롤 없이 바로 간다", async ({ page }) => {
     const stack = await threePeople(page);
     await stack.getByRole("button", { name: "다음" }).click();
-    const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / el.clientWidth);
+    const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
     expect(at).toBe(1);
   });
 });

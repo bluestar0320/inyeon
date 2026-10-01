@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { STORAGE_KEY, clearState, headline, readState, setUpProfile } from "./helpers";
+import { STORAGE_KEY, clearState, headline, readState, setUpProfile, openMore } from "./helpers";
 
 /*
  * 사전 점검(사람이 할 법한 오용·헤비 유저 시나리오)에서 찾은 문제들이 돌아오지 않게 묶어 둔다.
@@ -123,6 +123,7 @@ test("숫자 칸을 지워도 결과가 0으로 튀지 않는다", async ({ page
   await seed(page, { people: [person("a", "엄마")] });
   await page.goto("/people/edit?id=a");
   const before = await headline(page);
+  await openMore(page);
   await page.getByLabel("예상 수명").fill("");
   expect(await headline(page)).toBe(before);
   await page.getByLabel("빈도 횟수").fill("");

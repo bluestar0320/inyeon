@@ -147,7 +147,7 @@ test("셋째 장을 보다가 화면을 돌려도 같은 장에 머문다", asyn
   await page.setViewportSize({ width: size.height, height: size.width });
   await page.waitForTimeout(400);
   await expect(stack.getByText("3 / 3")).toBeVisible();
-  const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / el.clientWidth);
+  const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
   expect(Math.abs(at - 2)).toBeLessThan(0.05);
   await page.setViewportSize(size);
 });
@@ -169,7 +169,7 @@ test("손가락으로 밀어도 번호가 따라온다", async ({ page }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
-  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: el.clientWidth }));
+  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: (el.firstElementChild as HTMLElement).offsetWidth }));
   await expect(stack.getByText("2 / 2")).toBeVisible();
 });
 

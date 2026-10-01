@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, useRef } from "react";
 
+import MoreDetails from "@/components/MoreDetails";
 import NumberInput from "@/components/NumberInput";
 import ConsentCheck, { useConsent } from "@/components/ConsentCheck";
 import { hintFor } from "@/components/DecayHint";
@@ -26,6 +27,8 @@ import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
   ko: {
+    more: "더 자세히",
+    moreSummary: "언제부터 · 세는 기간 · 한 번에 몇 시간",
     thisPerson: "이 사람",
     ageMissing: "나이나 생년월일을 채우면 남은 만남이 계산됩니다.",
     timesUnit: "번",
@@ -52,6 +55,8 @@ const COPY = defineCopy({
     removed: (name: string) => `${josa(name, "을/를")} 지웠습니다.`,
   },
   en: {
+    more: "More details",
+    moreSummary: "Since when · How long · Hours per visit",
     thisPerson: "this person",
     ageMissing: "Add an age or birthday to count the times ahead.",
     timesUnit: "times",
@@ -78,6 +83,8 @@ const COPY = defineCopy({
     removed: (name) => `Deleted ${name}.`,
   },
   ja: {
+    more: "くわしく",
+    moreSummary: "いつから · 数える期間 · 1回の時間",
     thisPerson: "この人",
     ageMissing: "年齢か誕生日を入れると、これから会える回数を数えます。",
     timesUnit: "回",
@@ -104,6 +111,8 @@ const COPY = defineCopy({
     removed: (name) => `${name}を削除しました。`,
   },
   es: {
+    more: "Más detalles",
+    moreSummary: "Desde cuándo · Periodo · Horas por visita",
     thisPerson: "esta persona",
     ageMissing: "Añade la edad o la fecha de nacimiento para contar las veces que quedan.",
     timesUnit: "veces",
@@ -130,6 +139,8 @@ const COPY = defineCopy({
     removed: (name) => `Se eliminó a ${name}.`,
   },
   zh: {
+    more: "更多",
+    moreSummary: "从何时 · 计算期间 · 每次几小时",
     thisPerson: "这个人",
     ageMissing: "填写年龄或生日后，就能算出还能见面的次数。",
     timesUnit: "次",
@@ -332,6 +343,11 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           value={draft.frequency}
           onChange={(frequency) => setDraft({ ...draft, frequency })}
         />
+        <MoreDetails
+          label={t.more}
+          summary={t.moreSummary}
+          openWhen={Boolean(draft.since) || Boolean(draft.horizon) || draft.hoursPerMeeting !== undefined}
+        >
         <SinceField
           value={draft.since}
           frequency={draft.frequency}
@@ -366,6 +382,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             {t.hoursHint}
           </p>
         </div>
+        </MoreDetails>
       </div>
 
       {/* 조건과 그 결과(연도별 추이)는 한 카드에. 걸면 바로 아래에서 달라지는 게 보인다. */}
@@ -376,9 +393,10 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           basePerYear={toPerYear(draft.frequency)}
           hint={hintFor(draft.emoji, "person")}
         />
-        <div className="space-y-2 border-t border-ink-200/70 pt-4">
-          <p className="text-sm font-semibold text-ink-800">{t.byYear}</p>
-          <YearBreakdown slices={result.slices} />
+        <div className="border-t border-ink-200/70 pt-3">
+          <MoreDetails label={t.byYear} openWhen={draft.filters.length > 0}>
+            <YearBreakdown slices={result.slices} />
+          </MoreDetails>
         </div>
       </div>
 

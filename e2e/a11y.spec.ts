@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-import { AFTER_ADD_PERSON, clearState, setUpProfile } from "./helpers";
+import { AFTER_ADD_PERSON, clearState, setUpProfile, openMore } from "./helpers";
 
 /**
  * 접근성은 눈으로 표본을 훑어서는 안 된다.
@@ -74,6 +74,7 @@ for (const scheme of ["light", "dark"] as const) {
     test("생활 습관을 펼친 상태에도 위반이 없다", async ({ page }) => {
       // <details>는 접혀 있으면 검사에서 빠진다. 펴 놓고 재야 의미가 있다.
       await page.goto("/setup");
+      await openMore(page);
       await page.getByText("생활 습관 반영하기").click();
       await page.getByRole("button", { name: "피움", exact: true }).click();
       await page.waitForTimeout(300);

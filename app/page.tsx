@@ -237,6 +237,48 @@ export default function HomePage() {
       {/* 홈의 h1. 큰 제목을 두지 않는 화면이라 이 문장이 페이지를 대표한다. */}
       <h1 className="pt-2 text-sm font-normal text-ink-400">{copy.greeting}</h1>
 
+      {/* 조르지 않는 한 줄. 언제 뜨는지는 lib/backup.ts. */}
+      {backupDue(state) && (
+        <Link
+          href="/settings#backup"
+          className="block rounded-xl border border-ink-200/70 px-4 py-3 text-xs leading-relaxed text-ink-600 transition hover:border-ink-400"
+        >
+          {t.backupNudge}
+        </Link>
+      )}
+
+      {/* 사진 속 사람이 첫 화면이다. 내 남은 시간은 그 다음에 — 감정은 숫자보다 얼굴에서 먼저 온다. */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.people}</h2>
+          <Link href="/people" className="btn-quiet">
+            {t.seeAll}
+          </Link>
+        </div>
+        {people.length === 0 ? (
+          <EmptyState
+            title={copy.emptyPeople}
+            body={t.emptyPeopleBody}
+            actionHref="/people/new"
+            actionLabel={t.addPerson}
+          />
+        ) : (
+          <PhotoStack
+            label={t.people}
+            cards={people.slice(0, 10).map(({ person, result }) => ({
+              id: person.id,
+              href: `/people/detail?id=${person.id}`,
+              photo: photoFor(person),
+              title: person.relation ? `${person.name} · ${person.relation}` : person.name,
+              sentence: copy.meetingSentence(person.name, formatCount(result.total)),
+              count: formatCount(result.total),
+              unit: t.times,
+              note: lastMetLine(person),
+            }))}
+          />
+        )}
+      </section>
+
       <section className="hero space-y-5">
         <BigNumber
           label={copy.lifeLabel}
@@ -274,47 +316,6 @@ export default function HomePage() {
         <Link href="/setup" className="btn-quiet">
           {t.editProfile}
         </Link>
-      </section>
-
-      {/* 조르지 않는 한 줄. 언제 뜨는지는 lib/backup.ts. */}
-      {backupDue(state) && (
-        <Link
-          href="/settings#backup"
-          className="block rounded-xl border border-ink-200/70 px-4 py-3 text-xs leading-relaxed text-ink-600 transition hover:border-ink-400"
-        >
-          {t.backupNudge}
-        </Link>
-      )}
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.people}</h2>
-          <Link href="/people" className="btn-quiet">
-            {t.seeAll}
-          </Link>
-        </div>
-        {people.length === 0 ? (
-          <EmptyState
-            title={copy.emptyPeople}
-            body={t.emptyPeopleBody}
-            actionHref="/people/new"
-            actionLabel={t.addPerson}
-          />
-        ) : (
-          <PhotoStack
-            label={t.people}
-            cards={people.slice(0, 10).map(({ person, result }) => ({
-              id: person.id,
-              href: `/people/detail?id=${person.id}`,
-              photo: photoFor(person),
-              title: person.relation ? `${person.name} · ${person.relation}` : person.name,
-              sentence: copy.meetingSentence(person.name, formatCount(result.total)),
-              count: formatCount(result.total),
-              unit: t.times,
-              note: lastMetLine(person),
-            }))}
-          />
-        )}
       </section>
 
       {growing.length > 0 && (

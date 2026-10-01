@@ -41,3 +41,12 @@ export async function clearState(page: Page): Promise<void> {
   await page.goto("/");
   await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY);
 }
+
+/** 접혀 있는 「더 자세히」를 전부 펼친다. 나이 말고 다른 칸을 적는 시나리오가 먼저 부른다. */
+export async function openMore(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    document.querySelectorAll("details").forEach((d) => {
+      if (d.querySelector(":scope > summary")?.textContent?.includes("더 자세히")) d.setAttribute("open", "");
+    }),
+  );
+}

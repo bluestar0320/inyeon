@@ -18,6 +18,9 @@ const THEMES: Theme[] = ["system", "light", "dark"];
 
 const COPY = defineCopy({
   ko: {
+    groupView: "보기",
+    groupData: "기록",
+    groupApp: "앱",
     loading: "불러오는 중…",
     title: "설정",
     languageTitle: "언어",
@@ -77,6 +80,9 @@ const COPY = defineCopy({
     lifeEditable: "예상 수명은 언제든 직접 바꿀 수 있습니다.",
   },
   en: {
+    groupView: "Display",
+    groupData: "Your records",
+    groupApp: "App",
     loading: "Loading…",
     title: "Settings",
     languageTitle: "Language",
@@ -137,6 +143,9 @@ const COPY = defineCopy({
     lifeEditable: "You can change life expectancy yourself at any time.",
   },
   ja: {
+    groupView: "表示",
+    groupData: "記録",
+    groupApp: "アプリ",
     loading: "読み込み中…",
     title: "設定",
     languageTitle: "言語",
@@ -196,6 +205,9 @@ const COPY = defineCopy({
     lifeEditable: "平均余命はいつでも自分で変えられます。",
   },
   es: {
+    groupView: "Vista",
+    groupData: "Tus registros",
+    groupApp: "App",
     loading: "Cargando…",
     title: "Ajustes",
     languageTitle: "Idioma",
@@ -256,6 +268,9 @@ const COPY = defineCopy({
     lifeEditable: "Puedes cambiar la esperanza de vida tú mismo cuando quieras.",
   },
   zh: {
+    groupView: "显示",
+    groupData: "记录",
+    groupApp: "应用",
     loading: "加载中…",
     title: "设置",
     languageTitle: "语言",
@@ -413,8 +428,11 @@ export default function SettingsPage() {
   return (
     <div className="space-y-5">
       <h1 className="pt-2 text-xl font-semibold tracking-tight text-ink-900">{t.title}</h1>
-
-      <section className="card space-y-3">
+      {/* 서로 비슷한 것끼리 묶는다: 보기 · 기록 · 앱. 카드 아홉 장이 줄줄이 서 있으면 찾기 어렵다. */}
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold tracking-[0.1em] text-ink-600">{t.groupView}</h2>
+        <div className="card divide-y divide-ink-200/70 py-1">
+      <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.languageTitle}</p>
           <p className="mt-1 text-xs text-ink-400">{t.languageHint}</p>
@@ -434,8 +452,7 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
-
-      <section className="card space-y-3">
+      <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.toneTitle}</p>
           <p className="mt-1 text-xs text-ink-400">{t.toneHint}</p>
@@ -466,8 +483,7 @@ export default function SettingsPage() {
           })}
         </div>
       </section>
-
-      <section className="card space-y-3">
+      <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.pastTitle}</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.pastHint}</p>
@@ -489,8 +505,7 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
-
-      <section className="card space-y-3">
+      <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.themeTitle}</p>
           <p className="mt-1 text-xs text-ink-400">{t.themeHint}</p>
@@ -509,16 +524,13 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
-
-      <section className="card space-y-3">
-        <div>
-          <p className="text-sm font-semibold text-ink-800">{t.installTitle}</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.installHint}</p>
         </div>
-        <InstallButton />
-      </section>
+      </div>
 
-      <section id="backup" className="card scroll-mt-4 space-y-3">
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold tracking-[0.1em] text-ink-600">{t.groupData}</h2>
+        <div className="card divide-y divide-ink-200/70 py-1">
+      <section id="backup" className="scroll-mt-4 space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.dataTitle}</p>
           <p className="mt-1 text-xs text-ink-400">{t.dataHint}</p>
@@ -559,25 +571,7 @@ export default function SettingsPage() {
         </div>
         {message && <p className="text-xs text-ink-600">{message}</p>}
       </section>
-
-      {/*
-        테스트를 돌리면 카톡으로 "좋던데?"가 온다. 그걸로는 아무것도 못 배운다.
-        물어볼 것을 미리 채워 두면 답이 구체적으로 온다.
-        서버도 계정도 쓰지 않는다 — 기기의 메일 앱이 열릴 뿐이다.
-      */}
-      <section className="card space-y-3">
-        <div>
-          <p className="text-sm font-semibold text-ink-800">{t.feedbackTitle}</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.feedbackHint}</p>
-        </div>
-        <a className="btn-secondary w-fit" href={feedbackHref(t)}>
-          {t.feedbackTitle}
-        </a>
-      </section>
-      <Link href="/privacy" className="btn-secondary w-full">
-        {t.privacyLink}
-      </Link>
-      <section className="card space-y-3">
+      <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.clearTitle}</p>
           <p className="mt-1 text-xs text-ink-400">{t.clearHint}</p>
@@ -608,13 +602,39 @@ export default function SettingsPage() {
           </button>
         )}
       </section>
+        </div>
+      </div>
 
-      <section className="card space-y-2">
+      <div className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold tracking-[0.1em] text-ink-600">{t.groupApp}</h2>
+        <div className="card divide-y divide-ink-200/70 py-1">
+      <section className="space-y-3 py-4">
+        <div>
+          <p className="text-sm font-semibold text-ink-800">{t.installTitle}</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.installHint}</p>
+        </div>
+        <InstallButton />
+      </section>
+      <section className="space-y-3 py-4">
+        <div>
+          <p className="text-sm font-semibold text-ink-800">{t.feedbackTitle}</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.feedbackHint}</p>
+        </div>
+        <a className="btn-secondary w-fit" href={feedbackHref(t)}>
+          {t.feedbackTitle}
+        </a>
+      </section>
+        <Link href="/privacy" className="btn-secondary my-4 w-full">
+        {t.privacyLink}
+      </Link>
+      <section className="space-y-2 py-4">
         <p className="text-sm font-semibold text-ink-800">{t.lifeTitle}</p>
         <p className="text-xs leading-relaxed text-ink-400">{t.lifeSource(LIFE_TABLE_YEAR)}</p>
         <p className="text-xs leading-relaxed text-ink-400">{t.lifeWhy}</p>
         <p className="text-xs leading-relaxed text-ink-400">{t.lifeEditable}</p>
       </section>
+        </div>
+      </div>
     </div>
   );
 }

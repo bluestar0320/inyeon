@@ -39,6 +39,9 @@ for (const file of walk(OUT).sort()) {
   const rel = relative(OUT, file).split(sep).join(posix.sep);
   // 서비스 워커 자신은 캐시하지 않는다. 자기를 캐시하면 새 버전이 안 깔린다.
   if (rel === "sw.js") continue;
+  // 글꼴 조각(약 2MB, 92개)은 미리 받지 않는다. 화면에 나온 글자의 조각만 볼 때 받아 둔다.
+  // 오프라인에서 아직 안 받은 조각은 기기 명조로 그려진다 — 글자가 사라지지는 않는다.
+  if (rel.startsWith("fonts/") && rel.endsWith(".woff2")) continue;
   hash.update(rel).update(readFileSync(file));
   // index.html은 경로 자체로 요청된다(trailingSlash: true).
   if (rel === "index.html") routes.add("/");
