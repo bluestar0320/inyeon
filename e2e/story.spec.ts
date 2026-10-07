@@ -99,3 +99,20 @@ test("내 정보의 부르는 이름은 선택 칸이고, 넣으면 저장된다
   const nickname = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).profile.nickname, STORAGE_KEY);
   expect(nickname).toBe("지훈");
 });
+
+test("평균수명을 넘기신 분: 적어 둔 예상 수명을 지나도 0번이 아니고, 축하 한 줄과 '선물' 문장이 나온다", async ({ page }) => {
+  await clearState(page);
+  const value = {
+    version: 1,
+    profile: { ageYears: 50, ageAsOf: "2026-01-01", lifeExpectancy: 85, lifeExpectancyManual: true, countryCode: "KR", sex: "all" },
+    people: [{ id: "g", name: "할머니", relation: "할머니", ageYears: 93, ageAsOf: "2026-01-01", lifeExpectancy: 90, lifeExpectancyManual: true,
+      countryCode: "KR", sex: "female", frequency: { count: 1, unit: "month" }, filters: [], createdAt: created(0), updatedAt: created(0) }],
+    moments: [], marriage: null,
+    settings: { tone: "aware", theme: "light", showPast: true },
+  };
+  await page.evaluate(({ key, v }) => localStorage.setItem(key, JSON.stringify(v)), { key: STORAGE_KEY, v: value });
+  await page.goto("/people/detail/?id=g");
+  await expect(page.locator("p.numeral").first()).not.toHaveText(/^0/);
+  await expect(page.getByTestId("story-cheer")).toContainText("대한민국");
+  await expect(page.getByTestId("story-now")).not.toContainText("날짜");
+});

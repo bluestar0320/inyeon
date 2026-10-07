@@ -13,6 +13,7 @@ import type {
   Profile,
 } from "./types";
 import { defineCopy, tr } from "./i18n.ts";
+import { lookupLifeExpectancy } from "./lifeExpectancy.ts";
 
 export const DAYS_PER_YEAR = 365.2425;
 
@@ -141,7 +142,13 @@ export function remainingYears(span: LifeSpan, now: Date = new Date()): number |
   const age = resolveAge(span, now);
   if (age === null) return null;
   if (!Number.isFinite(span.lifeExpectancy)) return null;
-  return Math.max(0, span.lifeExpectancy - age);
+  if (span.lifeExpectancy > age) return span.lifeExpectancy - age;
+  /*
+   * 직접 적어 둔 예상 수명을 이미 넘기셨다. 예전에는 "0번"으로 끝났다 — 할머니께 그렇게
+   * 보이면 안 된다. 평균으로 되돌려도 언젠가 또 넘기므로, 넘긴 순간부터는 지금 나이의
+   * 생명표 여명으로 센다(생명표는 나이마다 남은 햇수를 주므로 0이 되지 않는다).
+   */
+  return Math.max(0, lookupLifeExpectancy(span.countryCode, span.sex, age, span.health) - age);
 }
 
 export interface YearSlice {

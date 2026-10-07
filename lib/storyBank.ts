@@ -44,6 +44,15 @@ function everyBand(list: string[]): Record<string, string[]> {
 export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
   aware: {
     ko: {
+      cheer: {
+        "*": [
+          "{name}께서는 {country} 평균수명보다 더 장수하고 계세요. 그동안 건강을 잘 지켜 오신 덕분이에요.",
+          "{country} 평균수명을 넘어 지금도 곁에 계셔 주시네요. {name}께서 몸 관리를 참 잘해 오셨어요.",
+          "{name}께서는 {country} 평균보다 더 오래 함께해 주고 계세요. 정말 축하드릴 일이에요.",
+          "{country} 평균수명을 훌쩍 넘기셨어요. {name}께서 건강하게 지내 오신 덕분에 오늘도 만날 수 있어요.",
+          "{country} 평균수명보다 더 오래, 건강하게 곁을 지켜 주고 계세요. 참 고마운 일이에요.",
+        ],
+      },
       then: {
         parent: [
           "매일 아침 {name} 목소리로 하루를 시작하던 때가 있었죠.",
@@ -59,6 +68,21 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        senior: [
+          "{name:와/과} 함께하는 날은 하루하루가 선물이에요. 앞으로의 {count}번도 한 번 한 번 꼭 안아 주세요.",
+          "{name:와/과} 마주 앉는 날 하나하나가 이제는 무엇보다 귀해요.",
+          "앞으로 {count}번, 숫자보다 그 하루하루에 담길 이야기가 더 소중해요.",
+          "{name}의 웃음을 볼 수 있는 날, 그 하루하루가 다 선물이에요.",
+          "{name:와/과} 보내는 시간은 이제 셀수록 더 귀해지는 시간이에요.",
+          "{name:와/과} 함께할 {count}번의 날, 한 번도 그냥 지나치지 말아요.",
+        ],
+        "senior.after": [
+          "그리고 지금도 {name:와/과} 함께하는 하루하루가 이어지고 있어요. 그 하루하루가 모두 선물이에요.",
+          "이제는 한 번 한 번의 만남이 무엇보다 귀한 선물이 되었어요.",
+          "지금은 {name:와/과} 마주 앉는 날 하나하나가 다 소중한 선물이에요.",
+          "그 시절처럼 매일은 아니어도, 지금 함께하는 날들이 더 깊이 남아요.",
+          "이제 앞으로의 {count}번은 숫자로 다 담을 수 없을 만큼 귀한 날들이에요.",
+        ],
         "after.*": [
           "이제는 남은 만남이 {count}번이에요. 날짜로만 세어 보면 {span:이/가} 채 안 되네요.",
           "그런데 이제 남은 건 {count}번. 하루에 한 번씩 만나도 {span:이/가} 안 되는 시간이에요.",
@@ -110,6 +134,16 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       today: {
+        senior: [
+          "이번 주엔 목소리 들려 드리러 {name}께 전화 한 통 드려 보세요.",
+          "다음에 찾아뵐 땐 옛날 사진 몇 장 챙겨 가 보세요. 이야기꽃이 필 거예요.",
+          "{name}께서 좋아하시는 음식 하나 사 들고 찾아뵈면 좋겠어요.",
+          "오늘은 {name}께 \"사랑해요\" 한마디 전해 드려 보세요.",
+          "다음에 뵐 땐 {name}의 손을 한 번 꼭 잡아 드리세요.",
+          "{name}께 옛날이야기를 청해 보세요. 오래도록 남을 이야기가 될 거예요.",
+          "영상 통화로 얼굴 한 번 보여 드리는 것만으로도 큰 기쁨이 되실 거예요.",
+          "다음 만남엔 {name:와/과} 사진 한 장 꼭 남겨 두세요.",
+        ],
         often: [
           "오늘 저녁엔 {name:와/과} 같은 밥상에 앉아 하루 이야기를 나눠 보세요.",
           "휴대폰은 잠시 내려 두고, 오늘은 {name}의 이야기에 귀 기울여 봐요.",
@@ -177,6 +211,13 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       past: {
+        senior: [
+          "{name:와/과} {me:이/가} 함께해 온 시간이 벌써 {pct}%예요. 그만큼 쌓인 추억이 많다는 뜻이에요.",
+          "지나온 {pct}%의 날들 덕분에 지금의 {me:이/가} 있어요. 남은 날들도 따뜻하게 채워 가요.",
+          "함께한 시간이 이렇게나 많았어요. 남은 날들은 고마운 마음을 전하는 데 써 보면 좋겠어요.",
+          "{pct}%의 날들을 함께 지나왔어요. 남은 하루하루도 서로에게 선물이 되길 바라요.",
+          "오래 함께해 온 만큼, 남은 날들은 더 다정하게 보내요.",
+        ],
         start: [
           "{name:와/과} {me}의 이야기는 이제 겨우 {pct}%가 지났어요. 앞으로 함께 채워 갈 날들이 훨씬 많아요.",
           "함께할 시간의 {pct}%만 지났을 뿐이에요. 지금 이 설렘을 오래오래 아껴 주세요.",
@@ -266,6 +307,7 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
       },
     },
     en: {
+      cheer: { "*": ["{name} has already lived beyond the average life expectancy in {country}. That's years of good care paying off.", "{name} is outliving the {country} average. That's worth celebrating."] },
       then: {
         parent: [
           "There was a time every morning began with {name}'s voice.",
@@ -363,6 +405,7 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
       },
     },
     ja: {
+      cheer: { "*": ["{name}は{country}の平均寿命を超えて、元気に過ごされています。日頃の健康管理のおかげですね。", "{country}の平均寿命より長く、そばにいてくれています。本当におめでたいことです。"] },
       then: {
         parent: [
           "毎朝、{name}の声で一日が始まっていた頃がありましたね。",
@@ -460,6 +503,7 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
       },
     },
     es: {
+      cheer: { "*": ["{name} ya supera la esperanza de vida media de {country}. Fruto de años cuidándose bien.", "{name} vive más que la media de {country}. Eso merece celebrarse."] },
       then: {
         parent: [
           "Hubo un tiempo en que cada mañana empezaba con la voz de {name}.",
@@ -533,6 +577,7 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
       },
     },
     zh: {
+      cheer: { "*": ["{name}已经超过了{country}的平均寿命，这是多年好好照顾身体的结果。", "{name}比{country}的平均寿命更长寿，真值得庆祝。"] },
       then: {
         parent: [
           "曾经，每天早上都是在{name}的声音里醒来。",

@@ -34,6 +34,11 @@ export default function StoryLines({
 
   return (
     <div data-testid="story" className="space-y-3 text-[15px] leading-relaxed text-ink-800">
+      {story.cheer && (
+        <p data-testid="story-cheer" className="font-medium text-accent-600">
+          {story.cheer}
+        </p>
+      )}
       {/* 그때 · 지금 · 오늘은 한 사람이 이어 말하듯 한 문단으로 붙인다. */}
       <p>
         {story.then && <span data-testid="story-then">{story.then} </span>}

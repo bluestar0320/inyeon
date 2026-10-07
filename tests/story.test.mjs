@@ -135,7 +135,7 @@ test("모든 언어·톤에서 now·today가 나오고 빈칸이 남지 않는�
 });
 
 test("은행의 모든 문장은 아는 빈칸만 쓴다", () => {
-  const vars = { name: "엄마", count: "100", span: "넉 달", pct: "92", n: "3", me: "당신" };
+  const vars = { name: "엄마", count: "100", span: "넉 달", pct: "92", n: "3", me: "당신", country: "대한민국" };
   for (const [tone, langs] of Object.entries(BANK))
     for (const [lang, slots] of Object.entries(langs))
       for (const [slot, keys] of Object.entries(slots))
@@ -174,7 +174,7 @@ test("문장 은행 분량", () => {
 });
 
 test("한 줄은 카드 세 줄 안에 들어갈 만큼 짧다", () => {
-  const vars = { name: "엄마", count: "1,234", span: "열한 달", pct: "92", n: "12", me: "당신" };
+  const vars = { name: "엄마", count: "1,234", span: "열한 달", pct: "92", n: "12", me: "당신", country: "아랍에미리트" };
   for (const [tone, langs] of Object.entries(BANK))
     for (const [lang, slots] of Object.entries(langs))
       for (const keys of Object.values(slots))
@@ -231,7 +231,7 @@ test("지나간 비율은 '만약에' 빈도가 아니라 실제 빈도로 센�
 });
 
 const filled = (list, extra = {}) =>
-  new Set(list.map((tpl) => fill(tpl, { name: "엄마", count: "100", span: "넉 달", pct: "98", n: "1", me: "당신", ...extra })));
+  new Set(list.map((tpl) => fill(tpl, { name: "엄마", count: "100", span: "넉 달", pct: "98", n: "1", me: "당신", country: "대한민국", ...extra })));
 
 test("그때 줄이 있으면 지금 줄은 앞 문장을 이어받는 문장(after)에서 고른다", () => {
   setLang("ko");
@@ -278,4 +278,31 @@ test("'어때요/어떨까요'로 끝나는 오늘 문장은 드물다", () => {
 test("한국어 찡하게의 중반 이후 맺음 문장은 모두 비율(%)을 말한다", () => {
   for (const key of ["middle", "late", "last", "elder.late", "elder.last"])
     for (const tpl of BANK.aware.ko.past[key]) assert.ok(tpl.includes("{pct}"), `${key}: ${tpl}`);
+});
+
+const elderly = (over = {}) => person({ name: "할머니", relation: "할머니", frequency: { count: 1, unit: "month" }, ...over });
+
+test("평균수명을 넘긴 분께는 축하 문장이 앞에 나온다(나라 이름과 함께)", () => {
+  setLang("ko");
+  const s = buildStory({ person: elderly(), remaining: 14, myAge: 40, theirAge: 92, tone: "aware", today: "2026-10-07", now: NOW,
+    averageLife: 84.3, country: "대한민국" });
+  assert.ok(s.cheer && s.cheer.includes("대한민국"), s.cheer);
+  const young = buildStory({ person: elderly(), remaining: 14, myAge: 40, theirAge: 80, tone: "aware", today: "2026-10-07", now: NOW,
+    averageLife: 84.3, country: "대한민국" });
+  assert.equal(young.cheer, undefined);
+});
+
+test("75세 이상이고 남은 횟수가 100번 이하면 날짜로 줄여 보이지 않는 '선물' 문장을 쓴다(부모님도)", () => {
+  setLang("ko");
+  for (const p of [elderly({ id: "g1" }), person({ id: "m1" })]) {
+    const s = buildStory({ person: p, remaining: 60, myAge: 50, theirAge: 82, tone: "aware", today: "2026-10-07", now: NOW });
+    const extra = { name: p.name, count: "60" };
+    const gentle = new Set([...filled(BANK.aware.ko.now.senior, extra), ...filled(BANK.aware.ko.now["senior.after"], extra)]);
+    assert.ok(gentle.has(s.now), `${p.id}: ${s.now}`);
+    assert.ok(!/날짜|매일 만나/.test(s.now), s.now);
+    assert.ok(filled(BANK.aware.ko.today.senior, extra).has(s.today), s.today);
+  }
+  // 아직 75세 전이면 원래 문장
+  const s = buildStory({ person: person({ id: "m1" }), remaining: 60, myAge: 40, theirAge: 70, tone: "aware", today: "2026-10-07", now: NOW });
+  assert.ok(!filled(BANK.aware.ko.today.senior).has(s.today));
 });

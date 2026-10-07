@@ -186,7 +186,8 @@ test("더미의 사진을 연타해도 한 번만 넘어가고 오류가 없다"
 });
 
 test("남은 만남이 0번인 사람도 더미에 제대로 걸린다", async ({ page }) => {
-  await seed(page, { people: [person("a", "할아버지", { ageYears: 99, lifeExpectancy: 90 })] });
+  // 예상 수명을 넘긴 분은 이제 생명표로 세어 0이 되지 않는다. 0번은 정해 둔 목표 나이를 지났을 때 생긴다.
+  await seed(page, { people: [person("a", "연인", { horizon: { kind: "untilMyAge", age: 1 } })] });
   await page.goto("/");
   await expect(page.getByRole("region", { name: "인연" }).getByRole("link").first()).toContainText("0");
 });

@@ -64,9 +64,9 @@ test("resolveAge prefers birthDate and falls back to a typed age", () => {
   assert.equal(resolveAge({ birthDate: "not-a-date", ageYears: 7 }, NOW), 7);
 });
 
-test("remainingYears never goes below zero", () => {
+test("remainingYears: 예상 수명을 넘긴 나이도 0이 아니라 생명표 여명으로 센다", () => {
   assert.equal(remainingYears({ ageYears: 60, lifeExpectancy: 80 }, NOW), 20);
-  assert.equal(remainingYears({ ageYears: 95, lifeExpectancy: 80 }, NOW), 0);
+  assert.ok(remainingYears({ ageYears: 95, lifeExpectancy: 80 }, NOW) > 0);
   assert.equal(remainingYears({ lifeExpectancy: 80 }, NOW), null);
 });
 
@@ -227,10 +227,10 @@ test("a zero-length horizon yields nothing rather than NaN", () => {
   assert.equal(result.baselineTotal, 0);
 });
 
-test("someone already past their life expectancy has no meetings left", () => {
+test("적어 둔 예상 수명을 넘기신 분도 만남이 남아 있다 — 0번으로 끝내지 않는다", () => {
   const result = computeRelationship(person({ ageYears: 92 }), profile(), NOW);
-  assert.equal(result.sharedYears, 0);
-  assert.equal(result.total, 0);
+  assert.ok(result.sharedYears > 0);
+  assert.ok(result.total > 0);
 });
 
 test("moment horizons resolve against the profile", () => {
@@ -574,4 +574,16 @@ test("0번이 되면 감소율 100%, 지금이 0번이면 셀 수 없으니 0", 
 
 test("늘어남은 계산과 같은 한도(-100%)에서 멈춘다", () => {
   assert.equal(decayRateFor(1, 1_000_000, 1), -1);
+});
+
+test("적어 둔 예상 수명을 나이가 넘어서면 0이 아니라 나이별 생명표로 센다", async () => {
+  const { remainingYears: left } = await import("../lib/calc.ts");
+  const { remainingLifeAt } = await import("../lib/lifeExpectancy.ts");
+  const grandma = { ageYears: 88, ageAsOf: "2026-01-01", lifeExpectancy: 85, lifeExpectancyManual: true, countryCode: "KR", sex: "female" };
+  const now = new Date("2026-01-01T12:00:00");
+  const years = left(grandma, now);
+  assert.ok(years > 0, `${years}`);
+  assert.ok(Math.abs(years - remainingLifeAt("KR", "female", 88)) < 0.1, `${years}`);
+  // 아직 넘지 않았으면 적어 둔 값을 그대로 존중한다.
+  assert.equal(left({ ...grandma, lifeExpectancy: 95 }, now), 7);
 });

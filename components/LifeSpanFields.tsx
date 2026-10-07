@@ -5,7 +5,7 @@ import { useId, useState } from "react";
 import HealthFields from "@/components/HealthFields";
 import NumberInput from "@/components/NumberInput";
 import { healthAgeOffset } from "@/lib/health";
-import { resolveAge } from "@/lib/calc";
+import { remainingYears, resolveAge } from "@/lib/calc";
 import { formatAge, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { COUNTRIES, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
@@ -160,7 +160,8 @@ export default function LifeSpanFields<T extends LifeSpan>({
   const t = tr(COPY);
   const ids = useId();
   const age = resolveAge(value);
-  const remaining = age === null ? null : Math.max(0, value.lifeExpectancy - age);
+  // 계산과 같은 규칙: 적어 둔 예상 수명을 넘겼으면 생명표 여명으로 센다(lib/calc.ts).
+  const remaining = remainingYears(value);
   // 예상 수명은 나이에 따라 달라진다. 이미 그 나이까지 살아온 사람은 일찍 떠난
   // 사람들이 끌어내린 출생 시 평균보다 더 오래 산다.
   const average = lookupLifeExpectancy(value.countryCode, value.sex, age, value.health);

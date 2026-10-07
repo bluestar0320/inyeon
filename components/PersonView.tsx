@@ -25,6 +25,7 @@ import {
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
+import { COUNTRIES, DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
 import { photoFor } from "@/lib/photos";
 import { buildStory } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
@@ -202,8 +203,11 @@ export default function PersonView({ person }: { person: Person }) {
         // 지나간 쪽은 "만약에"가 아니라 실제 빈도로 센다 — 바로 아래 지나온 막대와 같은 기준.
         pastFrequency: person.frequency,
         me: state.profile?.nickname,
+        // 출생 시 기대수명보다 나이가 많으시면 축하 한 줄을 붙인다.
+        averageLife: lookupLifeExpectancy(person.countryCode, person.sex),
+        country: COUNTRIES.find((c) => c.code === (person.countryCode ?? DEFAULT_COUNTRY_CODE))?.name,
       }),
-    [draft, result.total, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, state.profile?.nickname],
+    [draft, result.total, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, person.countryCode, person.sex, state.profile?.nickname],
   );
   // 다시 들어온 사람에게만 말투 바꾸기를 보인다. createdAt은 UTC라 기기 날짜로 바꿔 비교한다.
   const created = new Date(person.createdAt);

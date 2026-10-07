@@ -13,7 +13,7 @@ export type Rel = "parent" | "grandparent" | "partner" | "child" | "sibling" | "
 export type CountBand = "week" | "month" | "c100" | "c200" | "c300" | "year" | "twoYears" | "c1000" | "more";
 export type FreqBand = "often" | "sometimes" | "rarely";
 export type PastBand = "start" | "early" | "middle" | "late" | "last";
-export type Slot = "then" | "now" | "today" | "past" | "met";
+export type Slot = "cheer" | "then" | "now" | "today" | "past" | "met";
 
 /*
  * 조부모를 먼저 본다 — "할머니"의 "머니", "grandmother"의 "mother"가 부모님으로 잡히지 않게.
@@ -194,7 +194,13 @@ function groupOf(rel: Rel): string {
   return rel === "parent" || rel === "grandparent" ? "elder" : rel;
 }
 
+/** 이 나이 이상이고 남은 횟수가 적으면, 날짜로 줄여 보이지 않고 "하루하루가 선물" 쪽 문장(senior)을 쓴다. */
+export const SENIOR_AGE = 75;
+export const SENIOR_MAX_COUNT = 100;
+
 export interface Story {
+  /** 평균수명을 넘기신 분께 드리는 축하 한 줄. */
+  cheer?: string;
   then?: string;
   now?: string;
   today?: string;
@@ -217,6 +223,9 @@ export function buildStory(i: {
   pastFrequency?: Frequency;
   /** 「내 정보」의 닉네임. 비면 "당신". */
   me?: string;
+  /** 상대 나라·성별의 출생 시 기대수명과 나라 이름. 나이가 이보다 많으면 축하 문장을 붙인다. */
+  averageLife?: number;
+  country?: string;
 }): Story | null {
   if (!(i.remaining >= 1)) return null;
   const { person } = i;
@@ -237,6 +246,7 @@ export function buildStory(i: {
     span: spanText(i.remaining),
     pct: share ? String(share.pct) : "",
     me: i.me?.trim() || tr(ME),
+    country: i.country ?? "",
   };
   const count = countBand(i.remaining);
   const band = share ? pastBand(share.pct) : null;
@@ -246,15 +256,34 @@ export function buildStory(i: {
    * 문장을 따로 뽑아 붙이면 분위기가 따로 논다. 그때 줄이 있으면 지금 줄은 "이제는…"처럼
    * 앞 문장을 이어받는 문장(after)에서 고르고, 없으면 이름으로 시작하는 문장에서 고른다.
    */
+  const senior = typeof i.theirAge === "number" && i.theirAge >= SENIOR_AGE && i.remaining <= SENIOR_MAX_COUNT;
   const nowKeys = [`${rel}.${count}`, count, "*"];
+  const nowChain = [
+    ...(senior ? (then ? ["senior.after", "senior"] : ["senior"]) : []),
+    ...(then ? [`after.${count}`, "after.*"] : []),
+    ...nowKeys,
+  ];
+  const cheer =
+    typeof i.theirAge === "number" && typeof i.averageLife === "number" && i.country && i.theirAge > i.averageLife
+      ? pick("cheer", ["*"], i.tone, `${person.id}cheer`, vars)
+      : undefined;
   const story: Story = {
+    cheer,
     then,
-    now: pick("now", then ? [`after.${count}`, "after.*", ...nowKeys] : nowKeys, i.tone, `${person.id}now`, vars),
-    today: pick("today", [`${rel}.${freq}`, `${group}.${freq}`, freq, "*"], i.tone, `${person.id}today${i.today}`, vars),
-    past: band ? pick("past", [`${rel}.${band}`, `${group}.${band}`, band], i.tone, `${person.id}past`, vars) : undefined,
+    now: pick("now", nowChain, i.tone, `${person.id}now`, vars),
+    today: pick(
+      "today",
+      [...(senior ? [`senior.${freq}`, "senior"] : []), `${rel}.${freq}`, `${group}.${freq}`, freq, "*"],
+      i.tone,
+      `${person.id}today${i.today}`,
+      vars,
+    ),
+    past: band
+      ? pick("past", [...(senior ? ["senior"] : []), `${rel}.${band}`, `${group}.${band}`, band], i.tone, `${person.id}past`, vars)
+      : undefined,
     assumed: Boolean(share?.assumed),
   };
-  return story.then || story.now || story.today || story.past ? story : null;
+  return story.cheer || story.then || story.now || story.today || story.past ? story : null;
 }
 
 /** 「만났어요」 직후 한 마디. 남은 횟수는 줄지 않으니 쌓인 쪽(올해 n번째)을 말한다. */
