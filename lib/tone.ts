@@ -85,14 +85,14 @@ const WARM_KO: ToneCopy = {
 };
 
 const AWARE_KO: ToneCopy = {
-  label: "또렷하게",
-  description: "남은 횟수가 유한하다는 걸 분명히 드러냅니다.",
-  greeting: "남은 횟수는 이미 정해져 있습니다.",
+  label: "찡하게",
+  description: "남은 횟수가 얼마나 귀한지 또렷하게 짚어 줍니다.",
+  greeting: "남은 횟수는 생각보다 적어요.",
   meetingLabel: "남은 만남",
   momentLabel: "남은 횟수",
   lifeLabel: "남은 시간",
   marriageLabel: "남은 기회",
-  meetingSentence: (name, count) => `${josa(name, "와/과")} 남은 만남, ${count}번.`,
+  meetingSentence: (name, count) => `${josa(name, "와/과")} 남은 만남은 ${count}번이에요.`,
   momentSentence: (title, count) => `${title}, 남은 횟수 ${count}번.`,
   marriageSentence: (targetAge, count) => `${targetAge}세까지 남은 기회, ${count}번.`,
   limitedBySentence: (limitedBy, name) => {

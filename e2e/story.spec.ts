@@ -60,3 +60,17 @@ test("처음 만든 날엔 말투 바꾸기가 없고, 다시 오면 있다", as
   const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).settings.tone, STORAGE_KEY);
   expect(saved).toBe("warm");
 });
+
+test("만났어요를 누르면 한 마디가 뜨고, 남은 횟수는 그대로다", async ({ page }) => {
+  await seed(page, "어머니", "엄마");
+  const before = await page.locator("p.numeral").first().textContent();
+  await page.getByRole("button", { name: "만났어요" }).click();
+  await expect(page.getByText(/올해 1번째/)).toBeVisible();
+  expect(await page.locator("p.numeral").first().textContent()).toBe(before);
+});
+
+test("설정을 건드리지 않은 사람의 기본 말투는 「찡하게」다", async ({ page }) => {
+  await clearState(page);
+  await page.goto("/settings");
+  await expect(page.getByRole("button", { name: /찡하게/ })).toHaveAttribute("aria-pressed", "true");
+});

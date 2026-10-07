@@ -4,7 +4,8 @@ import { count } from "@/lib/analytics";
 import { todayISO } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { addMeeting, daysSinceLast, metThisYear } from "@/lib/meetings";
-import { useActions } from "@/lib/store";
+import { useActions, useAppState } from "@/lib/store";
+import { metLine } from "@/lib/story";
 import type { Person } from "@/lib/types";
 import { offerUndo } from "@/lib/undo";
 
@@ -61,6 +62,7 @@ export function lastMetLine(person: Person): string | null {
  */
 export default function MeetingLog({ person }: { person: Person }) {
   const t = tr(COPY);
+  const { state } = useAppState();
   const { savePerson } = useActions();
   const meetings = person.meetings ?? [];
   const last = lastMetLine(person);
@@ -81,8 +83,12 @@ export default function MeetingLog({ person }: { person: Person }) {
         type="button"
         className="btn-primary shrink-0"
         onClick={() => {
-          savePerson({ ...person, meetings: addMeeting(meetings, todayISO()), updatedAt: new Date().toISOString() });
-          offerUndo(t.saved, () => savePerson(person));
+          const next = addMeeting(meetings, todayISO());
+          savePerson({ ...person, meetings: next, updatedAt: new Date().toISOString() });
+          offerUndo(
+            metLine({ person, tone: state.settings.tone, thisYear: metThisYear(next, todayISO()) }) ?? t.saved,
+            () => savePerson(person),
+          );
           count({ event: "met" });
         }}
       >

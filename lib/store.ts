@@ -21,7 +21,8 @@ import type {
 } from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
-  tone: "calm",
+  // 처음 보는 사람에게는 「찡하게」로 말한다. 다시 온 사람은 결과 아래에서 바꿀 수 있다.
+  tone: "aware",
   theme: "system",
   showPast: true,
 };

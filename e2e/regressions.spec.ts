@@ -212,8 +212,9 @@ test("내 정보도 다른 창에서 바뀌면 알리고, 손대지 않았으면
 
 test("영문 이름에도 조사를 맞춰 붙인다", async ({ page }) => {
   await seed(page, { people: [person("a", "Tom"), person("b", "Kate")] });
-  await page.goto("/people/detail?id=a");
+  // 상세 화면은 이 문장 대신 이야기를 보인다. 같은 문장을 쓰는 수정 화면에서 본다.
+  await page.goto("/people/edit?id=a");
   await expect(page.getByText(/Tom과 앞으로/)).toBeVisible();
-  await page.goto("/people/detail?id=b");
+  await page.goto("/people/edit?id=b");
   await expect(page.getByText(/Kate와 앞으로/)).toBeVisible();
 });
