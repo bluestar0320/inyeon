@@ -477,7 +477,10 @@ test.describe("오프라인", () => {
       // 앱 안에서 옮겨 다닐 때 실패하는 요청이 없어야 한다. 예전에는 RSC 요청을 쿼리까지
       // 맞춰 찾다가 캐시를 놓쳐 ERR_FAILED가 찍히고 화면 전체를 다시 불러왔다.
       const failed: string[] = [];
-      page.on("requestfailed", (request) => failed.push(request.url()));
+      // 방문자 집계는 오프라인이면 못 보내고 조용히 넘어가는 게 맞으니 빼고 센다.
+      page.on("requestfailed", (request) => {
+        if (!new URL(request.url()).hostname.endsWith(".goatcounter.com")) failed.push(request.url());
+      });
       page.on("console", (message) => {
         if (/RSC payload/.test(message.text())) failed.push(message.text());
       });

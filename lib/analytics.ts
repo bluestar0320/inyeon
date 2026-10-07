@@ -10,7 +10,7 @@
  */
 
 /** GoatCounter 사이트 코드(https://<코드>.goatcounter.com). 비우면 집계를 끈다. */
-export const GOATCOUNTER_CODE = "";
+export const GOATCOUNTER_CODE = "bluecode0910";
 
 export const analyticsEnabled = (code: string = GOATCOUNTER_CODE): boolean => code !== "";
 
