@@ -86,7 +86,7 @@ export default function MeetingLog({ person }: { person: Person }) {
           const next = addMeeting(meetings, todayISO());
           savePerson({ ...person, meetings: next, updatedAt: new Date().toISOString() });
           offerUndo(
-            metLine({ person, tone: state.settings.tone, thisYear: metThisYear(next, todayISO()) }) ?? t.saved,
+            metLine({ person, tone: state.settings.tone, thisYear: metThisYear(next, todayISO()), me: state.profile?.nickname }) ?? t.saved,
             () => savePerson(person),
           );
           count({ event: "met" });

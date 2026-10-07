@@ -113,7 +113,14 @@ export function pastShare(i: {
 }
 
 const SPAN = defineCopy({
-  ko: { week: "일주일", month: "한 달", months: (n: number) => `${n}달`, year: "1년", years: (n: number) => `${n}년` },
+  // 달은 우리말 수로 센다("4달"보다 "넉 달"이 입에 붙는다).
+  ko: {
+    week: "일주일",
+    month: "한 달",
+    months: (n: number) => `${["", "한", "두", "석", "넉", "다섯", "여섯", "일곱", "여덟", "아홉", "열", "열한"][n] ?? n} 달`,
+    year: "1년",
+    years: (n: number) => `${n}년`,
+  },
   en: { week: "a week", month: "a month", months: (n) => `${n} months`, year: "a year", years: (n) => `${n} years` },
   ja: { week: "1週間", month: "1か月", months: (n) => `${n}か月`, year: "1年", years: (n) => `${n}年` },
   es: { week: "una semana", month: "un mes", months: (n) => `${n} meses`, year: "un año", years: (n) => `${n} años` },
@@ -179,6 +186,14 @@ function pick(slot: Slot, keys: string[], tone: Tone, seed: string, vars: Record
   return undefined;
 }
 
+/** 부르는 말. 「내 정보」에 닉네임이 없으면 이것을 쓴다. */
+const ME = defineCopy({ ko: "당신", en: "you", ja: "あなた", es: "tú", zh: "你" });
+
+/** 부모님·조부모님께는 높임 문장 묶음(elder)을 먼저 찾는다. */
+function groupOf(rel: Rel): string {
+  return rel === "parent" || rel === "grandparent" ? "elder" : rel;
+}
+
 export interface Story {
   then?: string;
   now?: string;
@@ -200,6 +215,8 @@ export function buildStory(i: {
   showPast?: boolean;
   /** 지나간 만남을 셀 빈도. person에 "만약에" 빈도가 들어 있을 때 실제 빈도를 따로 준다. */
   pastFrequency?: Frequency;
+  /** 「내 정보」의 닉네임. 비면 "당신". */
+  me?: string;
 }): Story | null {
   if (!(i.remaining >= 1)) return null;
   const { person } = i;
@@ -219,24 +236,30 @@ export function buildStory(i: {
     count: formatCount(i.remaining),
     span: spanText(i.remaining),
     pct: share ? String(share.pct) : "",
+    me: i.me?.trim() || tr(ME),
   };
   const count = countBand(i.remaining);
   const band = share ? pastBand(share.pct) : null;
+  const group = groupOf(rel);
+  const then = rel === "parent" && share ? pick("then", [`${rel}.${freq}`, rel], i.tone, `${person.id}then`, vars) : undefined;
+  /*
+   * 문장을 따로 뽑아 붙이면 분위기가 따로 논다. 그때 줄이 있으면 지금 줄은 "이제는…"처럼
+   * 앞 문장을 이어받는 문장(after)에서 고르고, 없으면 이름으로 시작하는 문장에서 고른다.
+   */
+  const nowKeys = [`${rel}.${count}`, count, "*"];
   const story: Story = {
-    then: rel === "parent" && share ? pick("then", [`${rel}.${freq}`, rel], i.tone, `${person.id}then`, vars) : undefined,
-    now: pick("now", [`${rel}.${count}`, count, "*"], i.tone, `${person.id}now`, vars),
-    today: pick("today", [`${rel}.${freq}`, freq, "*"], i.tone, `${person.id}today${i.today}`, vars),
-    past: band ? pick("past", [`${rel}.${band}`, band], i.tone, `${person.id}past`, vars) : undefined,
+    then,
+    now: pick("now", then ? [`after.${count}`, "after.*", ...nowKeys] : nowKeys, i.tone, `${person.id}now`, vars),
+    today: pick("today", [`${rel}.${freq}`, `${group}.${freq}`, freq, "*"], i.tone, `${person.id}today${i.today}`, vars),
+    past: band ? pick("past", [`${rel}.${band}`, `${group}.${band}`, band], i.tone, `${person.id}past`, vars) : undefined,
     assumed: Boolean(share?.assumed),
   };
   return story.then || story.now || story.today || story.past ? story : null;
 }
 
 /** 「만났어요」 직후 한 마디. 남은 횟수는 줄지 않으니 쌓인 쪽(올해 n번째)을 말한다. */
-export function metLine(i: { person: Person; tone: Tone; thisYear: number }): string | null {
+export function metLine(i: { person: Person; tone: Tone; thisYear: number; me?: string }): string | null {
   const rel = relationKind(i.person.relation);
-  return (
-    pick("met", [rel, "*"], i.tone, `${i.person.id}met${i.thisYear}`, { name: i.person.name, n: String(i.thisYear) }) ??
-    null
-  );
+  const vars = { name: i.person.name, n: String(i.thisYear), me: i.me?.trim() || tr(ME) };
+  return pick("met", [rel, groupOf(rel), "*"], i.tone, `${i.person.id}met${i.thisYear}`, vars) ?? null;
 }

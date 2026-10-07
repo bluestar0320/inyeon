@@ -76,7 +76,8 @@ test("날수 표현은 '채 안 되는' 가장 작은 덩어리", () => {
   setLang("ko");
   assert.equal(spanText(5), "일주일");
   assert.equal(spanText(30), "한 달");
-  assert.equal(spanText(100), "4달");
+  assert.equal(spanText(100), "넉 달");
+  assert.equal(spanText(200), "일곱 달");
   assert.equal(spanText(365), "1년");
   assert.equal(spanText(800), "3년");
   setLang("en");
@@ -134,7 +135,7 @@ test("모든 언어·톤에서 now·today가 나오고 빈칸이 남지 않는�
 });
 
 test("은행의 모든 문장은 아는 빈칸만 쓴다", () => {
-  const vars = { name: "엄마", count: "100", span: "4달", pct: "92", n: "3" };
+  const vars = { name: "엄마", count: "100", span: "넉 달", pct: "92", n: "3", me: "당신" };
   for (const [tone, langs] of Object.entries(BANK))
     for (const [lang, slots] of Object.entries(langs))
       for (const [slot, keys] of Object.entries(slots))
@@ -154,13 +155,14 @@ test("hash는 같은 입력에 같은 값, 음수가 아니다", () => {
 });
 
 const NEED = {
-  "aware/ko/then/parent": 10, "aware/ko/now/week": 10, "aware/ko/now/month": 10, "aware/ko/now/c100": 10,
-  "aware/ko/now/c200": 10, "aware/ko/now/c300": 10, "aware/ko/now/year": 10, "aware/ko/now/twoYears": 10,
-  "aware/ko/now/c1000": 10, "aware/ko/now/more": 10, "aware/ko/today/often": 10, "aware/ko/today/sometimes": 10,
-  "aware/ko/today/rarely": 10, "aware/ko/past/start": 10, "aware/ko/past/early": 10, "aware/ko/past/middle": 10,
-  "aware/ko/past/late": 10, "aware/ko/past/last": 10, "aware/ko/met/*": 10, "aware/ko/past/partner.start": 5,
-  "aware/en/now/c100": 5, "aware/ja/now/c100": 5, "aware/en/past/last": 5, "aware/ja/today/often": 5,
-  "warm/ko/now/c100": 3, "calm/ko/now/c100": 3, "aware/es/now/c100": 3, "aware/zh/today/rarely": 3,
+  "aware/ko/then/parent": 10, "aware/ko/now/after.*": 10, "aware/ko/now/*": 10,
+  "aware/ko/today/often": 8, "aware/ko/today/sometimes": 8, "aware/ko/today/rarely": 8,
+  "aware/ko/today/elder.often": 8, "aware/ko/today/elder.sometimes": 8, "aware/ko/today/elder.rarely": 8,
+  "aware/ko/past/start": 6, "aware/ko/past/early": 6, "aware/ko/past/middle": 6, "aware/ko/past/late": 6, "aware/ko/past/last": 6,
+  "aware/ko/past/elder.late": 5, "aware/ko/past/elder.last": 5, "aware/ko/past/partner.start": 5, "aware/ko/past/partner.early": 5,
+  "aware/ko/met/*": 8, "aware/ko/met/elder": 4,
+  "aware/en/now/after.*": 5, "aware/en/now/*": 5, "aware/ja/now/after.*": 5, "aware/en/past/last": 5, "aware/ja/today/often": 5,
+  "warm/ko/now/after.*": 3, "calm/ko/now/after.*": 3, "aware/es/now/*": 3, "aware/zh/today/rarely": 3,
 };
 
 test("문장 은행 분량", () => {
@@ -171,15 +173,15 @@ test("문장 은행 분량", () => {
   }
 });
 
-test("한 문장은 카드 두 줄에 들어갈 만큼 짧다", () => {
-  const vars = { name: "엄마", count: "1,234", span: "12달", pct: "92", n: "12" };
+test("한 줄은 카드 세 줄 안에 들어갈 만큼 짧다", () => {
+  const vars = { name: "엄마", count: "1,234", span: "열한 달", pct: "92", n: "12", me: "당신" };
   for (const [tone, langs] of Object.entries(BANK))
     for (const [lang, slots] of Object.entries(langs))
       for (const keys of Object.values(slots))
         for (const list of Object.values(keys))
           for (const tpl of list) {
             const line = fill(tpl, vars);
-            const limit = ["en", "es"].includes(lang) ? 90 : 44;
+            const limit = ["en", "es"].includes(lang) ? 150 : 72;
             assert.ok(line.length <= limit, `${tone}/${lang} ${line.length}자: ${line}`);
           }
 });
@@ -226,4 +228,54 @@ test("지나간 비율은 '만약에' 빈도가 아니라 실제 빈도로 센�
   const whatIf = buildStory({ person: { ...pal, frequency: { count: 7, unit: "week" } }, remaining: 100, myAge: 35, theirAge: 35,
     tone: "aware", today: "2026-10-07", now: NOW, pastFrequency: pal.frequency });
   assert.equal(whatIf.past, real.past);
+});
+
+const filled = (list, extra = {}) =>
+  new Set(list.map((tpl) => fill(tpl, { name: "엄마", count: "100", span: "넉 달", pct: "98", n: "1", me: "당신", ...extra })));
+
+test("그때 줄이 있으면 지금 줄은 앞 문장을 이어받는 문장(after)에서 고른다", () => {
+  setLang("ko");
+  const after = filled(BANK.aware.ko.now["after.*"]);
+  for (const id of ["a", "b", "c", "d", "e", "f"]) {
+    const s = buildStory({ person: person({ id }), remaining: 100, myAge: 35, tone: "aware", today: "2026-10-07", now: NOW });
+    assert.ok(s.then, id);
+    assert.ok(after.has(s.now), `${id}: ${s.now}`);
+  }
+});
+
+test("부모님께는 높임 문장(elder)을 고른다", () => {
+  setLang("ko");
+  const elder = filled(BANK.aware.ko.today["elder.sometimes"]);
+  for (const id of ["a", "b", "c", "d"]) {
+    const s = buildStory({ person: person({ id }), remaining: 100, myAge: 35, tone: "aware", today: "2026-10-07", now: NOW });
+    assert.ok(elder.has(s.today), `${id}: ${s.today}`);
+  }
+});
+
+test("닉네임이 있으면 '당신' 대신 그 이름으로 부른다", () => {
+  setLang("ko");
+  let used = false;
+  for (const id of "abcdefghijklmnop") {
+    const base = { person: person({ id }), remaining: 100, myAge: 35, tone: "aware", today: "2026-10-07", now: NOW };
+    const plain = buildStory(base);
+    const named = buildStory({ ...base, me: "지훈" });
+    const lines = (s) => [s.then, s.now, s.today, s.past].filter(Boolean).join(" ");
+    assert.ok(!lines(named).includes("당신"), lines(named));
+    if (lines(plain).includes("당신")) {
+      used = true;
+      assert.ok(lines(named).includes("지훈"), lines(named));
+    }
+  }
+  assert.ok(used, "어느 문장도 '당신'을 쓰지 않음");
+});
+
+test("'어때요/어떨까요'로 끝나는 오늘 문장은 드물다", () => {
+  const all = Object.entries(BANK.aware.ko.today).flatMap(([, list]) => list);
+  const asking = all.filter((t) => /어때요|어떨까요/.test(t));
+  assert.ok(asking.length * 5 <= all.length, `${asking.length}/${all.length}`);
+});
+
+test("한국어 찡하게의 중반 이후 맺음 문장은 모두 비율(%)을 말한다", () => {
+  for (const key of ["middle", "late", "last", "elder.late", "elder.last"])
+    for (const tpl of BANK.aware.ko.past[key]) assert.ok(tpl.includes("{pct}"), `${key}: ${tpl}`);
 });

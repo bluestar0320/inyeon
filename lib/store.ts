@@ -246,7 +246,9 @@ function normalise(raw: unknown): AppState {
   if (!isObject(raw)) return EMPTY_STATE;
   return {
     version: 1,
-    profile: isObject(raw.profile) ? refresh(repairSpan(raw.profile) as unknown as Profile) : null,
+    profile: isObject(raw.profile)
+      ? { ...refresh(repairSpan(raw.profile) as unknown as Profile), nickname: text(raw.profile.nickname)?.trim().slice(0, 20) || undefined }
+      : null,
     people: keep(raw.people, repairPerson).map(refresh),
     moments: keep(raw.moments, repairMoment),
     // 결혼 계획이 생기기 전에 저장된 데이터에는 이 키가 없다. null로 떨어뜨린다.

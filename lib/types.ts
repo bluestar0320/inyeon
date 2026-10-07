@@ -81,8 +81,11 @@ export interface LifeSpan extends AgeSource {
 
 export type Sex = "male" | "female" | "all";
 
-/** 나. 지금은 LifeSpan과 필드가 같지만, 계산에서 맡는 역할이 달라 이름을 따로 둔다. */
-export type Profile = LifeSpan;
+/** 나. 계산에는 LifeSpan만 쓰고, 닉네임은 이야기 문장에서 "당신" 대신 부르는 이름이다. */
+export interface Profile extends LifeSpan {
+  /** 비면 "당신". */
+  nickname?: string;
+}
 
 export interface Person extends LifeSpan {
   id: string;

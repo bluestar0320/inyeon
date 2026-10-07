@@ -135,6 +135,34 @@ export function wrapLines(
   return kept;
 }
 
+/**
+ * wrapLines와 같은 줄 수를 지키면서 폭을 줄여 본다. 앞줄만 꽉 차고 마지막 줄에 "못해요."
+ * 한 낱말만 남는 모양을 피하려는 것이다. 줄 수가 늘기 직전의 가장 좁은 폭을 찾는다.
+ */
+export function balanceLines(
+  ctx: Pick<CanvasRenderingContext2D, "measureText">,
+  text: string,
+  maxWidth: number,
+  maxLines: number,
+): string[] {
+  const greedy = wrapLines(ctx, text, maxWidth, maxLines);
+  if (greedy.length < 2 || greedy[greedy.length - 1].endsWith("…")) return greedy;
+  let lo = maxWidth / greedy.length;
+  let hi = maxWidth;
+  let best = greedy;
+  for (let i = 0; i < 12; i += 1) {
+    const mid = (lo + hi) / 2;
+    const lines = wrapLines(ctx, text, mid, maxLines);
+    if (lines.length <= greedy.length && !lines[lines.length - 1].endsWith("…")) {
+      best = lines;
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return best;
+}
+
 /** 숫자가 길어질수록 글자 크기를 줄여 카드 밖으로 나가지 않게 한다. */
 export function valueFontSize(value: string): number {
   const digits = value.replace(/[^0-9]/g, "").length;
@@ -201,9 +229,9 @@ export function drawCard(
   // 이야기 줄이 있으면 사진 카드는 숫자를 조금 올리고 작게 해 두 줄 자리를 낸다.
   const y = image
     ? story.length
-      ? { title: 728, subtitle: 782, baseline: 990, caption: 1044, maxSize: 200, lines: 2 }
+      ? { title: 728, subtitle: 782, baseline: 960, caption: 1008, maxSize: 180, lines: 3 }
       : { title: 728, subtitle: 782, baseline: 1012, caption: 1074, maxSize: 220, lines: 0 }
-    : { title: 460, subtitle: 530, baseline: 830, caption: story.length ? 930 : 940, maxSize: Infinity, lines: 4 };
+    : { title: 460, subtitle: 530, baseline: 830, caption: story.length ? 916 : 940, maxSize: Infinity, lines: 5 };
 
   if (image) {
     const side = 420;
@@ -289,13 +317,13 @@ export function drawCard(
   ctx.textBaseline = "middle";
   if (story.length) {
     ctx.fillStyle = theme.muted;
-    ctx.font = `30px ${FONT_STACK}`;
+    ctx.font = `28px ${FONT_STACK}`;
     const out: string[] = [];
     for (const line of story) {
       if (out.length >= y.lines) break;
-      out.push(...wrapLines(ctx, line, inner, y.lines - out.length));
+      out.push(...balanceLines(ctx, line, inner, y.lines - out.length));
     }
-    out.forEach((line, i) => ctx.fillText(line, cx, y.caption + i * 42));
+    out.forEach((line, i) => ctx.fillText(line, cx, y.caption + i * 38));
   } else if (spec.caption) {
     ctx.fillStyle = theme.muted;
     ctx.font = `34px ${FONT_STACK}`;

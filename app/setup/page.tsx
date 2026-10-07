@@ -17,6 +17,8 @@ const COPY = defineCopy({
   ko: {
     title: "내 정보",
     subtitle: "내 나이 하나면 시작할 수 있어요. 부모님과 남은 만남까지, 30초면 셉니다.",
+    nickname: "부르는 이름 (선택)",
+    nicknamePlaceholder: '비워 두면 "당신"이라고 불러요.',
     ageLabel: "내 나이",
     remaining: "앞으로 남은 시간",
     save: "저장하기",
@@ -26,6 +28,8 @@ const COPY = defineCopy({
   en: {
     title: "My details",
     subtitle: "Your age is all it takes to start. In 30 seconds you’ll see the visits left with your parents.",
+    nickname: "What should we call you? (optional)",
+    nicknamePlaceholder: 'Leave it blank and we’ll just say "you".',
     ageLabel: "My age",
     remaining: "Time ahead",
     save: "Save",
@@ -35,6 +39,8 @@ const COPY = defineCopy({
   ja: {
     title: "自分の情報",
     subtitle: "自分の年齢だけで始められます。親と会える残りの回数まで、30秒で数えます。",
+    nickname: "呼び名(任意)",
+    nicknamePlaceholder: '空欄なら「あなた」と呼びます。',
     ageLabel: "自分の年齢",
     remaining: "これからの時間",
     save: "保存する",
@@ -44,6 +50,8 @@ const COPY = defineCopy({
   es: {
     title: "Mis datos",
     subtitle: "Basta con tu edad para empezar. En 30 segundos verás las veces que te quedan con tus padres.",
+    nickname: "¿Cómo te llamamos? (opcional)",
+    nicknamePlaceholder: 'Si lo dejas vacío, te hablaremos de "tú".',
     ageLabel: "Mi edad",
     remaining: "Tiempo por delante",
     save: "Guardar",
@@ -53,6 +61,8 @@ const COPY = defineCopy({
   zh: {
     title: "我的信息",
     subtitle: "只要填年龄就能开始。30秒就能算出和父母还能见几次。",
+    nickname: "怎么称呼你(选填)",
+    nicknamePlaceholder: '不填就称呼“你”。',
     ageLabel: "我的年龄",
     remaining: "今后的时间",
     save: "保存",
@@ -133,7 +143,21 @@ export default function SetupPage() {
 
       <EditConflict conflict={conflict} />
 
-      <div className="card">
+      <div className="card space-y-4">
+        {/* 선택 칸. 비워도 저장된다 — 이야기 문장에서 "당신" 대신 부를 이름일 뿐이다. */}
+        <div>
+          <label className="label" htmlFor="setup-nickname">
+            {t.nickname}
+          </label>
+          <input
+            id="setup-nickname"
+            className="input"
+            maxLength={20}
+            value={draft.nickname ?? ""}
+            placeholder={t.nicknamePlaceholder}
+            onChange={(e) => setDraft({ ...draft, nickname: e.target.value || undefined })}
+          />
+        </div>
         <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.ageLabel} showHealth />
       </div>
 

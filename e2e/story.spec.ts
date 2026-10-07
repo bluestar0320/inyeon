@@ -88,3 +88,14 @@ test("「지금까지도 함께 보기」를 끄면 지나간 비율도 빠진�
   await expect(page.getByTestId("story-past")).toHaveCount(0);
   await expect(page.getByTestId("story-then")).toHaveCount(0);
 });
+
+test("내 정보의 부르는 이름은 선택 칸이고, 넣으면 저장된다", async ({ page }) => {
+  await clearState(page);
+  await page.goto("/setup");
+  await page.getByLabel("내 나이").fill("35");
+  await page.getByLabel("부르는 이름 (선택)").fill("지훈");
+  await page.getByRole("button", { name: "저장하기" }).click();
+  await page.waitForURL(/people\/new|\/$/);
+  const nickname = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).profile.nickname, STORAGE_KEY);
+  expect(nickname).toBe("지훈");
+});

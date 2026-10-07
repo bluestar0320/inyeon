@@ -33,20 +33,19 @@ export default function StoryLines({
   const { saveSettings } = useActions();
 
   return (
-    <div data-testid="story" className="space-y-1.5 text-[15px] leading-relaxed text-ink-800">
-      {story.then && (
-        <p data-testid="story-then" className="text-ink-600">
-          {story.then}
-        </p>
-      )}
-      {story.now && <p data-testid="story-now">{story.now}</p>}
-      {story.today && (
-        <p data-testid="story-today" className="font-medium">
-          {story.today}
-        </p>
-      )}
+    <div data-testid="story" className="space-y-3 text-[15px] leading-relaxed text-ink-800">
+      {/* 그때 · 지금 · 오늘은 한 사람이 이어 말하듯 한 문단으로 붙인다. */}
+      <p>
+        {story.then && <span data-testid="story-then">{story.then} </span>}
+        {story.now && <span data-testid="story-now">{story.now} </span>}
+        {story.today && (
+          <span data-testid="story-today" className="font-medium">
+            {story.today}
+          </span>
+        )}
+      </p>
       {story.past && (
-        <div className="pt-2">
+        <div>
           <p data-testid="story-past">{story.past}</p>
           {story.assumed && (
             <p className="mt-0.5 text-[11px] text-ink-400">
@@ -59,7 +58,7 @@ export default function StoryLines({
         </div>
       )}
       {returning && (
-        <div data-testid="story-tone" className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-ink-400">
+        <div data-testid="story-tone" className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-ink-400">
           <span>{t.tone}</span>
           {TONE_ORDER.map((tone) => {
             const active = state.settings.tone === tone;

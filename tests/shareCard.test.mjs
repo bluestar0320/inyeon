@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { safeFileName, truncateToWidth, valueFontSize, wrapLines } from "../lib/shareCard.ts";
+import { balanceLines, safeFileName, truncateToWidth, valueFontSize, wrapLines } from "../lib/shareCard.ts";
 
 /** 글자 하나를 10px로 보는 가짜 측정기. 실제 폰트 없이 자르기 규칙만 확인한다. */
 const fakeCtx = (perChar = 10) => ({
@@ -72,4 +72,15 @@ test("공백 없는 긴 글(한·중·일)은 글자 사이에서 끊는다", ()
   const lines = wrapLines(fakeCtx(10), "只剩十次了就算每天见面也不到一个月", 60, 5);
   for (const line of lines) assert.ok(line.length * 10 <= 60, line);
   assert.equal(lines.join(""), "只剩十次了就算每天见面也不到一个月");
+});
+
+test("두 줄로 나뉘면 길이를 고르게 맞춘다 — 마지막 줄에 한 낱말만 남기지 않는다", () => {
+  const ctx = fakeCtx(10);
+  const text = "지금은 582번이 남았어요. 매일 만난다 해도 2년을 다 채우지 못해요.";
+  const greedy = wrapLines(ctx, text, 340, 3);
+  const even = balanceLines(ctx, text, 340, 3);
+  assert.equal(even.length, greedy.length);
+  assert.ok(Math.min(...even.map((l) => l.length)) > Math.min(...greedy.map((l) => l.length)), even.join(" / "));
+  assert.equal(even.join(" ").replace(/\s+/g, " "), text);
+  for (const line of even) assert.ok(line.length * 10 <= 340, line);
 });

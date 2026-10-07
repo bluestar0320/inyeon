@@ -201,8 +201,9 @@ export default function PersonView({ person }: { person: Person }) {
         showPast: state.settings.showPast,
         // 지나간 쪽은 "만약에"가 아니라 실제 빈도로 센다 — 바로 아래 지나온 막대와 같은 기준.
         pastFrequency: person.frequency,
+        me: state.profile?.nickname,
       }),
-    [draft, result.total, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency],
+    [draft, result.total, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, state.profile?.nickname],
   );
   // 다시 들어온 사람에게만 말투 바꾸기를 보인다. createdAt은 UTC라 기기 날짜로 바꿔 비교한다.
   const created = new Date(person.createdAt);
@@ -249,7 +250,8 @@ export default function PersonView({ person }: { person: Person }) {
           value: formatCount(result.total),
           unit: t.timesUnit,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,
-          story: story ? [story.now, story.today, story.past].filter((line): line is string => Boolean(line)) : undefined,
+          // 카드에는 숫자를 풀어 쓴 지금 줄과 맺음(비율)만 — 오늘 할 일은 보는 사람의 몫이 아니다.
+          story: story ? [story.now, story.past ?? story.today].filter((line): line is string => Boolean(line)) : undefined,
         }}
         story={story && <StoryLines story={story} personId={person.id} returning={returning} />}
         shareFileName={[person.name, t.times(formatCount(result.total))]}
