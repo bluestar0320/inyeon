@@ -191,8 +191,18 @@ export default function PersonView({ person }: { person: Person }) {
   const theirAge = resolveAge(person);
   const story = useMemo(
     () =>
-      buildStory({ person: draft, remaining: result.total, myAge, theirAge, tone: state.settings.tone, today: todayISO() }),
-    [draft, result.total, myAge, theirAge, state.settings.tone],
+      buildStory({
+        person: draft,
+        remaining: result.total,
+        myAge,
+        theirAge,
+        tone: state.settings.tone,
+        today: todayISO(),
+        showPast: state.settings.showPast,
+        // 지나간 쪽은 "만약에"가 아니라 실제 빈도로 센다 — 바로 아래 지나온 막대와 같은 기준.
+        pastFrequency: person.frequency,
+      }),
+    [draft, result.total, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency],
   );
   // 다시 들어온 사람에게만 말투 바꾸기를 보인다. createdAt은 UTC라 기기 날짜로 바꿔 비교한다.
   const created = new Date(person.createdAt);

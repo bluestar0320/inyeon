@@ -1,4 +1,4 @@
-import { defineCopy, tr } from "./i18n";
+import { defineCopy, tr } from "./i18n.ts";
 import type { CalcFilter, Frequency, MomentHorizon } from "./types";
 
 /*

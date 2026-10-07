@@ -74,3 +74,17 @@ test("설정을 건드리지 않은 사람의 기본 말투는 「찡하게」�
   await page.goto("/settings");
   await expect(page.getByRole("button", { name: /찡하게/ })).toHaveAttribute("aria-pressed", "true");
 });
+
+test("「지금까지도 함께 보기」를 끄면 지나간 비율도 빠진다", async ({ page }) => {
+  await seed(page, "어머니", "엄마");
+  await expect(page.getByTestId("story-past")).toBeVisible();
+  await page.evaluate((key) => {
+    const s = JSON.parse(localStorage.getItem(key)!);
+    s.settings.showPast = false;
+    localStorage.setItem(key, JSON.stringify(s));
+  }, STORAGE_KEY);
+  await page.reload();
+  await expect(page.getByTestId("story-now")).toBeVisible();
+  await expect(page.getByTestId("story-past")).toHaveCount(0);
+  await expect(page.getByTestId("story-then")).toHaveCount(0);
+});

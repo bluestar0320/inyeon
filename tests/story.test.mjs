@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { setLang } from "../lib/i18n.ts";
+import { relationPresets } from "../lib/presets.ts";
 import { BANK } from "../lib/storyBank.ts";
 import {
   buildStory, countBand, fill, freqBand, hash, metLine, pastBand, pastShare, relationKind, spanText,
@@ -187,4 +188,42 @@ test("한국어 만났어요 문장은 모두 '올해 n번째'를 담는다", ()
   for (const tone of ["aware", "warm", "calm"])
     for (const list of Object.values(BANK[tone].ko?.met ?? {}))
       for (const tpl of list) assert.ok(tpl.includes("{n}번째"), `${tone}: ${tpl}`);
+});
+
+test("관계 판별: 사돈·친척·낱말 일부가 부모님·자녀로 잡히지 않는다", () => {
+  for (const r of ["시어머니", "장모님", "큰아버지", "작은어머니", "mother-in-law", "godfather", "叔父", "伯母", "姑妈", "舅妈", "姨妈", "母校"])
+    assert.notEqual(relationKind(r), "parent", r);
+  for (const r of ["Jason", "person", "Madison"]) assert.equal(relationKind(r), "other", r);
+  assert.equal(relationKind("아이돌 친구"), "friend");
+  for (const r of ["grandson", "granddaughter"]) assert.notEqual(relationKind(r), "grandparent", r);
+  assert.equal(relationKind("business partner"), "other");
+  assert.equal(relationKind("부모님"), "parent");
+  assert.equal(relationKind("Mommy"), "parent");
+});
+
+test("관계 판별: 5개 언어의 프리셋 이름은 모두 제자리로", () => {
+  const expected = ["parent", "parent", "grandparent", "sibling", "partner", "child", "friend"];
+  for (const lang of ["ko", "en", "ja", "es", "zh"]) {
+    setLang(lang);
+    assert.deepEqual(relationPresets().map((p) => relationKind(p.relation)), expected, lang);
+  }
+  setLang("ko");
+});
+
+test("지나간 비율은 설정으로 끌 수 있다 — 끄면 그때·비율·가정이 모두 빠진다", () => {
+  setLang("ko");
+  const s = buildStory({ person: person(), remaining: 100, myAge: 35, tone: "aware", today: "2026-10-07", now: NOW, showPast: false });
+  assert.equal(s.then, undefined);
+  assert.equal(s.past, undefined);
+  assert.equal(s.assumed, false);
+  assert.ok(s.now && s.today);
+});
+
+test("지나간 비율은 '만약에' 빈도가 아니라 실제 빈도로 센다", () => {
+  setLang("ko");
+  const pal = person({ name: "민수", relation: "친구", since: "2016-10-07", frequency: { count: 1, unit: "month" } });
+  const real = buildStory({ person: pal, remaining: 100, myAge: 35, theirAge: 35, tone: "aware", today: "2026-10-07", now: NOW });
+  const whatIf = buildStory({ person: { ...pal, frequency: { count: 7, unit: "week" } }, remaining: 100, myAge: 35, theirAge: 35,
+    tone: "aware", today: "2026-10-07", now: NOW, pastFrequency: pal.frequency });
+  assert.equal(whatIf.past, real.past);
 });
