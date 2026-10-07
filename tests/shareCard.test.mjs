@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { safeFileName, truncateToWidth, valueFontSize } from "../lib/shareCard.ts";
+import { safeFileName, truncateToWidth, valueFontSize, wrapLines } from "../lib/shareCard.ts";
 
 /** 글자 하나를 10px로 보는 가짜 측정기. 실제 폰트 없이 자르기 규칙만 확인한다. */
 const fakeCtx = (perChar = 10) => ({
@@ -53,4 +53,23 @@ test("화면 밖(서버)에서 쓰는 예비 색도 지금 종이 팔레트다",
     accent: "#a85230",
     border: "#e2d8ca",
   });
+});
+
+test("이야기 줄은 폭에 맞춰 나누고, 넘치면 마지막 줄을 줄임표로 자른다", () => {
+  const ctx = fakeCtx(10);
+  assert.deepEqual(wrapLines(ctx, "짧은 문장", 100, 2), ["짧은 문장"]);
+  const lines = wrapLines(ctx, "이제 남은 건 100번. 매일 만난다 해도 4달이 채 안 돼요.", 120, 2);
+  assert.equal(lines.length, 2);
+  for (const line of lines) assert.ok(line.length * 10 <= 120, line);
+  assert.ok(lines[1].endsWith("…"));
+});
+
+test("영어는 낱말 사이에서 끊는다", () => {
+  assert.deepEqual(wrapLines(fakeCtx(10), "Even if you met every day", 120, 3), ["Even if you", "met every", "day"]);
+});
+
+test("공백 없는 긴 글(한·중·일)은 글자 사이에서 끊는다", () => {
+  const lines = wrapLines(fakeCtx(10), "只剩十次了就算每天见面也不到一个月", 60, 5);
+  for (const line of lines) assert.ok(line.length * 10 <= 60, line);
+  assert.equal(lines.join(""), "只剩十次了就算每天见面也不到一个月");
 });

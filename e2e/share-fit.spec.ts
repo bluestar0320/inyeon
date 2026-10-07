@@ -9,11 +9,11 @@ import { STORAGE_KEY, clearState } from "./helpers";
 
 const now = new Date().toISOString();
 
-function state(lang: string, name: string, count: number, unit: string, theme = "light") {
+function state(lang: string, name: string, count: number, unit: string, theme = "light", relation?: string) {
   return {
     version: 1,
     profile: { ageYears: 20, ageAsOf: "2026-01-01", lifeExpectancy: 90, lifeExpectancyManual: true, countryCode: "KR", sex: "all" },
-    people: [{ id: "p1", name, emoji: "👩‍👩‍👧‍👦", ageYears: 20, ageAsOf: "2026-01-01", lifeExpectancy: 90, lifeExpectancyManual: true,
+    people: [{ id: "p1", name, relation, emoji: "👩‍👩‍👧‍👦", ageYears: 20, ageAsOf: "2026-01-01", lifeExpectancy: 90, lifeExpectancyManual: true,
       countryCode: "KR", sex: "female", frequency: { count, unit }, filters: [], createdAt: now, updatedAt: now }],
     moments: [], marriage: null,
     settings: { tone: "calm", theme, showPast: true, language: lang },
@@ -76,6 +76,15 @@ const cases: [string, string, number, string][] = [
 for (const [lang, name, count, unit] of cases) {
   test(`카드: ${lang} ${count}/${unit} ${name.slice(0, 10)}`, async ({ page }) => {
     const r = await card(page, state(lang, name, count, unit));
+    expect(r.strayPixels).toBe(0);
+  });
+}
+
+// 부모님이면 이야기 줄(지금·오늘·지나간 비율)이 숫자 아래에 들어간다. 여백 밖으로 나가면 안 된다.
+const storyCases: [string, string][] = [["ko", "엄마"], ["en", "Mom"], ["ja", "お母さん"], ["zh", "妈妈"], ["es", "Mamá"]];
+for (const [lang, name] of storyCases) {
+  test(`카드: 이야기 ${lang} ${name}`, async ({ page }) => {
+    const r = await card(page, state(lang, name, 1, "month", "light", name));
     expect(r.strayPixels).toBe(0);
   });
 }

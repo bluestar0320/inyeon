@@ -103,6 +103,38 @@ export function truncateToWidth(
   return `${cut}…`;
 }
 
+/** 이야기 줄은 자르지 않고 나눈다. 공백이 있으면 낱말 사이에서, 없으면(한·중·일) 글자 사이에서. */
+export function wrapLines(
+  ctx: Pick<CanvasRenderingContext2D, "measureText">,
+  text: string,
+  maxWidth: number,
+  maxLines: number,
+): string[] {
+  const lines: string[] = [];
+  let line = "";
+  for (const ch of Array.from(text.trim())) {
+    if (line === "" || ctx.measureText(line + ch).width <= maxWidth) {
+      line += ch;
+      continue;
+    }
+    const cut = line.lastIndexOf(" ");
+    if (ch !== " " && cut > 0) {
+      lines.push(line.slice(0, cut));
+      line = line.slice(cut + 1) + ch;
+    } else {
+      lines.push(line.trimEnd());
+      line = ch === " " ? "" : ch;
+    }
+  }
+  if (line) lines.push(line);
+  if (lines.length <= maxLines) return lines;
+  // 넘치면 마지막 줄에 나머지를 붙여 줄임표로 자른다 — 잘렸다는 걸 보여야 한다.
+  const kept = lines.slice(0, maxLines);
+  const last = truncateToWidth(ctx, lines.slice(maxLines - 1).join(" "), maxWidth);
+  kept[maxLines - 1] = last.endsWith("…") ? last : truncateToWidth(ctx, `${last}…`, maxWidth);
+  return kept;
+}
+
 /** 숫자가 길어질수록 글자 크기를 줄여 카드 밖으로 나가지 않게 한다. */
 export function valueFontSize(value: string): number {
   const digits = value.replace(/[^0-9]/g, "").length;
@@ -165,9 +197,13 @@ export function drawCard(
    * 사진이 있으면 위쪽에 살짝 기운 폴라로이드로 걸고, 글자와 숫자를 그만큼 아래로 내린다.
    * 없으면 예전처럼 이모지 한 개.
    */
+  const story = spec.story?.filter(Boolean) ?? [];
+  // 이야기 줄이 있으면 사진 카드는 숫자를 조금 올리고 작게 해 두 줄 자리를 낸다.
   const y = image
-    ? { title: 728, subtitle: 782, baseline: 1012, caption: 1074, maxSize: 220 }
-    : { title: 460, subtitle: 530, baseline: 830, caption: 940, maxSize: Infinity };
+    ? story.length
+      ? { title: 728, subtitle: 782, baseline: 990, caption: 1044, maxSize: 200, lines: 2 }
+      : { title: 728, subtitle: 782, baseline: 1012, caption: 1074, maxSize: 220, lines: 0 }
+    : { title: 460, subtitle: 530, baseline: 830, caption: story.length ? 930 : 940, maxSize: Infinity, lines: 4 };
 
   if (image) {
     const side = 420;
@@ -251,7 +287,16 @@ export function drawCard(
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  if (spec.caption) {
+  if (story.length) {
+    ctx.fillStyle = theme.muted;
+    ctx.font = `30px ${FONT_STACK}`;
+    const out: string[] = [];
+    for (const line of story) {
+      if (out.length >= y.lines) break;
+      out.push(...wrapLines(ctx, line, inner, y.lines - out.length));
+    }
+    out.forEach((line, i) => ctx.fillText(line, cx, y.caption + i * 42));
+  } else if (spec.caption) {
     ctx.fillStyle = theme.muted;
     ctx.font = `34px ${FONT_STACK}`;
     ctx.fillText(truncateToWidth(ctx, spec.caption, inner), cx, y.caption);
