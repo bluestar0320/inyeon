@@ -38,6 +38,8 @@ export interface ShareSpec {
   caption?: string;
   /** 카드 위쪽 폴라로이드에 넣을 사진 주소. 있으면 이모지 대신 사진이 들어간다. */
   photo?: string;
+  /** 숫자 아래 이야기 줄(지금·오늘·비율). 있으면 caption 대신 그린다. */
+  story?: string[];
 }
 
 export interface CardTheme {

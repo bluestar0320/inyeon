@@ -9,6 +9,7 @@ import { hintFor } from "@/components/DecayHint";
 import MeetingLog from "@/components/MeetingLog";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
+import StoryLines from "@/components/StoryLines";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
 import { DEFAULT_GROWTH, computeGrowth, computePast, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
@@ -20,10 +21,12 @@ import {
   formatInterval,
   formatYears,
   josa,
+  todayISO,
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
 import { photoFor } from "@/lib/photos";
+import { buildStory } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Person } from "@/lib/types";
@@ -184,6 +187,17 @@ export default function PersonView({ person }: { person: Person }) {
     [draft, state.profile],
   );
   const growth = useMemo(() => computeGrowth(person), [person]);
+  const myAge = state.profile ? resolveAge(state.profile) : null;
+  const theirAge = resolveAge(person);
+  const story = useMemo(
+    () =>
+      buildStory({ person: draft, remaining: result.total, myAge, theirAge, tone: state.settings.tone, today: todayISO() }),
+    [draft, result.total, myAge, theirAge, state.settings.tone],
+  );
+  // 다시 들어온 사람에게만 말투 바꾸기를 보인다. createdAt은 UTC라 기기 날짜로 바꿔 비교한다.
+  const created = new Date(person.createdAt);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const returning = `${created.getFullYear()}-${pad(created.getMonth() + 1)}-${pad(created.getDate())}` !== todayISO();
   // 설정을 끄면 시작점이 있어도 안 보인다. 어림값이라 끌 수 있어야 한다.
   const past = useMemo(
     () =>
@@ -225,7 +239,9 @@ export default function PersonView({ person }: { person: Person }) {
           value: formatCount(result.total),
           unit: t.timesUnit,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,
+          story: story ? [story.now, story.today, story.past].filter((line): line is string => Boolean(line)) : undefined,
         }}
+        story={story && <StoryLines story={story} personId={person.id} returning={returning} />}
         shareFileName={[person.name, t.times(formatCount(result.total))]}
         past={past}
         stats={[

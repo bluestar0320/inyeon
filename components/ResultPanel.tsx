@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
@@ -61,6 +63,7 @@ export default function ResultPanel({
   share,
   shareFileName,
   past,
+  story,
 }: {
   label: string;
   result: CountResult;
@@ -72,6 +75,8 @@ export default function ResultPanel({
   shareFileName?: string[];
   /** 시작점을 넣었고 설정이 켜져 있을 때만 온다. 없으면 막대를 그리지 않는다. */
   past?: PastResult | null;
+  /** 큰 숫자 아래의 이야기. 있으면 sentence 대신 이것을 보인다. */
+  story?: ReactNode;
 }) {
   const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
@@ -92,7 +97,8 @@ export default function ResultPanel({
 
   return (
     <div className="hero space-y-6">
-      <BigNumber label={label} value={formatCount(result.total)} unit={t.unit} sub={sentence} />
+      <BigNumber label={label} value={formatCount(result.total)} unit={t.unit} sub={story ? undefined : sentence} />
+      {story}
 
       {/*
         줄어든 사실은 상자에 담지 않는다. 이 블록 안에 또 상자를 넣으면 숫자와
