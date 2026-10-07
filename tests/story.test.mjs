@@ -151,3 +151,40 @@ test("hash는 같은 입력에 같은 값, 음수가 아니다", () => {
   assert.equal(hash("p1now"), hash("p1now"));
   assert.ok(hash("x") >= 0);
 });
+
+const NEED = {
+  "aware/ko/then/parent": 10, "aware/ko/now/week": 10, "aware/ko/now/month": 10, "aware/ko/now/c100": 10,
+  "aware/ko/now/c200": 10, "aware/ko/now/c300": 10, "aware/ko/now/year": 10, "aware/ko/now/twoYears": 10,
+  "aware/ko/now/c1000": 10, "aware/ko/now/more": 10, "aware/ko/today/often": 10, "aware/ko/today/sometimes": 10,
+  "aware/ko/today/rarely": 10, "aware/ko/past/start": 10, "aware/ko/past/early": 10, "aware/ko/past/middle": 10,
+  "aware/ko/past/late": 10, "aware/ko/past/last": 10, "aware/ko/met/*": 10, "aware/ko/past/partner.start": 5,
+  "aware/en/now/c100": 5, "aware/ja/now/c100": 5, "aware/en/past/last": 5, "aware/ja/today/often": 5,
+  "warm/ko/now/c100": 3, "calm/ko/now/c100": 3, "aware/es/now/c100": 3, "aware/zh/today/rarely": 3,
+};
+
+test("문장 은행 분량", () => {
+  for (const [path, min] of Object.entries(NEED)) {
+    const [tone, lang, slot, key] = path.split("/");
+    const n = BANK[tone]?.[lang]?.[slot]?.[key]?.length ?? 0;
+    assert.ok(n >= min, `${path}: ${n} < ${min}`);
+  }
+});
+
+test("한 문장은 카드 두 줄에 들어갈 만큼 짧다", () => {
+  const vars = { name: "엄마", count: "1,234", span: "12달", pct: "92", n: "12" };
+  for (const [tone, langs] of Object.entries(BANK))
+    for (const [lang, slots] of Object.entries(langs))
+      for (const keys of Object.values(slots))
+        for (const list of Object.values(keys))
+          for (const tpl of list) {
+            const line = fill(tpl, vars);
+            const limit = ["en", "es"].includes(lang) ? 90 : 44;
+            assert.ok(line.length <= limit, `${tone}/${lang} ${line.length}자: ${line}`);
+          }
+});
+
+test("한국어 만났어요 문장은 모두 '올해 n번째'를 담는다", () => {
+  for (const tone of ["aware", "warm", "calm"])
+    for (const list of Object.values(BANK[tone].ko?.met ?? {}))
+      for (const tpl of list) assert.ok(tpl.includes("{n}번째"), `${tone}: ${tpl}`);
+});
