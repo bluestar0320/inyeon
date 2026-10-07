@@ -388,7 +388,7 @@ test.describe("순간 반복 추가", () => {
     await page.getByRole("button", { name: "추가하기" }).click();
     await page.waitForURL(/\/moments\/?$/);
     // 원본을 덮어쓰지 않고 둘 다 남아야 한다.
-    await expect(page.locator("a.card")).toHaveCount(2);
+    await expect(page.getByTestId("moment-tile")).toHaveCount(2);
   });
 
   test("보던 것에서 바로 비슷한 것을 만든다", async ({ page }) => {
@@ -398,7 +398,7 @@ test.describe("순간 반복 추가", () => {
     await page.getByRole("button", { name: "추가하기" }).click();
     await page.waitForURL(/\/moments\/?$/);
 
-    await page.locator("a.card").first().click();
+    await page.getByTestId("moment-tile").first().click();
     await page.waitForURL(/\/moments\/detail/);
     await page.getByRole("link", { name: "비슷한 것 추가" }).click();
     await page.waitForURL(/\/moments\/new/);

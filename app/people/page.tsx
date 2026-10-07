@@ -17,6 +17,7 @@ import {
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { photoFor } from "@/lib/photos";
+import { relationTag } from "@/lib/story";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import type { Person } from "@/lib/types";
@@ -327,7 +328,7 @@ export default function PeoplePage() {
                     목록에서 서로를 구분한다.
                   */}
                   <span className="block text-xs text-ink-400">
-                    {[person.relation, formatAge(resolveAge(person))]
+                    {[relationTag(person.name, person.relation), formatAge(resolveAge(person))]
                       .filter((part) => part && part !== "-")
                       .map((part) => `${part} · `)
                       .join("")}

@@ -27,7 +27,7 @@ import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
 import { photoFor } from "@/lib/photos";
-import { buildStory } from "@/lib/story";
+import { buildStory, relationTag } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Person } from "@/lib/types";
@@ -281,7 +281,7 @@ export default function PersonView({ person }: { person: Person }) {
         {/* 이름은 화면 제목과 히어로에 이미 두 번 나왔다. 여기서 또 쓰지 않는다. */}
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold tracking-[0.1em] text-ink-400">
-            {person.relation ?? t.info}
+            {relationTag(person.name, person.relation) ?? t.info}
           </p>
           <Link href={`/people/edit?id=${person.id}`} className="btn-secondary shrink-0" prefetch={false}>
             {t.edit}

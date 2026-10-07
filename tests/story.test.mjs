@@ -5,7 +5,7 @@ import { setLang } from "../lib/i18n.ts";
 import { relationPresets } from "../lib/presets.ts";
 import { BANK } from "../lib/storyBank.ts";
 import {
-  buildStory, countBand, fill, freqBand, hash, metLine, pastBand, pastShare, relationKind, spanText,
+  buildStory, countBand, fill, freqBand, hash, metLine, pastBand, pastShare, relationKind, relationTag, spanText,
 } from "../lib/story.ts";
 
 const NOW = new Date("2026-10-07T12:00:00");
@@ -305,4 +305,15 @@ test("75세 이상이고 남은 횟수가 100번 이하면 날짜로 줄여 보�
   // 아직 75세 전이면 원래 문장
   const s = buildStory({ person: person({ id: "m1" }), remaining: 60, myAge: 40, theirAge: 70, tone: "aware", today: "2026-10-07", now: NOW });
   assert.ok(!filled(BANK.aware.ko.today.senior).has(s.today));
+});
+
+test("이름과 관계가 같은 말이면 관계를 따로 붙이지 않는다", () => {
+  assert.equal(relationTag("어머니", "어머니"), undefined);
+  assert.equal(relationTag("엄마", "어머니"), undefined);
+  assert.equal(relationTag("할머니", "조부모"), undefined);
+  assert.equal(relationTag("Mom", "Mom"), undefined);
+  assert.equal(relationTag("민수", "친구"), "친구");
+  assert.equal(relationTag("김영희", "어머니"), "어머니");
+  assert.equal(relationTag("엄마", undefined), undefined);
+  assert.equal(relationTag("엄마", "  "), undefined);
 });

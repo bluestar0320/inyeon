@@ -7,7 +7,8 @@ import type { Frequency, FrequencyUnit } from "@/lib/types";
 import { unitLabel } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 
-const UNITS: FrequencyUnit[] = ["day", "week", "month", "quarter", "year"];
+// 몇 해에 한 번 하는 일(콘서트, 해외여행)도 고를 수 있게 2·3·5·10년을 둔다.
+const UNITS: FrequencyUnit[] = ["day", "week", "month", "quarter", "year", "year2", "year3", "year5", "year10"];
 
 const COPY = defineCopy({
   ko: {
@@ -20,7 +21,17 @@ const COPY = defineCopy({
   en: {
     label: "How often",
     option: (unit) =>
-      ({ day: "Each day", week: "Each week", month: "Each month", quarter: "Each quarter", year: "Each year" })[unit],
+      ({
+        day: "Each day",
+        week: "Each week",
+        month: "Each month",
+        quarter: "Each quarter",
+        year: "Each year",
+        year2: "Every 2 years",
+        year3: "Every 3 years",
+        year5: "Every 5 years",
+        year10: "Every 10 years",
+      })[unit],
     unitAria: "Frequency unit",
     countAria: "Number of times",
     times: "times",
@@ -35,7 +46,17 @@ const COPY = defineCopy({
   es: {
     label: "Frecuencia",
     option: (unit) =>
-      ({ day: "Al día", week: "A la semana", month: "Al mes", quarter: "Al trimestre", year: "Al año" })[unit],
+      ({
+        day: "Al día",
+        week: "A la semana",
+        month: "Al mes",
+        quarter: "Al trimestre",
+        year: "Al año",
+        year2: "Cada 2 años",
+        year3: "Cada 3 años",
+        year5: "Cada 5 años",
+        year10: "Cada 10 años",
+      })[unit],
     unitAria: "Unidad de frecuencia",
     countAria: "Número de veces",
     times: "veces",

@@ -62,7 +62,7 @@ function refresh<T extends { ageYears?: number; ageAsOf?: string }>(span: T): T 
   return refreshLifeSpan(withDate as T & Parameters<typeof refreshLifeSpan>[0]) as T;
 }
 
-const UNITS = ["day", "week", "month", "quarter", "year"];
+const UNITS = ["day", "week", "month", "quarter", "year", "year2", "year3", "year5", "year10"];
 const FILTER_KINDS = ["multiplier", "decay", "window", "cap"];
 const TONES = ["calm", "warm", "aware"];
 const THEMES = ["system", "light", "dark"];

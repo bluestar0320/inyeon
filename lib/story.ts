@@ -51,6 +51,19 @@ export function relationKind(relation: string | undefined): Rel {
   return "other";
 }
 
+/**
+ * 이름 옆에 붙일 관계. 이름과 관계가 같은 말이거나("어머니 · 어머니") 같은 칸의 말이면
+ * ("엄마 · 어머니", "할머니 · 조부모") 하나만 보이게 비운다. "민수 · 친구"는 그대로.
+ */
+export function relationTag(name: string, relation: string | undefined): string | undefined {
+  const rel = relation?.trim();
+  if (!rel) return undefined;
+  if (rel === name.trim()) return undefined;
+  const kind = relationKind(name);
+  if (kind !== "other" && kind === relationKind(rel)) return undefined;
+  return rel;
+}
+
 const COUNT_BANDS: [number, CountBand][] = [
   [7, "week"], [30, "month"], [100, "c100"], [200, "c200"], [300, "c300"], [365, "year"], [730, "twoYears"], [1000, "c1000"],
 ];

@@ -3,7 +3,7 @@ import type { Frequency, FrequencyUnit } from "./types";
 
 const COPY = defineCopy({
   ko: {
-    unit: { day: "하루", week: "주", month: "한 달", quarter: "분기", year: "1년" } as Record<FrequencyUnit, string>,
+    unit: { day: "하루", week: "주", month: "한 달", quarter: "분기", year: "1년", year2: "2년", year3: "3년", year5: "5년", year10: "10년" } as Record<FrequencyUnit, string>,
     frequency: (unit: string, count: string) => `${unit}에 ${count}번`,
     lessThanMonth: "1개월 미만",
     months: (n: number) => `${n}개월`,
@@ -19,7 +19,7 @@ const COPY = defineCopy({
     days: (n: number) => `${n}일`,
   },
   en: {
-    unit: { day: "a day", week: "a week", month: "a month", quarter: "a quarter", year: "a year" },
+    unit: { day: "a day", week: "a week", month: "a month", quarter: "a quarter", year: "a year", year2: "every 2 years", year3: "every 3 years", year5: "every 5 years", year10: "every 10 years" },
     frequency: (unit, count) => `${count} ${count === "1" ? "time" : "times"} ${unit}`,
     lessThanMonth: "under a month",
     months: (n) => `${n} ${n === 1 ? "month" : "months"}`,
@@ -35,7 +35,7 @@ const COPY = defineCopy({
     days: (n) => `${n} ${n === 1 ? "day" : "days"}`,
   },
   ja: {
-    unit: { day: "1日", week: "週", month: "月", quarter: "四半期", year: "年" },
+    unit: { day: "1日", week: "週", month: "月", quarter: "四半期", year: "年", year2: "2年", year3: "3年", year5: "5年", year10: "10年" },
     frequency: (unit, count) => `${unit}に${count}回`,
     lessThanMonth: "1か月未満",
     months: (n) => `${n}か月`,
@@ -51,7 +51,7 @@ const COPY = defineCopy({
     days: (n) => `${n}日`,
   },
   es: {
-    unit: { day: "al día", week: "a la semana", month: "al mes", quarter: "al trimestre", year: "al año" },
+    unit: { day: "al día", week: "a la semana", month: "al mes", quarter: "al trimestre", year: "al año", year2: "cada 2 años", year3: "cada 3 años", year5: "cada 5 años", year10: "cada 10 años" },
     frequency: (unit, count) => `${count} ${count === "1" ? "vez" : "veces"} ${unit}`,
     lessThanMonth: "menos de un mes",
     months: (n) => `${n} ${n === 1 ? "mes" : "meses"}`,
@@ -67,7 +67,7 @@ const COPY = defineCopy({
     days: (n) => `${n} ${n === 1 ? "día" : "días"}`,
   },
   zh: {
-    unit: { day: "每天", week: "每周", month: "每月", quarter: "每季度", year: "每年" },
+    unit: { day: "每天", week: "每周", month: "每月", quarter: "每季度", year: "每年", year2: "每2年", year3: "每3年", year5: "每5年", year10: "每10年" },
     frequency: (unit, count) => `${unit}${count}次`,
     lessThanMonth: "不到1个月",
     months: (n) => `${n}个月`,

@@ -1,7 +1,8 @@
 import type { Lang } from "./i18n";
 
 /** 빈도를 표현하는 단위. "주 2회"는 { count: 2, unit: "week" }. */
-export type FrequencyUnit = "day" | "week" | "month" | "quarter" | "year";
+/** year2·year3·year5·year10은 "N년에 count번" — 콘서트·해외여행처럼 몇 해에 한 번 하는 일. */
+export type FrequencyUnit = "day" | "week" | "month" | "quarter" | "year" | "year2" | "year3" | "year5" | "year10";
 
 export interface Frequency {
   count: number;

@@ -116,3 +116,25 @@ test("평균수명을 넘기신 분: 적어 둔 예상 수명을 지나도 0번�
   await expect(page.getByTestId("story-cheer")).toContainText("대한민국");
   await expect(page.getByTestId("story-now")).not.toContainText("날짜");
 });
+
+test("순간 목록은 폰에서 두 칸 타일이라 한 화면에 네 개쯤 보이고, 몇 년에 한 번도 고를 수 있다", async ({ page }) => {
+  await clearState(page);
+  const moment = (id: string, title: string) => ({ id, title, frequency: { count: 1, unit: "year2" }, filters: [],
+    createdAt: created(0), updatedAt: created(0) });
+  const value = {
+    version: 1,
+    profile: { ageYears: 35, ageAsOf: "2026-01-01", lifeExpectancy: 85, lifeExpectancyManual: true, countryCode: "KR", sex: "all" },
+    people: [], moments: ["a", "b", "c", "d", "e"].map((id) => moment(id, `순간 ${id}`)), marriage: null,
+    settings: { tone: "aware", theme: "light", showPast: true },
+  };
+  await page.evaluate(({ key, v }) => localStorage.setItem(key, JSON.stringify(v)), { key: STORAGE_KEY, v: value });
+  await page.goto("/moments");
+  const tiles = page.getByTestId("moment-tile");
+  await expect(tiles).toHaveCount(5);
+  const [a, b] = [await tiles.nth(0).boundingBox(), await tiles.nth(1).boundingBox()];
+  expect(Math.abs(a!.y - b!.y)).toBeLessThan(2); // 같은 줄에 두 칸
+  expect(a!.width).toBeLessThan(page.viewportSize()!.width / 2);
+  await expect(tiles.first()).toContainText("2년에 1번");
+  await page.goto("/moments/new");
+  await expect(page.getByRole("option", { name: "10년에" })).toHaveCount(1);
+});

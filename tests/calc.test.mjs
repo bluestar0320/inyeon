@@ -587,3 +587,18 @@ test("적어 둔 예상 수명을 나이가 넘어서면 0이 아니라 나이�
   // 아직 넘지 않았으면 적어 둔 값을 그대로 존중한다.
   assert.equal(left({ ...grandma, lifeExpectancy: 95 }, now), 7);
 });
+
+test("몇 년에 한 번(2·3·5·10년)도 셀 수 있다", async () => {
+  const { toPerYear: perYear } = await import("../lib/calc.ts");
+  const { formatFrequency } = await import("../lib/format.ts");
+  const { setLang } = await import("../lib/i18n.ts");
+  assert.equal(perYear({ count: 1, unit: "year2" }), 0.5);
+  assert.ok(Math.abs(perYear({ count: 1, unit: "year3" }) - 1 / 3) < 1e-9);
+  assert.equal(perYear({ count: 1, unit: "year5" }), 0.2);
+  assert.equal(perYear({ count: 1, unit: "year10" }), 0.1);
+  setLang("ko");
+  assert.equal(formatFrequency({ count: 1, unit: "year5" }), "5년에 1번");
+  setLang("en");
+  assert.equal(formatFrequency({ count: 1, unit: "year10" }), "1 time every 10 years");
+  setLang("ko");
+});

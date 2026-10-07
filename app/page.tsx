@@ -28,6 +28,7 @@ import {
 } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { photoFor } from "@/lib/photos";
+import { relationTag } from "@/lib/story";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 
@@ -269,7 +270,7 @@ export default function HomePage() {
               id: person.id,
               href: `/people/detail?id=${person.id}`,
               photo: photoFor(person),
-              title: person.relation ? `${person.name} · ${person.relation}` : person.name,
+              title: [person.name, relationTag(person.name, person.relation)].filter(Boolean).join(" · "),
               sentence: copy.meetingSentence(person.name, formatCount(result.total)),
               count: formatCount(result.total),
               unit: t.times,

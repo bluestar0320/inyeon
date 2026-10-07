@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
-import Polaroid from "@/components/Polaroid";
 import ListControls, { type SortOption } from "@/components/ListControls";
 import { computeMoment } from "@/lib/calc";
 import { formatCount, formatFrequency } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
-import { photoFor } from "@/lib/photos";
+import { photoFor, photoSrc } from "@/lib/photos";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 
@@ -173,29 +172,43 @@ export default function MomentsPage() {
           {t.noMatch(query)}
         </p>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {rows.sorted.map(({ moment, result }) => (
-            <Link
-              key={moment.id}
-              href={`/moments/detail?id=${moment.id}`}
-              className="card transition hover:border-ink-400" prefetch={false}>
-              <Polaroid photo={photoFor(moment)} size="sm" />
-              <p className="mt-2 text-sm font-medium text-ink-800">{moment.title}</p>
-              <p className="text-xs text-ink-400">{formatFrequency(moment.frequency)}</p>
-              <p className="numeral mt-2 text-3xl text-ink-900">
-                {formatCount(result.total)}
-                <span className="ml-1 text-sm font-normal text-ink-400">{t.times}</span>
-              </p>
-              {moment.filters.some((f) => f.enabled) && (
-                <p className="mt-1 text-[11px] text-accent-500">
-                  {t.filtersOn(moment.filters.filter((f) => f.enabled).length)}
-                </p>
-              )}
-              {moment.note && (
-                <p className="mt-1 line-clamp-2 text-xs text-ink-400">{moment.note}</p>
-              )}
-            </Link>
-          ))}
+        /*
+          목록에서는 폴라로이드가 너무 작았다(상세에서는 그대로 폴라로이드). 여기서는 사진이 칸을
+          가득 채우는 정사각 타일로, 폰에서도 두 줄 두 칸 — 한 화면에 네 개쯤 보이게 한다.
+        */
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {rows.sorted.map(({ moment, result }) => {
+            const filters = moment.filters.filter((f) => f.enabled).length;
+            return (
+              <Link
+                key={moment.id}
+                href={`/moments/detail?id=${moment.id}`}
+                data-testid="moment-tile"
+                className="group relative block aspect-square overflow-hidden rounded-2xl border border-ink-200/70 bg-ink-800"
+                prefetch={false}
+              >
+                <img
+                  src={photoSrc(photoFor(moment))}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+                />
+                <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <span className="absolute inset-x-0 bottom-0 p-3 text-white">
+                  <span className="block truncate text-sm font-semibold">{moment.title}</span>
+                  <span className="numeral block text-2xl leading-tight text-white">
+                    {formatCount(result.total)}
+                    <span className="ml-0.5 text-xs font-normal text-white/80">{t.times}</span>
+                  </span>
+                  <span className="block truncate text-[11px] text-white/80">
+                    {formatFrequency(moment.frequency)}
+                    {filters > 0 && ` · ${t.filtersOn(filters)}`}
+                  </span>
+                </span>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

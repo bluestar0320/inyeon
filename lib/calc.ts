@@ -23,6 +23,10 @@ const PER_YEAR: Record<FrequencyUnit, number> = {
   month: 12,
   quarter: 4,
   year: 1,
+  year2: 1 / 2,
+  year3: 1 / 3,
+  year5: 1 / 5,
+  year10: 1 / 10,
 };
 
 /** "주 2회" -> 연간 104.35회. 모든 계산은 연 단위 빈도로 정규화해서 한다. */
