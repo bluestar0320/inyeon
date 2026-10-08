@@ -268,6 +268,7 @@ export default function PersonView({ person }: { person: Person }) {
           story: story ? [story.now, (story.assumed ? undefined : story.past) ?? story.today].filter((line): line is string => Boolean(line)) : undefined,
         }}
         story={story && <StoryLines story={story} personId={person.id} returning={returning} />}
+        met={{ count: result.metThisPeriod, unit: draftSetup.frequency.unit }}
         shareFileName={[person.name, t.times(formatCount(result.total))]}
         past={past}
         stats={[

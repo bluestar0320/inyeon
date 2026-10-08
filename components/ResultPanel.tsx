@@ -6,6 +6,7 @@ import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
 import type { CountResult, PastResult } from "@/lib/calc";
+import type { FrequencyUnit } from "@/lib/types";
 import { dotsFor } from "@/lib/dots";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
@@ -20,6 +21,8 @@ const COPY = defineCopy({
     pastNote: (years: string) => `${years} 동안 지금 빈도로 이어졌다고 봤을 때의 어림값입니다.`,
     span: "계산 기간",
     perDot: (n: string) => `점 하나 = ${n}번`,
+    met: (period: string, n: number) => `${period} 함께한 만남 ${n}번`,
+    period: { day: "오늘", week: "이번 주", month: "이번 달", quarter: "이번 분기", year: "올해", year2: "최근 2년", year3: "최근 3년", year5: "최근 5년", year10: "최근 10년" } as Record<FrequencyUnit, string>,
   },
   en: {
     unit: "times",
@@ -29,6 +32,8 @@ const COPY = defineCopy({
     pastNote: (years) => `A rough estimate, assuming the same frequency over ${years}.`,
     span: "Time span",
     perDot: (n) => `Each dot = ${n} times`,
+    met: (period, n) => `Met ${n} ${n === 1 ? "time" : "times"} ${period}`,
+    period: { day: "today", week: "this week", month: "this month", quarter: "this quarter", year: "this year", year2: "in the last 2 years", year3: "in the last 3 years", year5: "in the last 5 years", year10: "in the last 10 years" },
   },
   ja: {
     unit: "回",
@@ -38,6 +43,8 @@ const COPY = defineCopy({
     pastNote: (years) => `${years}のあいだ今の頻度で続いたと考えたときの目安です。`,
     span: "計算期間",
     perDot: (n) => `点ひとつ = ${n}回`,
+    met: (period, n) => `${period}会えたのは${n}回`,
+    period: { day: "今日", week: "今週", month: "今月", quarter: "この四半期", year: "今年", year2: "この2年", year3: "この3年", year5: "この5年", year10: "この10年" },
   },
   es: {
     unit: "veces",
@@ -47,6 +54,8 @@ const COPY = defineCopy({
     pastNote: (years) => `Estimación aproximada, suponiendo la misma frecuencia durante ${years}.`,
     span: "Periodo",
     perDot: (n) => `Cada punto = ${n} veces`,
+    met: (period, n) => `${n} ${n === 1 ? "encuentro" : "encuentros"} ${period}`,
+    period: { day: "hoy", week: "esta semana", month: "este mes", quarter: "este trimestre", year: "este año", year2: "en los últimos 2 años", year3: "en los últimos 3 años", year5: "en los últimos 5 años", year10: "en los últimos 10 años" },
   },
   zh: {
     unit: "次",
@@ -56,6 +65,8 @@ const COPY = defineCopy({
     pastNote: (years) => `按照过去${years}一直保持现在的频率估算，仅供参考。`,
     span: "计算期间",
     perDot: (n) => `每个点 = ${n}次`,
+    met: (period, n) => `${period}已见面${n}次`,
+    period: { day: "今天", week: "本周", month: "本月", quarter: "本季度", year: "今年", year2: "近2年", year3: "近3年", year5: "近5年", year10: "近10年" },
   },
 });
 
@@ -70,6 +81,7 @@ export default function ResultPanel({
   shareFileName,
   past,
   story,
+  met,
 }: {
   label: string;
   result: CountResult;
@@ -83,12 +95,16 @@ export default function ResultPanel({
   past?: PastResult | null;
   /** 큰 숫자 아래의 이야기. 있으면 sentence 대신 이것을 보인다. */
   story?: ReactNode;
+  /** 이번 기간에 「만났어요」로 기록한 만남. 남은 점의 앞쪽을 "함께한 점" 색으로 칠한다. */
+  met?: { count: number; unit: FrequencyUnit };
 }) {
   const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
   const hasPast = Boolean(past && past.count >= 1);
   const dots = dotsFor(hasPast ? past!.count : 0, result.total);
+  // 한 번만 만나도 점 하나는 칠한다. 점이 여러 번을 묶고 있어도 "방금 하나 썼다"가 보여야 한다.
+  const metDots = met && met.count > 0 ? Math.min(dots.left, Math.max(1, Math.round(met.count / dots.unit))) : 0;
 
   /*
    * 아직 셀 수 없을 때(나이를 안 넣었을 때)는 한 줄로만 둔다. 큰 "-"가 화면 위 절반을
@@ -128,9 +144,18 @@ export default function ResultPanel({
         <div data-testid="dots" className="border-t border-hero-line pt-5">
           <div aria-hidden="true" className="flex flex-wrap gap-1.5">
             {Array.from({ length: dots.past + dots.left }, (_, i) => (
-              <span key={i} className={`h-2 w-2 rounded-full ${i < dots.past ? "bg-hero-line" : "bg-ink-800"}`} />
+              <span
+                key={i}
+                className={`h-2 w-2 rounded-full ${i < dots.past ? "bg-hero-line" : i < dots.past + metDots ? "bg-accent-500" : "bg-ink-800"}`}
+              />
             ))}
           </div>
+          {metDots > 0 && (
+            <p data-testid="met-dots" className="mt-2 flex items-center gap-1.5 text-xs text-ink-600">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-accent-500" />
+              {t.met(t.period[met!.unit], met!.count)}
+            </p>
+          )}
           {hasPast && (
             <p className="mt-2 text-xs text-ink-600">
               {t.pastFuture(formatCount(past!.count), formatCount(result.total))}
