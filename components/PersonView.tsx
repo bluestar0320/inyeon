@@ -21,7 +21,6 @@ import {
   formatInterval,
   formatYears,
   josa,
-  todayISO,
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
@@ -30,6 +29,7 @@ import { photoFor } from "@/lib/photos";
 import { buildStory, relationTag } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
+import { useToday } from "@/lib/useToday";
 import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -190,6 +190,8 @@ export default function PersonView({ person }: { person: Person }) {
   const growth = useMemo(() => computeGrowth(person), [person]);
   const myAge = state.profile ? resolveAge(state.profile) : null;
   const theirAge = resolveAge(person);
+  // 화면을 켜 둔 채 자정을 넘기면 「오늘」 문장과 말투 바꾸기도 새날 기준으로 바뀐다.
+  const today = useToday();
   const story = useMemo(
     () =>
       buildStory({
@@ -198,7 +200,7 @@ export default function PersonView({ person }: { person: Person }) {
         myAge,
         theirAge,
         tone: state.settings.tone,
-        today: todayISO(),
+        today,
         showPast: state.settings.showPast,
         // 지나간 쪽은 "만약에"가 아니라 실제 빈도로 센다 — 바로 아래 지나온 막대와 같은 기준.
         pastFrequency: person.frequency,
@@ -207,12 +209,12 @@ export default function PersonView({ person }: { person: Person }) {
         averageLife: lookupLifeExpectancy(person.countryCode, person.sex),
         country: COUNTRIES.find((c) => c.code === (person.countryCode ?? DEFAULT_COUNTRY_CODE))?.name,
       }),
-    [draft, result.total, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, person.countryCode, person.sex, state.profile?.nickname],
+    [draft, result.total, today, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, person.countryCode, person.sex, state.profile?.nickname],
   );
   // 다시 들어온 사람에게만 말투 바꾸기를 보인다. createdAt은 UTC라 기기 날짜로 바꿔 비교한다.
   const created = new Date(person.createdAt);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const returning = `${created.getFullYear()}-${pad(created.getMonth() + 1)}-${pad(created.getDate())}` !== todayISO();
+  const returning = `${created.getFullYear()}-${pad(created.getMonth() + 1)}-${pad(created.getDate())}` !== today;
   // 설정을 끄면 시작점이 있어도 안 보인다. 어림값이라 끌 수 있어야 한다.
   const past = useMemo(
     () =>
@@ -255,7 +257,8 @@ export default function PersonView({ person }: { person: Person }) {
           unit: t.timesUnit,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,
           // 카드에는 숫자를 풀어 쓴 지금 줄과 맺음(비율)만 — 오늘 할 일은 보는 사람의 몫이 아니다.
-          story: story ? [story.now, story.past ?? story.today].filter((line): line is string => Boolean(line)) : undefined,
+          // 독립 나이를 가정한 비율은 카드에 그 단서를 붙일 자리가 없어 싣지 않는다.
+          story: story ? [story.now, (story.assumed ? undefined : story.past) ?? story.today].filter((line): line is string => Boolean(line)) : undefined,
         }}
         story={story && <StoryLines story={story} personId={person.id} returning={returning} />}
         shareFileName={[person.name, t.times(formatCount(result.total))]}

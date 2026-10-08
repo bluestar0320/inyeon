@@ -145,6 +145,21 @@ export function balanceLines(
   maxWidth: number,
   maxLines: number,
 ): string[] {
+  // 문장이 여럿이면 문장마다 새 줄에서 시작한다. 줄 수가 모자라면 아래처럼 이어 채운다.
+  const sentences = text.trim().split(/(?<=[.?!])\s+|(?<=[。？！])/).filter(Boolean);
+  if (sentences.length > 1) {
+    const lines = sentences.flatMap((s) => balanceSentence(ctx, s, maxWidth, maxLines));
+    if (lines.length <= maxLines && !lines.some((l) => l.endsWith("…"))) return lines;
+  }
+  return balanceSentence(ctx, text, maxWidth, maxLines);
+}
+
+function balanceSentence(
+  ctx: Pick<CanvasRenderingContext2D, "measureText">,
+  text: string,
+  maxWidth: number,
+  maxLines: number,
+): string[] {
   const greedy = wrapLines(ctx, text, maxWidth, maxLines);
   if (greedy.length < 2 || greedy[greedy.length - 1].endsWith("…")) return greedy;
   let lo = maxWidth / greedy.length;

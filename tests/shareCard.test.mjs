@@ -84,3 +84,14 @@ test("두 줄로 나뉘면 길이를 고르게 맞춘다 — 마지막 줄에 �
   assert.equal(even.join(" ").replace(/\s+/g, " "), text);
   for (const line of even) assert.ok(line.length * 10 <= 340, line);
 });
+
+test("문장이 둘이면 문장 끝에서 줄을 바꾼다 — 문장 한가운데서 끊지 않는다", () => {
+  const ctx = fakeCtx(10);
+  assert.deepEqual(
+    balanceLines(ctx, "이제 남은 건 100번. 매일 만난다 해도 4달이 채 안 돼요.", 400, 3),
+    ["이제 남은 건 100번.", "매일 만난다 해도 4달이 채 안 돼요."],
+  );
+  assert.deepEqual(balanceLines(ctx, "只剩十次了。就算每天见面也不到一个月。", 200, 3), ["只剩十次了。", "就算每天见面也不到一个月。"]);
+  // 줄 수가 모자라면 예전처럼 채워 넣는다.
+  assert.equal(balanceLines(ctx, "이제 남은 건 100번. 매일 만난다 해도 4달이 채 안 돼요.", 400, 1).length, 1);
+});

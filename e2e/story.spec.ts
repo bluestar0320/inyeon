@@ -138,3 +138,14 @@ test("순간 목록은 폰에서 두 칸 타일이라 한 화면에 네 개쯤 �
   await page.goto("/moments/new");
   await expect(page.getByRole("option", { name: "10년에" })).toHaveCount(1);
 });
+
+test("화면을 켜 둔 채 자정을 넘기면 새날로 본다 — 오늘 만든 인연도 다음 날엔 말투 바꾸기가 보인다", async ({ page }) => {
+  const late = new Date();
+  late.setHours(23, 59, 30, 0);
+  await page.clock.install({ time: late });
+  await seed(page, "어머니", "엄마", 0);
+  await expect(page.getByTestId("story-now")).toBeVisible();
+  await expect(page.getByTestId("story-tone")).toHaveCount(0);
+  await page.clock.runFor("02:00");
+  await expect(page.getByTestId("story-tone")).toBeVisible();
+});
