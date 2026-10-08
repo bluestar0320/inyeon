@@ -5,11 +5,12 @@ import { useRef, useState } from "react";
 import { count } from "@/lib/analytics";
 import { SITE_URL } from "@/lib/contact";
 import { defineCopy, tr } from "@/lib/i18n";
-import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
+import { isNativeApp, saveFileNatively, shareFileNatively } from "@/lib/nativeShare";
 import {
   currentTheme,
   drawCard,
   loadImage,
+  SERIF_STACK,
   safeFileName,
   toBlob,
   type ShareSpec,
@@ -26,38 +27,37 @@ import {
 type Status = "idle" | "working" | "shared" | "saved" | "failed";
 
 const COPY = defineCopy({
-  ko: {
-    wordmark: "몇번더?",
-    ownPhoto: "내 사진으로",
-    label: {
-      idle: "이미지로 저장",
-      working: "만드는 중…",
-      shared: "공유했습니다",
-      saved: "저장했습니다",
-      failed: "실패했습니다",
-    } as Record<Status, string>,
-  },
-  en: {
-    wordmark: "How many more?",
-    ownPhoto: "Use my photo",
-    label: { idle: "Save as image", working: "Creating…", shared: "Shared", saved: "Saved", failed: "Something went wrong" },
-  },
-  ja: {
-    wordmark: "あと何回？",
-    ownPhoto: "自分の写真で",
-    label: { idle: "画像で保存", working: "作成中…", shared: "共有しました", saved: "保存しました", failed: "うまくいきませんでした" },
-  },
-  es: {
-    wordmark: "¿Cuántas veces más?",
-    ownPhoto: "Con mi foto",
-    label: { idle: "Guardar como imagen", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "No se pudo" },
-  },
-  zh: {
-    wordmark: "还有几次？",
-    ownPhoto: "用我的照片",
-    label: { idle: "保存为图片", working: "生成中…", shared: "已分享", saved: "已保存", failed: "未能完成" },
-  },
+  ko: { wordmark: "몇번더?", save: "이미지 저장", share: "공유하기", working: "만드는 중…", shared: "공유했어요", saved: "저장했어요", failed: "잘 안 됐어요" },
+  en: { wordmark: "How many more?", save: "Save image", share: "Share", working: "Creating…", shared: "Shared", saved: "Saved", failed: "Something went wrong" },
+  ja: { wordmark: "あと何回？", save: "画像を保存", share: "共有", working: "作成中…", shared: "共有しました", saved: "保存しました", failed: "うまくいきませんでした" },
+  es: { wordmark: "¿Cuántas veces más?", save: "Guardar imagen", share: "Compartir", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "No se pudo" },
+  zh: { wordmark: "还有几次？", save: "保存图片", share: "分享", working: "生成中…", shared: "已分享", saved: "已保存", failed: "未能完成" },
 });
+
+/** iOS 사파리는 내려받은 그림을 사진첩이 아니라 파일 앱에 둔다. 사진첩에 넣으려면 공유 시트의 「이미지 저장」을 거쳐야 한다. */
+function isIOS(): boolean {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function download(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 공유 시트를 띄운다. 닫기만 한 것은 false(실패 아님). 시트를 못 띄우는 환경이면 예외. */
+async function shareSheet(file: File): Promise<boolean> {
+  try {
+    await navigator.share({ files: [file] });
+    return true;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return false;
+    throw error;
+  }
+}
 
 export default function ShareButton({
   spec,
@@ -70,95 +70,71 @@ export default function ShareButton({
   const [status, setStatus] = useState<Status>("idle");
   const t = tr(COPY);
 
-  /*
-   * own: 사람이 고른 사진. 카드를 그리는 데만 쓰고 어디에도 저장하지 않는다(기기 밖으로도,
-   * 저장소에도). 그래서 고를 때마다 새로 고른다.
-   */
-  async function run(own?: File): Promise<void> {
-    setStatus("working");
-    let ownUrl: string | null = null;
+  async function makeFile(): Promise<File> {
+    const canvas = canvasRef.current ?? document.createElement("canvas");
+    canvasRef.current = canvas;
+    // 명조 글꼴은 글자 조각마다 따로 받는다. 카드에 쓸 글자의 조각을 먼저 받아 두지 않으면 기본 글꼴로 그려진다.
+    const text = [spec.title, spec.label, ...(spec.story ?? [])].filter(Boolean).join("");
     try {
-      const canvas = canvasRef.current ?? document.createElement("canvas");
-      canvasRef.current = canvas;
-      if (own) ownUrl = URL.createObjectURL(own);
-      const src = ownUrl ?? spec.photo;
-      const image = src ? await loadImage(src) : null;
-      drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined, SITE_URL);
+      await document.fonts?.load(`40px ${SERIF_STACK}`, text);
+    } catch {
+      // 글꼴을 못 받아도 카드는 그린다(오프라인 등).
+    }
+    const image = spec.photo ? await loadImage(spec.photo) : null;
+    drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined, SITE_URL);
+    const blob = await toBlob(canvas);
+    if (!blob) throw new Error("이미지를 만들지 못했습니다.");
+    return new File([blob], safeFileName(fileNameParts), { type: "image/png" });
+  }
 
-      const blob = await toBlob(canvas);
-      if (!blob) throw new Error("이미지를 만들지 못했습니다.");
-
-      const name = safeFileName(fileNameParts);
-
-      // APK로 감싼 경우. WebView에는 navigator.share도 <a download>도 없어서
-      // 그냥 두면 눌러도 아무 일이 없는 것처럼 보인다.
+  async function run(action: "save" | "share"): Promise<void> {
+    setStatus("working");
+    try {
+      const file = await makeFile();
+      let done: Status = action === "save" ? "saved" : "shared";
       if (isNativeApp()) {
-        await shareFileNatively(blob, name);
-        setStatus("shared");
-        count({ event: "share-card" });
-        return;
-      }
-
-      const file = new File([blob], name, { type: "image/png" });
-
-      // 휴대폰 브라우저에서는 공유 시트가 바로 뜨는 편이 자연스럽다. 안 되면 내려받는다.
-      if (navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file] });
-          setStatus("shared");
-        count({ event: "share-card" });
-          return;
-        } catch (error) {
-          // 사용자가 공유 시트를 닫은 것뿐이면 실패로 다루지 않는다.
-          if (error instanceof DOMException && error.name === "AbortError") {
+        // APK의 WebView에는 navigator.share도 <a download>도 없다.
+        if (action === "save") await saveFileNatively(file, file.name);
+        else await shareFileNatively(file, file.name);
+      } else if (action === "share" || isIOS()) {
+        // 공유 시트가 없으면(PC 등) 내려받기로 대신한다.
+        if (navigator.canShare?.({ files: [file] })) {
+          if (!(await shareSheet(file))) {
             setStatus("idle");
             return;
           }
-          // 그 밖의 실패는 내려받기로 넘어간다.
+        } else {
+          download(file, file.name);
+          done = "saved";
         }
+      } else {
+        // 안드로이드 크롬·PC: 다운로드 폴더에 바로 저장된다(갤러리의 Download 앨범에 보인다).
+        download(file, file.name);
       }
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = name;
-      link.click();
-      URL.revokeObjectURL(url);
-      setStatus("saved");
-      count({ event: "share-card" });
+      setStatus(done);
+      count({ event: action === "save" ? "save-card" : "share-card" });
     } catch {
       setStatus("failed");
-    } finally {
-      if (ownUrl) URL.revokeObjectURL(ownUrl);
     }
   }
 
+  const busy = status === "working";
+  const button =
+    "flex-1 rounded-xl border border-hero-line px-4 py-2.5 text-sm font-medium text-ink-600 transition hover:bg-hero-line/60 disabled:opacity-50";
   return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        className="w-full rounded-xl border border-hero-line px-4 py-2.5 text-sm font-medium text-ink-600 transition hover:bg-hero-line/60 disabled:opacity-50"
-        onClick={() => void run()}
-        disabled={status === "working"}
-        data-testid="share-card"
-      >
-        {t.label[status]}
-      </button>
-      {spec.photo && (
-        <label className="btn-quiet shrink-0 cursor-pointer whitespace-nowrap">
-          {t.ownPhoto}
-          <input
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            data-testid="own-photo"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) void run(file);
-            }}
-          />
-        </label>
+    <div className="space-y-1.5">
+      <div className="flex gap-2">
+        <button type="button" className={button} onClick={() => void run("save")} disabled={busy} data-testid="save-card">
+          {t.save}
+        </button>
+        <button type="button" className={button} onClick={() => void run("share")} disabled={busy} data-testid="share-card">
+          {t.share}
+        </button>
+      </div>
+      {status !== "idle" && (
+        <p role="status" className="text-center text-[11px] text-ink-400">
+          {t[status]}
+        </p>
       )}
     </div>
   );

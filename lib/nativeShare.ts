@@ -65,3 +65,22 @@ export async function shareFileNatively(blob: Blob, fileName: string): Promise<b
   }
   return true;
 }
+
+/**
+ * APK에서 「이미지 저장」. 공유 시트를 거치지 않고 기기의 문서/몇번더 폴더에 바로 쓴다.
+ * 안드로이드 9 이하는 저장소 권한이 있어야 해서 먼저 묻는다.
+ */
+export async function saveFileNatively(blob: Blob, fileName: string): Promise<void> {
+  const { Filesystem, Directory } = await import("@capacitor/filesystem");
+  try {
+    await Filesystem.requestPermissions();
+  } catch {
+    // 권한을 따로 묻지 않는 버전·기기. 쓰기에서 실패하면 그때 알린다.
+  }
+  await Filesystem.writeFile({
+    path: `몇번더/${fileName}`,
+    data: await toBase64(blob),
+    directory: Directory.Documents,
+    recursive: true,
+  });
+}

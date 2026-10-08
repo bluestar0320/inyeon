@@ -10,7 +10,7 @@ import { headline, setUpProfile } from "./helpers";
 test("N년 뒤 몇 번으로 적으면 올해·10년 뒤·20년 뒤가 횟수로 보이고 숫자가 줄어든다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
   const before = await headline(page);
 
@@ -25,7 +25,7 @@ test("N년 뒤 몇 번으로 적으면 올해·10년 뒤·20년 뒤가 횟수로
 test("「헷갈리세요?」는 누를 때만 펼쳐지고, 관계에 맞는 통계와 출처를 보여 준다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
   await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
 

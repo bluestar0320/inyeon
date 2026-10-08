@@ -1,5 +1,3 @@
-import { photoSrc } from "@/lib/photos";
-
 const WIDTH = { sm: "w-12", md: "w-full", lg: "w-full max-w-[16rem]" } as const;
 
 /*
@@ -8,12 +6,13 @@ const WIDTH = { sm: "w-12", md: "w-full", lg: "w-full max-w-[16rem]" } as const;
  * 기울기는 움직임을 줄인 사람에게는 걷는다.
  */
 export default function Polaroid({
-  photo,
+  src,
   size,
   tilt = 0,
   children,
 }: {
-  photo: string;
+  /** 그림 주소(lib/photos.ts의 imageFor). */
+  src: string;
   size: keyof typeof WIDTH;
   tilt?: number;
   children?: React.ReactNode;
@@ -23,7 +22,7 @@ export default function Polaroid({
       className={`polaroid shrink-0 motion-safe:transition-transform motion-reduce:!transform-none ${WIDTH[size]} ${size === "sm" ? "p-1 pb-1.5" : ""}`}
       style={tilt ? { transform: `rotate(${tilt}deg)` } : undefined}
     >
-      <img src={photoSrc(photo)} alt="" loading="lazy" decoding="async" />
+      <img src={src} alt="" loading="lazy" decoding="async" />
       {children}
     </span>
   );

@@ -44,6 +44,51 @@ function everyBand(list: string[]): Record<string, string[]> {
 export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
   aware: {
     ko: {
+      moment: {
+        rarely: [
+          "{title}, 앞으로 {count}번이에요. 해마다 오니까 끝이 없을 것 같았는데, 세어 보면 이만큼이에요.",
+          "1년에 한 번 오는 {title}. {count}번이 남았으니, 올해의 한 번도 그중 귀한 하나예요.",
+          "{me:이/가} {title:을/를} 누릴 날은 {count}번 남았어요. 같은 계절은 와도, 같은 해는 다시 오지 않아요.",
+          "기다리면 또 오겠지 싶었던 {title}. 앞으로 {count}번이라고 생각하면 마음이 조금 달라지죠.",
+          "{title:은/는} 앞으로 {count}번. 한 번 지나가면 꼬박 한 해를 기다려야 하는 숫자예요.",
+          "올해를 넘기면 {title:은/는} {count}번에서 하나가 줄어요. 그래서 이번 한 번이 더 아까워요.",
+        ],
+        sometimes: [
+          "{title}, 앞으로 {count}번 남았어요. 한 달에 한두 번씩이면 생각보다 금방 줄어드는 숫자예요.",
+          "{count}번이면 넉넉해 보이죠. 그런데 바빠서 건너뛴 달들도 그 안에서 하나씩 빠져나가요.",
+          "{me:이/가} {title:을/를} 할 수 있는 날은 {count}번이에요. 미뤄 둔 한 번도 그중 하나였어요.",
+          "{title:은/는} 앞으로 {count}번. 달력 한 장에 한두 칸, 그렇게 채워 가는 숫자예요.",
+        ],
+        often: [
+          "{title}, 앞으로 {count}번. 매일 하는 일이라 당연해 보여도 끝이 있는 숫자예요.",
+          "늘 하던 {title}도 세어 보면 {count}번이에요. 오늘의 한 번은 오늘뿐이고요.",
+          "{count}번이면 많아 보이죠. 그래도 그중 오늘 것은 딱 한 번이에요.",
+          "{title:은/는} {count}번 남았어요. 아무렇지 않게 지나가는 하루하루가 이 숫자를 채워요.",
+        ],
+        "*": [
+          "{title}, 앞으로 {count}번이에요. 숫자로 보면 생각보다 손에 잡히는 만큼이에요.",
+          "{me:이/가} {title:을/를} 누릴 수 있는 날은 {count}번. 그 한 번 한 번이 다 다른 날이에요.",
+        ],
+      },
+      momentToday: {
+        rarely: [
+          "올해의 {title:은/는} 날짜부터 먼저 잡아 두면 좋겠어요.",
+          "이번엔 같이 가고 싶은 사람에게 먼저 말을 건네 봐요.",
+          "이번 {title:은/는} 사진 한 장이라도 꼭 남겨 두기로 해요.",
+          "다음에 하자는 말, 이번 {title}엔 한 번 접어 둬요.",
+        ],
+        sometimes: [
+          "이번 달 달력에 {title:을/를} 위한 하루를 먼저 비워 둬요.",
+          "다음 한 번은 조금 더 천천히, 끝까지 즐겨 봐요.",
+          "미뤄 두었던 한 번, 이번 주말에 해 보면 좋겠어요.",
+        ],
+        often: [
+          "오늘은 휴대폰을 내려놓고 {title}에만 마음을 써 봐요.",
+          "오늘의 한 번을 그냥 흘려보내지 않으면 그걸로 충분해요.",
+          "오늘 {title:은/는} 평소보다 조금만 더 길게 해 봐요.",
+        ],
+        "*": ["다음 한 번은 조금 더 마음을 담아 보내요."],
+      },
       cheer: {
         "*": [
           "{name}께서는 {country} 평균수명보다 더 장수하고 계세요. 그동안 건강을 잘 지켜 오신 덕분이에요.",
@@ -307,6 +352,26 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
       },
     },
     en: {
+      moment: {
+        rarely: [
+          "{title}: {count} more times. It comes back every year, so it feels endless — until you count it.",
+          "{title} comes once a year. With {count} left, this year's one is a precious one.",
+          "{count} more times. The season will return, but this year won't.",
+        ],
+        often: [
+          "{title}: {count} more times. It feels ordinary because it's daily, but it isn't endless.",
+          "{count} sounds like a lot. Still, today's one only happens today.",
+        ],
+        "*": [
+          "{title}: {count} more times. Smaller than it felt, isn't it?",
+          "You can enjoy {title} {count} more times. Each one is a different day.",
+        ],
+      },
+      momentToday: {
+        rarely: ["Put this year's {title} on the calendar now.", "Ask someone to come along this time."],
+        often: ["Today, put the phone away and just be there for it."],
+        "*": ["Make the next one count a little more."],
+      },
       cheer: { "*": ["{name} has already lived beyond the average life expectancy in {country}. That's years of good care paying off.", "{name} is outliving the {country} average. That's worth celebrating."] },
       then: {
         parent: [
@@ -617,6 +682,16 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
   },
   calm: {
     ko: {
+      moment: {
+        "*": [
+          "{title}, 앞으로 {count}번입니다.",
+          "{title:은/는} 앞으로 {count}번 남았어요. 지금 빈도대로라면요.",
+          "남은 {title:은/는} {count}번. 셀 수 있는 숫자예요.",
+        ],
+      },
+      momentToday: {
+        "*": ["다음 한 번의 날짜를 정해 두면 좋겠어요.", "이번 한 번을 미루지 않는 것부터요."],
+      },
       then: {
         parent: [
           "어릴 땐 {name:와/과} 매일 얼굴을 보며 지냈어요.",
@@ -711,6 +786,16 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
   },
   warm: {
     ko: {
+      moment: {
+        "*": [
+          "{title}, 앞으로도 {count}번이나 더 누릴 수 있어요. 생각만 해도 설레죠.",
+          "{me:은/는} 앞으로 {title:을/를} {count}번 더 만날 수 있어요. 한 번 한 번 좋은 기억으로 채워 가요.",
+          "{count}번의 {title}. 그 안에 어떤 장면들이 담길지 기대돼요.",
+        ],
+      },
+      momentToday: {
+        "*": ["다음 {title:은/는} 좋아하는 사람과 함께해 봐요.", "이번 한 번도 마음껏 즐겨요."],
+      },
       then: {
         parent: [
           "어릴 적 {name:와/과} 마주 앉던 아침들, 아직 마음 한편에 남아 있죠.",

@@ -245,6 +245,9 @@ export function momentPresets(): MomentPreset[] {
 }
 
 export interface RelationPreset {
+  /** 단추에 보이는 말이자, 이름 칸이 비어 있을 때 넣는 이름. */
+  label: string;
+  /** 관계 칸에 들어가는 말. 어머니·아버지는 「부모님」으로 묶는다. */
   relation: string;
   emoji: string;
   frequency: Frequency;
@@ -253,7 +256,7 @@ export interface RelationPreset {
   withGrowth?: boolean;
 }
 
-const RELATION_SPECS: Omit<RelationPreset, "relation">[] = [
+const RELATION_SPECS: Omit<RelationPreset, "label" | "relation">[] = [
   { emoji: "🌷", frequency: { count: 1, unit: "month" }, hoursPerMeeting: 6 },
   { emoji: "🌳", frequency: { count: 1, unit: "month" }, hoursPerMeeting: 6 },
   { emoji: "🫖", frequency: { count: 2, unit: "year" }, hoursPerMeeting: 8 },
@@ -271,9 +274,16 @@ const RELATION_COPY = defineCopy<string[]>({
   zh: ["妈妈", "爸爸", "祖父母", "兄弟姐妹", "伴侣", "孩子", "好友"],
 });
 
+/** 어머니·아버지 단추가 관계 칸에 넣는 말. lib/story.ts의 relationKind가 부모님으로 읽어야 한다. */
+const PARENT_COPY = defineCopy({ ko: "부모님", en: "Parent", ja: "両親", es: "Padres", zh: "父母" });
+
 /** 렌더 중에 부른다. */
 export function relationPresets(): RelationPreset[] {
-  return tr(RELATION_COPY).map((relation, i) => ({ relation, ...RELATION_SPECS[i] }));
+  return tr(RELATION_COPY).map((label, i) => ({
+    label,
+    relation: i < 2 ? tr(PARENT_COPY) : label,
+    ...RELATION_SPECS[i],
+  }));
 }
 
 type FrequencyChip = { label: string; frequency: Frequency };

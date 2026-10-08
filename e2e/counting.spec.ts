@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 test("컨셉의 예시가 화면에 그대로 나온다: 어머니 60세·수명 80세·월 1회 = 240번", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
@@ -31,7 +31,7 @@ test("자녀는 내 남은 시간이 기준이 된다", async ({ page }) => {
 test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
@@ -59,7 +59,7 @@ test("결혼 계획: 목표 나이를 지나면 0번 대신 다시 잡으라고 
 test("성장 캘린더는 켜지 않아도 아이를 넣으면 상세에 뜨고 아이 나이를 따라간다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🧸 자녀" }).click();
+  await page.getByRole("button", { name: "자녀", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("7");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/detail/);
@@ -77,7 +77,7 @@ test("성장 캘린더는 켜지 않아도 아이를 넣으면 상세에 뜨고 
 test("만남 필터는 성장 캘린더를 건드리지 않는다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🧸 자녀" }).click();
+  await page.getByRole("button", { name: "자녀", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("7");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/detail/);
@@ -105,7 +105,7 @@ test("데이트 계산: 목표 나이까지만 세고 그 사실을 밝힌다", 
 test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
@@ -175,7 +175,7 @@ test("첫 실행은 약한 숫자가 아니라 큰 숫자로 끝난다", async (
   await page.waitForURL(/\/people\/new\/?$/);
   await expect(page.getByRole("heading", { name: "먼저 한 사람만" })).toBeVisible();
 
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("68");
   await page.getByRole("button", { name: "추가하기" }).click();
 
@@ -189,7 +189,7 @@ test("첫 실행은 약한 숫자가 아니라 큰 숫자로 끝난다", async (
   // 둘째부터는 목록으로 간다 — 여러 명 이어서 넣을 때 매번 뒤로 가지 않게.
   await page.goto("/people/new");
   await expect(page.getByRole("heading", { name: "인연 추가" })).toBeVisible();
-  await page.getByRole("button", { name: "🍻 가까운 친구" }).click();
+  await page.getByRole("button", { name: "가까운 친구", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("39");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/\/people\/?$/);
@@ -206,7 +206,7 @@ test("내 정보를 다시 고치면 홈으로 돌아간다", async ({ page }) =
 test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으로 끌 수 있다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("68");
 
   // 시작점이 없으면 아예 세지 않는다 — 모르는 것을 지어내지 않는다.
@@ -232,4 +232,38 @@ test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으�
   await page.waitForURL(/\/people\/detail/);
   await expect(page.getByText(/지금까지 \d+번/)).toBeHidden();
   expect(await headline(page)).toBe(headlineBefore);
+});
+
+test("생년월일은 달력 없이 숫자 자판으로 친다 — 19650312가 1965-03-12가 된다", async ({ page }) => {
+  await clearState(page);
+  await page.goto("/setup");
+  await openMore(page);
+  const birth = page.getByLabel("생년월일");
+  await expect(birth).toHaveAttribute("inputmode", "numeric");
+  await birth.click();
+  await page.keyboard.type("19650312");
+  await expect(birth).toHaveValue("1965-03-12");
+  await expect(page.getByText(/^현재 만 \d+세/)).toBeVisible();
+  // 없는 날은 받지 않는다. 칸을 떠나면 마지막으로 맞았던 날짜로 돌아간다.
+  await birth.fill("19650230");
+  await birth.blur();
+  await expect(birth).toHaveValue("1965-03-12");
+});
+
+test("템플릿을 바꿔 누르면 이름도 따라 바뀌고, 어머니·아버지는 관계가 「부모님」이다", async ({ page }) => {
+  await setUpProfile(page, 38);
+  await page.goto("/people/new");
+  const name = page.getByLabel("이름");
+  const relation = page.getByLabel("관계");
+  await page.getByRole("button", { name: "아버지", exact: true }).click();
+  await expect(name).toHaveValue("아버지");
+  await expect(relation).toHaveValue("부모님");
+  await page.getByRole("button", { name: "가까운 친구", exact: true }).click();
+  await expect(name).toHaveValue("가까운 친구");
+  await expect(relation).toHaveValue("가까운 친구");
+  // 직접 쓴 이름은 지킨다.
+  await name.fill("민수");
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await expect(name).toHaveValue("민수");
+  await expect(relation).toHaveValue("부모님");
 });

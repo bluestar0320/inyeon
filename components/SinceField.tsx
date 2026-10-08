@@ -2,8 +2,9 @@
 
 import { useId } from "react";
 
+import DateInput from "@/components/DateInput";
 import { computePast } from "@/lib/calc";
-import { formatCount, formatYears, todayISO } from "@/lib/format";
+import { formatCount, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import type { Frequency } from "@/lib/types";
 
@@ -81,14 +82,7 @@ export default function SinceField({
         {t.label}
       </label>
       <div className="flex items-center gap-2">
-        <input
-          id={id}
-          className="input w-44"
-          type="date"
-          value={value ?? ""}
-          max={todayISO()}
-          onChange={(e) => onChange(e.target.value || undefined)}
-        />
+        <DateInput id={id} className="input w-44" value={value} onChange={onChange} />
         {value && (
           <button type="button" className="btn-quiet" onClick={() => onChange(undefined)}>
             {t.clear}

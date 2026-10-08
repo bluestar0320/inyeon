@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import GrowthCalendar from "@/components/GrowthCalendar";
 import { hintFor } from "@/components/DecayHint";
 import MeetingLog from "@/components/MeetingLog";
+import OwnPhotoPicker from "@/components/OwnPhotoPicker";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
 import StoryLines from "@/components/StoryLines";
@@ -25,7 +26,8 @@ import {
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
-import { photoFor } from "@/lib/photos";
+import { imageFor } from "@/lib/photos";
+import { pairTitle } from "@/lib/shareCard";
 import { buildStory, relationTag } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
@@ -240,18 +242,23 @@ export default function PersonView({ person }: { person: Person }) {
   return (
     <div className="space-y-5">
       <div className="flex justify-center pt-2">
-        <Polaroid photo={photoFor(person)} size="lg" tilt={-2}>
+        <Polaroid src={imageFor(person)} size="lg" tilt={-2}>
           <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
         </Polaroid>
       </div>
+      <OwnPhotoPicker
+        value={person.ownPhoto}
+        onChange={(ownPhoto) => savePerson({ ...person, ownPhoto, updatedAt: new Date().toISOString() })}
+      />
       <MeetingLog person={person} />
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
         sentence={copy.meetingSentence(person.name, formatCount(result.total))}
         share={{
-          emoji: person.emoji ?? "🫧",
-          title: person.name,
+          photo: imageFor(person),
+          label: person.name,
+          title: pairTitle(person.name),
           subtitle: copy.meetingLabel,
           value: formatCount(result.total),
           unit: t.timesUnit,

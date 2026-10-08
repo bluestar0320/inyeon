@@ -96,6 +96,8 @@ export interface Person extends LifeSpan {
   emoji?: string;
   /** 폴라로이드 사진 키(lib/photos.ts). 없으면 이모지·id로 고른다. */
   photo?: string;
+  /** 사람이 올린 사진(정사각 JPEG data URL). 기기 밖으로 나가지 않는다. 있으면 photo보다 먼저 쓴다. */
+  ownPhoto?: string;
   /** 「만났어요」로 남긴 날짜들(YYYY-MM-DD, 오래된 순). lib/meetings.ts */
   meetings?: string[];
   frequency: Frequency;
@@ -163,6 +165,8 @@ export interface Moment {
   emoji?: string;
   /** 폴라로이드 사진 키(lib/photos.ts). 없으면 이모지·id로 고른다. */
   photo?: string;
+  /** 사람이 올린 사진(정사각 JPEG data URL). 기기 밖으로 나가지 않는다. 있으면 photo보다 먼저 쓴다. */
+  ownPhoto?: string;
   frequency: Frequency;
   horizon: MomentHorizon;
   filters: CalcFilter[];

@@ -5,7 +5,7 @@ import { setLang } from "../lib/i18n.ts";
 import { relationPresets } from "../lib/presets.ts";
 import { BANK } from "../lib/storyBank.ts";
 import {
-  buildStory, countBand, fill, freqBand, hash, metLine, pastBand, pastShare, relationKind, relationTag, spanText,
+  buildStory, countBand, fill, freqBand, hash, metLine, momentStory, pastBand, pastShare, relationKind, relationTag, spanText,
 } from "../lib/story.ts";
 
 const NOW = new Date("2026-10-07T12:00:00");
@@ -91,7 +91,7 @@ test("빈칸 채우기: 조사를 붙이고, 못 채우면 null", () => {
   assert.equal(fill("{nope}", { name: "엄마" }), null);
 });
 
-test("같은 사람은 같은 문장, today만 날마다 바뀔 수 있다", () => {
+test("같은 날엔 같은 문장, 날이 바뀌면 지금 줄도 다른 조합이 나온다", () => {
   setLang("ko");
   const at = (today) => buildStory({ person: person(), remaining: 100, myAge: 35, tone: "aware", today, now: NOW });
   const a = at("2026-10-07");
@@ -99,9 +99,21 @@ test("같은 사람은 같은 문장, today만 날마다 바뀔 수 있다", () 
   const days = new Set(["2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13"]
     .map((d) => at(d).today));
   assert.ok(days.size > 1, "today가 날마다 하나도 안 바뀜");
-  const c = at("2026-10-08");
-  assert.equal(c.now, a.now);
-  assert.equal(c.then, a.then);
+  const nows = new Set(["2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11", "2026-10-12", "2026-10-13"]
+    .map((d) => at(d).now));
+  assert.ok(nows.size > 2, "지금 줄이 날마다 거의 안 바뀜");
+});
+
+test("순간도 이야기가 있고, 1년에 한 번 오는 순간과 매일 하는 순간은 다른 묶음에서 고른다", () => {
+  setLang("ko");
+  const m = (frequency) => ({ id: "m1", title: "벚꽃 보기", frequency, horizon: { kind: "life" }, filters: [] });
+  const yearly = BANK.aware.ko.moment.rarely.map((t) => fill(t, { title: "벚꽃 보기", count: "40", me: "당신" }));
+  const s = momentStory({ moment: m({ count: 1, unit: "year" }), remaining: 40, tone: "aware", today: "2026-10-08" });
+  assert.ok(yearly.includes(s.now), s.now);
+  assert.ok(s.today);
+  const daily = momentStory({ moment: m({ count: 7, unit: "week" }), remaining: 4000, tone: "aware", today: "2026-10-08" });
+  assert.ok(!yearly.includes(daily.now), daily.now);
+  assert.equal(momentStory({ moment: m({ count: 1, unit: "year" }), remaining: 0, tone: "aware", today: "2026-10-08" }), null);
 });
 
 test("부모님은 그때·비율·가정이 나오고, 친구는 그때·비율이 없다", () => {
@@ -135,7 +147,7 @@ test("모든 언어·톤에서 now·today가 나오고 빈칸이 남지 않는�
 });
 
 test("은행의 모든 문장은 아는 빈칸만 쓴다", () => {
-  const vars = { name: "엄마", count: "100", span: "넉 달", pct: "92", n: "3", me: "당신", country: "대한민국" };
+  const vars = { name: "엄마", title: "벚꽃 보기", count: "100", span: "넉 달", pct: "92", n: "3", me: "당신", country: "대한민국" };
   for (const [tone, langs] of Object.entries(BANK))
     for (const [lang, slots] of Object.entries(langs))
       for (const [slot, keys] of Object.entries(slots))
@@ -174,7 +186,7 @@ test("문장 은행 분량", () => {
 });
 
 test("한 줄은 카드 세 줄 안에 들어갈 만큼 짧다", () => {
-  const vars = { name: "엄마", count: "1,234", span: "열한 달", pct: "92", n: "12", me: "당신", country: "아랍에미리트" };
+  const vars = { name: "엄마", title: "명절에 본가 가기", count: "1,234", span: "열한 달", pct: "92", n: "12", me: "당신", country: "아랍에미리트" };
   for (const [tone, langs] of Object.entries(BANK))
     for (const [lang, slots] of Object.entries(langs))
       for (const keys of Object.values(slots))
@@ -208,6 +220,7 @@ test("관계 판별: 5개 언어의 프리셋 이름은 모두 제자리로", ()
   for (const lang of ["ko", "en", "ja", "es", "zh"]) {
     setLang(lang);
     assert.deepEqual(relationPresets().map((p) => relationKind(p.relation)), expected, lang);
+    assert.deepEqual(relationPresets().map((p) => relationKind(p.label)), expected, `${lang} label`);
   }
   setLang("ko");
 });

@@ -19,7 +19,9 @@ import YearBreakdown from "@/components/YearBreakdown";
 import { computeRelationship, pastLimit, resolveAge, toPerYear } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
+import { imageFor } from "@/lib/photos";
 import { relationPresets } from "@/lib/presets";
+import { pairTitle } from "@/lib/shareCard";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
@@ -182,6 +184,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const [draft, setDraft] = useState<Person>(initial);
 
   const t = tr(COPY);
+  const presets = relationPresets();
   const copy = copyFor(state.settings.tone);
   const result = useMemo(
     () => computeRelationship(draft, state.profile),
@@ -259,8 +262,9 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           ageMissing ? t.ageMissing : undefined
         }
         share={{
-          emoji: draft.emoji ?? "🫧",
-          title: nameForCopy,
+          photo: imageFor(draft),
+          label: nameForCopy,
+          title: pairTitle(nameForCopy),
           subtitle: copy.meetingLabel,
           value: formatCount(result.total),
           unit: t.timesUnit,
@@ -289,23 +293,25 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       {/* 한 사람에 대한 것은 한 카드에. 프리셋이 먼저다 — 누르면 대부분이 채워진다. */}
       <div className="card space-y-4">
         <div className="flex flex-wrap gap-1.5">
-          {relationPresets().map((preset) => (
+          {presets.map((preset) => (
             <button
-              key={preset.relation}
+              key={preset.label}
               type="button"
               className="chip"
               onClick={() =>
                 setDraft({
                   ...draft,
                   relation: preset.relation,
+                  // 이모지는 화면에 보이지 않고 폴라로이드 사진을 고르는 데만 쓴다(lib/photos.ts).
                   emoji: preset.emoji,
-                  name: draft.name || preset.relation,
+                  // 비어 있거나 다른 단추가 넣은 이름이면 바꾼다. 직접 쓴 이름은 지키고.
+                  name: !draft.name.trim() || presets.some((p) => p.label === draft.name) ? preset.label : draft.name,
                   frequency: preset.frequency,
                   hoursPerMeeting: preset.hoursPerMeeting,
                 })
               }
             >
-              {preset.emoji} {preset.relation}
+              {preset.label}
             </button>
           ))}
         </div>

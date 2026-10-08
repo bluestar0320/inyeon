@@ -150,6 +150,12 @@ function repairScenarios(value: unknown): Scenario[] | undefined {
     }));
 }
 
+export const OWN_PHOTO_MAX = 400_000;
+
+function ownPhotoOk(value: unknown): value is string {
+  return typeof value === "string" && value.length <= OWN_PHOTO_MAX && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(value);
+}
+
 /** 인연과 순간이 함께 가진 부분을 고친다. 빈도가 없으면 셀 수가 없으니 뺀다. */
 function repairCommon(item: unknown): Loose | null {
   if (!isObject(item) || typeof item.id !== "string" || !frequencyOk(item.frequency)) return null;
@@ -161,6 +167,8 @@ function repairCommon(item: unknown): Loose | null {
     emoji: text(item.emoji),
     // 모르는 키는 photoFor가 공용 사진으로 떨어뜨린다. 여기서 걸러 내지 않는다.
     photo: text(item.photo),
+    // 불러오기로 들어온 값이 <img src>에 그대로 들어가므로 우리가 만든 모양(JPEG data URL)만 받는다.
+    ownPhoto: ownPhotoOk(item.ownPhoto) ? item.ownPhoto : undefined,
     note: text(item.note),
     since: text(item.since),
     createdAt: text(item.createdAt) ?? "",

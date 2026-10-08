@@ -27,7 +27,7 @@ import {
   formatYears,
 } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
-import { photoFor } from "@/lib/photos";
+import { imageFor } from "@/lib/photos";
 import { relationTag } from "@/lib/story";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -269,7 +269,7 @@ export default function HomePage() {
             cards={people.slice(0, 10).map(({ person, result }) => ({
               id: person.id,
               href: `/people/detail?id=${person.id}`,
-              photo: photoFor(person),
+              photo: imageFor(person),
               title: [person.name, relationTag(person.name, person.relation)].filter(Boolean).join(" · "),
               sentence: copy.meetingSentence(person.name, formatCount(result.total)),
               count: formatCount(result.total),
@@ -380,7 +380,7 @@ export default function HomePage() {
             cards={moments.slice(0, 10).map(({ moment, result }) => ({
               id: moment.id,
               href: `/moments/detail?id=${moment.id}`,
-              photo: photoFor(moment),
+              photo: imageFor(moment),
               title: moment.title,
               sentence: copy.momentSentence(moment.title, formatCount(result.total)),
               count: formatCount(result.total),

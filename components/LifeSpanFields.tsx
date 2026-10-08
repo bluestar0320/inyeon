@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import HealthFields from "@/components/HealthFields";
+import DateInput from "@/components/DateInput";
 import NumberInput from "@/components/NumberInput";
 import { healthAgeOffset } from "@/lib/health";
 import { remainingYears, resolveAge } from "@/lib/calc";
@@ -229,13 +230,11 @@ export default function LifeSpanFields<T extends LifeSpan>({
             <label className="label" htmlFor={`${ids}-birth`}>
               {t.birthDate}
             </label>
-            <input
+            <DateInput
               id={`${ids}-birth`}
               className="input"
-              type="date"
-              value={value.birthDate ?? ""}
-              max={todayISO()}
-              onChange={(e) => patch({ birthDate: e.target.value || undefined })}
+              value={value.birthDate}
+              onChange={(birthDate) => patch({ birthDate })}
             />
             <p className="mt-1 text-[11px] text-ink-400">
               {value.birthDate ? t.currentAge(formatAge(age)) : t.birthUnknown}

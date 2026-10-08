@@ -23,7 +23,7 @@ const SCREENS = [
 async function seed(page: import("@playwright/test").Page) {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🧸 자녀" }).click();
+  await page.getByRole("button", { name: "자녀", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("7");
   await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
   await page.getByRole("button", { name: "추가하기" }).click();

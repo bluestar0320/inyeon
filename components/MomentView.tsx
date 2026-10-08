@@ -5,18 +5,22 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { hintFor } from "@/components/DecayHint";
+import OwnPhotoPicker from "@/components/OwnPhotoPicker";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
+import StoryLines from "@/components/StoryLines";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
 import { DAYS_PER_YEAR, computeMoment, computePast, resolveAge, toPerYear } from "@/lib/calc";
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
-import { photoFor, photoSrc } from "@/lib/photos";
+import { imageFor } from "@/lib/photos";
+import { momentStory } from "@/lib/story";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import type { Moment } from "@/lib/types";
+import { useToday } from "@/lib/useToday";
 
 const COPY = defineCopy({
   ko: {
@@ -138,6 +142,11 @@ export default function MomentView({ moment }: { moment: Moment }) {
 
   const draft = useMemo(() => ({ ...moment, ...draftSetup }), [moment, draftSetup]);
   const result = useMemo(() => computeMoment(draft, state.profile), [draft, state.profile]);
+  const today = useToday();
+  const story = useMemo(
+    () => momentStory({ moment: draft, remaining: result.total, tone: state.settings.tone, today, me: state.profile?.nickname }),
+    [draft, result.total, state.settings.tone, today, state.profile?.nickname],
+  );
 
   const perYear = toPerYear(draftSetup.frequency);
   const horizonText =
@@ -150,24 +159,30 @@ export default function MomentView({ moment }: { moment: Moment }) {
   return (
     <div className="space-y-5">
       <div className="flex justify-center pt-2">
-        <Polaroid photo={photoFor(moment)} size="lg" tilt={-2}>
+        <Polaroid src={imageFor(moment)} size="lg" tilt={-2}>
           <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{moment.title}</span>
         </Polaroid>
       </div>
+      <OwnPhotoPicker
+        value={moment.ownPhoto}
+        onChange={(ownPhoto) => saveMoment({ ...moment, ownPhoto, updatedAt: new Date().toISOString() })}
+      />
       <ResultPanel
         label={copy.momentLabel}
         result={result}
         sentence={copy.momentSentence(moment.title, formatCount(result.total))}
         unknownMessage={result.horizonYears === null ? t.unknown : undefined}
         share={{
-          emoji: moment.emoji,
-          photo: photoSrc(photoFor(moment)),
-          title: moment.title,
-          subtitle: copy.momentLabel,
+          photo: imageFor(moment),
+          // 이름은 폴라로이드 아래에 적혀 있으니, 제목 자리에는 무엇을 센 것인지를 둔다.
+          label: moment.title,
+          title: copy.momentLabel,
           value: formatCount(result.total),
           unit: t.unit,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.horizonYears)}`,
+          story: story?.now ? [story.now] : undefined,
         }}
+        story={story && <StoryLines story={story} personId={moment.id} returning={false} />}
         shareFileName={[moment.title, t.times(formatCount(result.total))]}
         past={state.settings.showPast ? computePast(
                 moment.frequency,

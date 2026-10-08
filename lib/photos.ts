@@ -69,6 +69,11 @@ export function photoFor(item: { id: string; emoji?: string; photo?: string }): 
   return SHARED_PHOTOS[hash(item.id) % SHARED_PHOTOS.length];
 }
 
+/** 폴라로이드·공유 카드에 실제로 넣을 그림 주소. 올린 사진이 있으면 그것. */
+export function imageFor(item: { id: string; emoji?: string; photo?: string; ownPhoto?: string }): string {
+  return item.ownPhoto ?? photoSrc(photoFor(item));
+}
+
 export function photoSrc(key: string): string {
   return `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/photos/${key}.webp`;
 }

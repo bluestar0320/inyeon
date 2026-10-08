@@ -9,6 +9,7 @@ import { defineCopy, tr } from "@/lib/i18n";
 export type StackCard = {
   id: string;
   href: string;
+  /** 그림 주소(imageFor). */
   photo: string;
   title: string;
   sentence: string;
@@ -105,7 +106,7 @@ export default function PhotoStack({ label, cards }: { label: string; cards: Sta
           <div key={card.id} className={`shrink-0 snap-center py-3 ${many ? "w-full px-[4%]" : "w-full px-[14%]"}`}>
             {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. */}
             <Link href={card.href} prefetch={false} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">
-              <Polaroid photo={card.photo} size="md" tilt={TILTS[i % TILTS.length]}>
+              <Polaroid src={card.photo} size="md" tilt={TILTS[i % TILTS.length]}>
                 <span className="mt-2 block px-1">
                   <span className="font-album block truncate text-sm text-ink-800">{card.title}</span>
                   <span className="font-album mt-0.5 block text-xs leading-relaxed text-ink-600">{card.sentence}</span>

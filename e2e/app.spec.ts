@@ -241,7 +241,7 @@ test("기록은 이 기기 밖으로 나가지 않는다", async ({ page, contex
 
   await setUpProfile(page, 38);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "🌷 어머니" }).click();
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
   await page.getByLabel("이름").fill("우리엄마정순임");
   await page.getByLabel("나이", { exact: true }).fill("68");
   await page.getByRole("button", { name: "추가하기" }).click();
@@ -442,7 +442,7 @@ test.describe("오프라인", () => {
       await page.waitForURL(/\/people\/new\/?$/);
 
       // 입력이 먹고 계산이 도는지 — 청크가 빠지면 여기서 버튼이 잠긴 채 멈춘다.
-      await page.getByRole("button", { name: "🌷 어머니" }).click();
+      await page.getByRole("button", { name: "어머니", exact: true }).click();
       await page.getByLabel("나이", { exact: true }).fill("68");
       await page.getByRole("button", { name: "추가하기" }).click();
 

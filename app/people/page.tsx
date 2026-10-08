@@ -16,7 +16,7 @@ import {
   formatYears,
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
-import { photoFor } from "@/lib/photos";
+import { imageFor } from "@/lib/photos";
 import { relationTag } from "@/lib/story";
 import { matches, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -311,7 +311,7 @@ export default function PeoplePage() {
               href={`/people/detail?id=${person.id}`}
               className="card flex items-center justify-between transition hover:border-ink-400" prefetch={false}>
               <span className="flex min-w-0 items-center gap-3">
-                <Polaroid photo={photoFor(person)} size="sm" />
+                <Polaroid src={imageFor(person)} size="sm" />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium text-ink-800">
                     {person.name}

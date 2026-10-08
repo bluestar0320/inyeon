@@ -190,3 +190,17 @@ export function todayISO(): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
+
+/**
+ * 날짜 칸에 친 글자를 다듬는다. 폰의 날짜 칸은 달력만 띄워서 몇십 년 전 연도를 고르기가
+ * 고역이라, 숫자 자판으로 치게 하고 여기서 YYYY-MM-DD 모양으로 맞춘다.
+ * 여덟 자리가 다 차고 실제 있는 날(1900년 ~ max)일 때만 iso를 준다.
+ */
+export function typedDate(raw: string, max: string): { text: string; iso: string | null } {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  const text = [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6)].filter(Boolean).join("-");
+  if (digits.length < 8) return { text, iso: null };
+  const d = new Date(`${text}T00:00:00`);
+  const real = !Number.isNaN(d.getTime()) && d.getDate() === Number(digits.slice(6));
+  return { text, iso: real && text >= "1900-01-01" && text <= max ? text : null };
+}

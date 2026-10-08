@@ -2,7 +2,7 @@ import { DAYS_PER_YEAR, computePast, pastLimit, toPerYear } from "./calc.ts";
 import { formatCount, josa } from "./format.ts";
 import { defineCopy, getLang, tr, type Lang } from "./i18n.ts";
 import { BANK } from "./storyBank.ts";
-import type { Frequency, Person, Tone } from "./types";
+import type { Frequency, Moment, Person, Tone } from "./types";
 
 /*
  * 숫자를 짧은 이야기로 읽어 준다. AI를 부르지 않는다 — 상황을 판별해 storyBank.ts에 미리 써 둔
@@ -13,7 +13,7 @@ export type Rel = "parent" | "grandparent" | "partner" | "child" | "sibling" | "
 export type CountBand = "week" | "month" | "c100" | "c200" | "c300" | "year" | "twoYears" | "c1000" | "more";
 export type FreqBand = "often" | "sometimes" | "rarely";
 export type PastBand = "start" | "early" | "middle" | "late" | "last";
-export type Slot = "cheer" | "then" | "now" | "today" | "past" | "met";
+export type Slot = "cheer" | "then" | "now" | "today" | "past" | "met" | "moment" | "momentToday";
 
 /*
  * 조부모를 먼저 본다 — "할머니"의 "머니", "grandmother"의 "mother"가 부모님으로 잡히지 않게.
@@ -21,7 +21,7 @@ export type Slot = "cheer" | "then" | "now" | "today" | "past" | "met";
  */
 const REL_WORDS: [Rel, string[]][] = [
   ["grandparent", ["할머니", "할아버지", "조부모", "외할", "grandma", "grandpa", "grandmother", "grandfather", "grandparent", "祖父", "祖母", "おじいちゃん", "おばあちゃん", "abuel", "爷爷", "奶奶", "外公", "外婆"]],
-  ["parent", ["부모", "엄마", "어머니", "아빠", "아버지", "mom", "mother", "dad", "father", "parent", "お母さん", "お父さん", "母", "父", "mamá", "papá", "madre", "padre", "妈", "爸"]],
+  ["parent", ["부모", "엄마", "어머니", "아빠", "아버지", "mom", "mother", "dad", "father", "parent", "お母さん", "お父さん", "両親", "母", "父", "mamá", "papá", "madre", "padre", "妈", "爸"]],
   ["partner", ["연인", "애인", "배우자", "남편", "아내", "여자친구", "남자친구", "partner", "wife", "husband", "girlfriend", "boyfriend", "恋人", "妻", "夫", "パートナー", "pareja", "esposa", "esposo", "novia", "novio", "伴侣", "老公", "老婆", "男朋友", "女朋友"]],
   ["child", ["자녀", "아들", "딸", "아이", "child", "son", "daughter", "kid", "子ども", "息子", "娘", "hijo", "hija", "孩子", "儿子", "女儿"]],
   ["sibling", ["형제", "자매", "누나", "오빠", "언니", "동생", "sibling", "brother", "sister", "きょうだい", "兄", "姉", "弟", "妹", "herman", "兄弟", "姐妹", "哥", "姐"]],
@@ -264,7 +264,7 @@ export function buildStory(i: {
   const count = countBand(i.remaining);
   const band = share ? pastBand(share.pct) : null;
   const group = groupOf(rel);
-  const then = rel === "parent" && share ? pick("then", [`${rel}.${freq}`, rel], i.tone, `${person.id}then`, vars) : undefined;
+  const then = rel === "parent" && share ? pick("then", [`${rel}.${freq}`, rel], i.tone, `${person.id}then${i.today}`, vars) : undefined;
   /*
    * 문장을 따로 뽑아 붙이면 분위기가 따로 논다. 그때 줄이 있으면 지금 줄은 "이제는…"처럼
    * 앞 문장을 이어받는 문장(after)에서 고르고, 없으면 이름으로 시작하는 문장에서 고른다.
@@ -278,12 +278,12 @@ export function buildStory(i: {
   ];
   const cheer =
     typeof i.theirAge === "number" && typeof i.averageLife === "number" && i.country && i.theirAge > i.averageLife
-      ? pick("cheer", ["*"], i.tone, `${person.id}cheer`, vars)
+      ? pick("cheer", ["*"], i.tone, `${person.id}cheer${i.today}`, vars)
       : undefined;
   const story: Story = {
     cheer,
     then,
-    now: pick("now", nowChain, i.tone, `${person.id}now`, vars),
+    now: pick("now", nowChain, i.tone, `${person.id}now${i.today}`, vars),
     today: pick(
       "today",
       [...(senior ? [`senior.${freq}`, "senior"] : []), `${rel}.${freq}`, `${group}.${freq}`, freq, "*"],
@@ -292,7 +292,7 @@ export function buildStory(i: {
       vars,
     ),
     past: band
-      ? pick("past", [...(senior ? ["senior"] : []), `${rel}.${band}`, `${group}.${band}`, band], i.tone, `${person.id}past`, vars)
+      ? pick("past", [...(senior ? ["senior"] : []), `${rel}.${band}`, `${group}.${band}`, band], i.tone, `${person.id}past${i.today}`, vars)
       : undefined,
     assumed: Boolean(share?.assumed),
   };
@@ -304,4 +304,21 @@ export function metLine(i: { person: Person; tone: Tone; thisYear: number; me?: 
   const rel = relationKind(i.person.relation);
   const vars = { name: i.person.name, n: String(i.thisYear), me: i.me?.trim() || tr(ME) };
   return pick("met", [rel, groupOf(rel), "*"], i.tone, `${i.person.id}met${i.thisYear}`, vars) ?? null;
+}
+
+/**
+ * 순간 상세의 이야기. 지금 줄(횟수의 무게)과 오늘 줄(작은 제안) 둘.
+ * 1년에 한두 번 오는 순간(rarely)과 매일 하는 순간(often)은 결이 달라서 빈도로 나눈다.
+ */
+export function momentStory(i: { moment: Moment; remaining: number; tone: Tone; today: string; me?: string }): Story | null {
+  if (!(i.remaining >= 1)) return null;
+  const freq = freqBand(i.moment.frequency);
+  const vars = { title: i.moment.title, count: formatCount(i.remaining), me: i.me?.trim() || tr(ME) };
+  const seed = `${i.moment.id}${i.today}`;
+  const story: Story = {
+    now: pick("moment", [freq, "*"], i.tone, `${seed}now`, vars),
+    today: pick("momentToday", [freq, "*"], i.tone, `${seed}today`, vars),
+    assumed: false,
+  };
+  return story.now || story.today ? story : null;
 }
