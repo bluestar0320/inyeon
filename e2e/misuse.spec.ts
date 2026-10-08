@@ -233,8 +233,8 @@ test("인터넷이 끊겨도 폴라로이드 사진이 보인다", async ({ page
       }),
       { timeout: 20_000 },
     )
-    // 기본 24장 + 순간 변형 55장. 전부 미리 받아 두어야 비행기 안에서도 보인다.
-    .toBe(79);
+    // 기본 24장 + 변형 70장(순간 11 + 부모님·조부모님 3, 5장씩). 전부 미리 받아 두어야 비행기 안에서도 보인다.
+    .toBe(94);
   await context.setOffline(true);
   try {
     for (const path of ["/", "/people/", "/people/edit?id=b"]) {

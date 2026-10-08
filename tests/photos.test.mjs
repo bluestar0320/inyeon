@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { MOMENT_PHOTO_KEYS, PHOTOS, SHARED_PHOTOS, photoFor, photoSrc } from "../lib/photos.ts";
+import { VARIED_PHOTO_KEYS, PHOTOS, SHARED_PHOTOS, photoFor, photoSrc } from "../lib/photos.ts";
 
 test("24장이고 키가 겹치지 않는다", () => {
   assert.equal(PHOTOS.length, 24);
@@ -15,7 +15,7 @@ test("고른 사진이 있으면 그것", () => {
 });
 
 test("고른 사진이 없으면 프리셋 이모지의 사진", () => {
-  assert.equal(photoFor({ id: "a", emoji: "🌷" }), "mother");
+  assert.match(photoFor({ id: "a", emoji: "🌷" }), /^mother(-[2-6])?$/);
   assert.match(photoFor({ id: "a", emoji: "🌸" }), /^blossom(-[2-6])?$/);
 });
 
@@ -55,14 +55,17 @@ test("순간 프리셋은 6장 중 하나 — 사람마다(id마다) 다르고, 
   assert.equal(photoFor({ id: "m7", emoji: "🌸" }), photoFor({ id: "m7", emoji: "🌸" }));
 });
 
-test("인연 프리셋은 한 장 그대로", () => {
+test("부모님·조부모님도 6장 중 하나, 다른 인연 프리셋은 한 장 그대로", () => {
   const seen = new Set();
-  for (let i = 0; i < 30; i++) seen.add(photoFor({ id: `p${i}`, emoji: "🌷" }));
-  assert.deepEqual([...seen], ["mother"]);
+  for (let i = 0; i < 60; i++) seen.add(photoFor({ id: `p${i}`, emoji: "🌷" }));
+  assert.equal(seen.size, 6);
+  const friends = new Set();
+  for (let i = 0; i < 30; i++) friends.add(photoFor({ id: `p${i}`, emoji: "🍻" }));
+  assert.deepEqual([...friends], ["friend"]);
 });
 
-test("순간 변형 사진 파일이 전부 있다", () => {
-  for (const key of MOMENT_PHOTO_KEYS) {
+test("변형 사진 파일이 전부 있다", () => {
+  for (const key of VARIED_PHOTO_KEYS) {
     for (let n = 2; n <= 6; n++) assert.ok(existsSync(`public/photos/${key}-${n}.webp`), `${key}-${n}`);
   }
 });

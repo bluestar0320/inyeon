@@ -33,20 +33,20 @@ export const PHOTOS = [
 export type PhotoKey = (typeof PHOTOS)[number]["key"];
 
 /*
- * 순간 프리셋은 사진이 6장씩 있다(기본 1장 + "-2"~"-6"). 공유 카드에 들어가는 사진이라
- * 모두가 같은 벚꽃을 올리면 재미가 없다. 어느 장을 쓸지는 id로 정한다 — 사람마다 다르고,
+ * 순간 프리셋과 부모님·조부모님은 사진이 6장씩 있다(기본 1장 + "-2"~"-6"). 공유 카드에 들어가는
+ * 사진이라 모두가 같은 벚꽃·같은 저녁상을 올리면 재미가 없다. 어느 장을 쓸지는 id로 정한다 — 사람마다 다르고,
  * 한 사람에게는 늘 같다(앱에서 본 폴라로이드와 저장한 카드가 같아야 한다).
  */
-export const MOMENT_PHOTO_KEYS = ["blossom", "sea", "travel", "hometown", "books", "surf", "guitar", "snow", "dog", "swim", "woodwork"];
+export const VARIED_PHOTO_KEYS = ["mother", "father", "grandparent", "blossom", "sea", "travel", "hometown", "books", "surf", "guitar", "snow", "dog", "swim", "woodwork"];
 const VARIANTS = 6;
 
 export const SHARED_PHOTOS: string[] = PHOTOS.filter((p) => !("emoji" in p)).map((p) => p.key);
 
 const KEYS = new Set<string>([
   ...PHOTOS.map((p) => p.key),
-  ...MOMENT_PHOTO_KEYS.flatMap((key) => Array.from({ length: VARIANTS - 1 }, (_, i) => `${key}-${i + 2}`)),
+  ...VARIED_PHOTO_KEYS.flatMap((key) => Array.from({ length: VARIANTS - 1 }, (_, i) => `${key}-${i + 2}`)),
 ]);
-const MOMENT_KEYS = new Set(MOMENT_PHOTO_KEYS);
+const VARIED_KEYS = new Set(VARIED_PHOTO_KEYS);
 const BY_EMOJI = new Map<string, string>(
   PHOTOS.flatMap((p) => ("emoji" in p ? [[p.emoji as string, p.key] as [string, string]] : [])),
 );
@@ -61,7 +61,7 @@ function hash(text: string): number {
 export function photoFor(item: { id: string; emoji?: string; photo?: string }): string {
   if (item.photo && KEYS.has(item.photo)) return item.photo;
   const byEmoji = item.emoji ? BY_EMOJI.get(item.emoji) : undefined;
-  if (byEmoji && MOMENT_KEYS.has(byEmoji)) {
+  if (byEmoji && VARIED_KEYS.has(byEmoji)) {
     const n = hash(item.id) % VARIANTS;
     return n === 0 ? byEmoji : `${byEmoji}-${n + 1}`;
   }

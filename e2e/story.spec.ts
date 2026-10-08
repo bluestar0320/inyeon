@@ -150,3 +150,13 @@ test("화면을 켜 둔 채 자정을 넘기면 새날로 본다 — 오늘 만�
   await page.clock.runFor("02:00");
   await expect(page.getByTestId("story-tone")).toBeVisible();
 });
+
+test("남은 만남을 점으로 보이고, 시작점이 있으면 지나간 만남을 흐린 점으로 앞에 깐다", async ({ page }) => {
+  await seed(page, "친구", "민수");
+  const dots = page.getByTestId("dots");
+  await expect(dots).toBeVisible();
+  await expect(dots.getByText(/지금까지/)).toHaveCount(0);
+  await seed(page, "어머니", "엄마", 0, "2012-03-01");
+  await expect(dots.getByText(/지금까지 \d+번 · 앞으로 \d+번/)).toBeVisible();
+  await dots.screenshot({ path: "test-results/dots.png" });
+});

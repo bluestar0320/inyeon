@@ -6,6 +6,7 @@ import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
 import type { CountResult, PastResult } from "@/lib/calc";
+import { dotsFor } from "@/lib/dots";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import type { ShareSpec } from "@/lib/shareCard";
@@ -18,6 +19,7 @@ const COPY = defineCopy({
     pastFuture: (past: string, future: string) => `지금까지 ${past}번 · 앞으로 ${future}번`,
     pastNote: (years: string) => `${years} 동안 지금 빈도로 이어졌다고 봤을 때의 어림값입니다.`,
     span: "계산 기간",
+    perDot: (n: string) => `점 하나 = ${n}번`,
   },
   en: {
     unit: "times",
@@ -26,6 +28,7 @@ const COPY = defineCopy({
     pastFuture: (past, future) => `${past} so far · ${future} to go`,
     pastNote: (years) => `A rough estimate, assuming the same frequency over ${years}.`,
     span: "Time span",
+    perDot: (n) => `Each dot = ${n} times`,
   },
   ja: {
     unit: "回",
@@ -34,6 +37,7 @@ const COPY = defineCopy({
     pastFuture: (past, future) => `これまで${past}回 · これから${future}回`,
     pastNote: (years) => `${years}のあいだ今の頻度で続いたと考えたときの目安です。`,
     span: "計算期間",
+    perDot: (n) => `点ひとつ = ${n}回`,
   },
   es: {
     unit: "veces",
@@ -42,6 +46,7 @@ const COPY = defineCopy({
     pastFuture: (past, future) => `${past} hasta ahora · ${future} por delante`,
     pastNote: (years) => `Estimación aproximada, suponiendo la misma frecuencia durante ${years}.`,
     span: "Periodo",
+    perDot: (n) => `Cada punto = ${n} veces`,
   },
   zh: {
     unit: "次",
@@ -50,6 +55,7 @@ const COPY = defineCopy({
     pastFuture: (past, future) => `至今${past}次 · 往后${future}次`,
     pastNote: (years) => `按照过去${years}一直保持现在的频率估算，仅供参考。`,
     span: "计算期间",
+    perDot: (n) => `每个点 = ${n}次`,
   },
 });
 
@@ -81,6 +87,8 @@ export default function ResultPanel({
   const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
+  const hasPast = Boolean(past && past.count >= 1);
+  const dots = dotsFor(hasPast ? past!.count : 0, result.total);
 
   /*
    * 아직 셀 수 없을 때(나이를 안 넣었을 때)는 한 줄로만 둔다. 큰 "-"가 화면 위 절반을
@@ -112,24 +120,28 @@ export default function ResultPanel({
       )}
 
       {/*
-        지나온 쪽과 남은 쪽을 나란히 놓는다. 홈의 인생 막대와 같은 모양이다 —
-        이 앱이 처음부터 하던 말("얼마나 지나왔고 얼마나 남았는가")을 인연과
-        순간에도 그대로 적용하는 것이라, 다른 그림을 쓸 이유가 없다.
+        남은 만남을 점으로 센다. 시작점이 있으면 지나온 만남을 흐린 점으로 앞에 깐다 —
+        "얼마나 지나왔고 얼마나 남았는가"를 숫자보다 먼저 눈으로 본다.
+        많으면 묶는다(lib/dots.ts). 숫자는 바로 위·아래 글자에 있으므로 점은 읽어 주지 않는다.
       */}
-      {past && past.count >= 1 && (
-        <div className="border-t border-hero-line pt-5">
-          <div className="flex h-2 overflow-hidden rounded-full bg-hero-line">
-            <div
-              className="h-full bg-ink-800"
-              style={{ width: `${(past.count / (past.count + result.total)) * 100}%` }}
-            />
+      {dots.left > 0 && (
+        <div data-testid="dots" className="border-t border-hero-line pt-5">
+          <div aria-hidden="true" className="flex flex-wrap gap-1.5">
+            {Array.from({ length: dots.past + dots.left }, (_, i) => (
+              <span key={i} className={`h-2 w-2 rounded-full ${i < dots.past ? "bg-hero-line" : "bg-ink-800"}`} />
+            ))}
           </div>
-          <p className="mt-2 text-xs text-ink-600">
-            {t.pastFuture(formatCount(past.count), formatCount(result.total))}
-          </p>
-          <p className="mt-0.5 text-[11px] text-ink-400">
-            {t.pastNote(formatYears(past.years))}
-          </p>
+          {hasPast && (
+            <p className="mt-2 text-xs text-ink-600">
+              {t.pastFuture(formatCount(past!.count), formatCount(result.total))}
+            </p>
+          )}
+          {dots.unit > 1 && <p className="mt-0.5 text-[11px] text-ink-400">{t.perDot(formatCount(dots.unit))}</p>}
+          {hasPast && (
+            <p className="mt-0.5 text-[11px] text-ink-400">
+              {t.pastNote(formatYears(past!.years))}
+            </p>
+          )}
         </div>
       )}
 
