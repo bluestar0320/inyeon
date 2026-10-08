@@ -11,6 +11,7 @@ import ThemeApplier from "@/components/ThemeApplier";
 import SaveWarning from "@/components/SaveWarning";
 import SkipLink from "@/components/SkipLink";
 import UndoBar from "@/components/UndoBar";
+import { SITE_URL } from "@/lib/contact";
 import { STORAGE_KEY } from "@/lib/storageKey";
 import { PAPER_COUNT } from "@/lib/paper";
 import { THEME_COLOR } from "@/lib/themeColor";
@@ -21,6 +22,17 @@ export const metadata: Metadata = {
     "남은 시간과 남은 만남을 횟수로 계산합니다. 리마인딩이 아니라 플래닝을 위한 계산기.",
   // iOS는 manifest의 display를 무시하므로 따로 알려 줘야 전체 화면으로 열린다.
   appleWebApp: { capable: true, title: "몇번더", statusBarStyle: "default" },
+  // 메신저에 링크를 붙였을 때 뜨는 미리보기. 그림은 scripts/og-image.mjs로 만든다.
+  // 메신저는 절대 주소만 읽으므로 하위 경로까지 붙은 SITE_URL을 바탕으로 둔다.
+  metadataBase: new URL(`https://${SITE_URL}/`),
+  openGraph: {
+    type: "website",
+    siteName: "몇 번 더",
+    title: "어머니와 남은 저녁 식사, 몇 번일까요?",
+    description: "만나는 횟수로 세어 보는 남은 시간. 계산도 기록도 이 기기 안에만 남습니다.",
+    images: [{ url: "og.jpg", width: 1200, height: 630, alt: "저녁상이 차려진 부엌 식탁" }],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

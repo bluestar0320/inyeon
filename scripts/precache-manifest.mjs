@@ -42,6 +42,8 @@ for (const file of walk(OUT).sort()) {
   // 글꼴 조각(약 2MB, 92개)은 미리 받지 않는다. 화면에 나온 글자의 조각만 볼 때 받아 둔다.
   // 오프라인에서 아직 안 받은 조각은 기기 명조로 그려진다 — 글자가 사라지지는 않는다.
   if (rel.startsWith("fonts/") && rel.endsWith(".woff2")) continue;
+  // 링크 미리보기 그림은 메신저가 가져가는 것이라 앱에서는 쓰지 않는다.
+  if (rel === "og.jpg") continue;
   hash.update(rel).update(readFileSync(file));
   // index.html은 경로 자체로 요청된다(trailingSlash: true).
   if (rel === "index.html") routes.add("/");
