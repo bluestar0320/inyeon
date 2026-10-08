@@ -140,8 +140,9 @@ test("순간 목록은 폰에서 두 칸 타일이라 한 화면에 네 개쯤 �
 });
 
 test("화면을 켜 둔 채 자정을 넘기면 새날로 본다 — 오늘 만든 인연도 다음 날엔 말투 바꾸기가 보인다", async ({ page }) => {
-  const late = new Date();
-  late.setHours(23, 59, 30, 0);
+  // 브라우저는 서울 시간(playwright.config)이고 CI는 UTC라, 서울 날짜로 오늘 밤을 잡는다.
+  const seoulToday = new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);
+  const late = new Date(`${seoulToday}T23:59:30+09:00`);
   await page.clock.install({ time: late });
   await seed(page, "어머니", "엄마", 0);
   await expect(page.getByTestId("story-now")).toBeVisible();
