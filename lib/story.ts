@@ -93,6 +93,11 @@ export function pastShare(i: {
   theirAge: number | null;
   remaining: number;
   now?: Date;
+  /**
+   * 「만났어요」를 쓰는 사람: 앱에 넣은 뒤 기간(years)은 어림 대신 실제로 기록한 만남(met)으로 센다.
+   * 화면의 "함께한 만남"과 같은 기준이 된다. 기록을 안 쓰는 사람에게는 주지 않는다(어림 그대로).
+   */
+  recorded?: { years: number; met: number };
 }): { pct: number; assumed: boolean } | null {
   const now = i.now ?? new Date();
   let away: number | null = null;
@@ -119,6 +124,7 @@ export function pastShare(i: {
     if (!result) return null;
     past = result.count;
   }
+  if (i.recorded) past = Math.max(0, past - toPerYear(i.frequency) * i.recorded.years + i.recorded.met);
   const total = past + Math.max(0, i.remaining);
   if (!(total > 0)) return null;
   const pct = Math.min(100, Math.max(0, Math.floor((past / total) * 100)));
@@ -236,6 +242,8 @@ export function buildStory(i: {
   pastFrequency?: Frequency;
   /** 「내 정보」의 닉네임. 비면 "당신". */
   me?: string;
+  /** 「만났어요」 기록으로 센 앱 사용 기간의 만남(pastShare 참고). */
+  recorded?: { years: number; met: number };
   /** 상대 나라·성별의 출생 시 기대수명과 나라 이름. 나이가 이보다 많으면 축하 문장을 붙인다. */
   averageLife?: number;
   country?: string;
@@ -252,6 +260,7 @@ export function buildStory(i: {
     theirAge: i.theirAge ?? null,
     remaining: i.remaining,
     now: i.now,
+    recorded: i.recorded,
   });
   const vars: Record<string, string> = {
     name: person.name,

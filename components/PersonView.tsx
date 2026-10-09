@@ -13,7 +13,7 @@ import ResultPanel from "@/components/ResultPanel";
 import StoryLines from "@/components/StoryLines";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
-import { DEFAULT_GROWTH, computeGrowth, computePast, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
+import { DAYS_PER_YEAR, DEFAULT_GROWTH, computeGrowth, computePast, computeRelationship, pastLimit, resolveAge } from "@/lib/calc";
 import {
   formatAge,
   formatCount,
@@ -40,6 +40,8 @@ const COPY = defineCopy({
     untilMyAge: (age: number) => `내가 ${age}세 될 때까지`,
     years: (n: number) => `앞으로 ${n}년`,
     timesUnit: "번",
+    // 공유 카드: "어머니와 나 / 함께한 37번, 그리고 앞으로 / 255번".
+    togetherSub: (n: string) => `함께한 ${n}번, 그리고 앞으로`,
     times: (n: string) => `${n}번`,
     interval: "만남 간격",
     together: "함께 보낼 시간",
@@ -64,6 +66,7 @@ const COPY = defineCopy({
     untilMyAge: (age) => `Until I turn ${age}`,
     years: (n) => `The next ${n} ${n === 1 ? "year" : "years"}`,
     timesUnit: "times",
+    togetherSub: (n) => `${n} together, and still to come`,
     times: (n) => `${n} times`,
     interval: "Every",
     together: "Time together",
@@ -88,6 +91,7 @@ const COPY = defineCopy({
     untilMyAge: (age) => `自分が${age}歳になるまで`,
     years: (n) => `これから${n}年`,
     timesUnit: "回",
+    togetherSub: (n) => `一緒に${n}回、そしてこれから`,
     times: (n) => `${n}回`,
     interval: "会う間隔",
     together: "一緒に過ごす時間",
@@ -112,6 +116,7 @@ const COPY = defineCopy({
     untilMyAge: (age) => `Hasta que cumpla ${age}`,
     years: (n) => `Los próximos ${n} ${n === 1 ? "año" : "años"}`,
     timesUnit: "veces",
+    togetherSub: (n) => `${n} juntos, y aún por delante`,
     times: (n) => `${n} veces`,
     interval: "Cada",
     together: "Tiempo juntos",
@@ -136,6 +141,7 @@ const COPY = defineCopy({
     untilMyAge: (age) => `到我${age}岁为止`,
     years: (n) => `今后${n}年`,
     timesUnit: "次",
+    togetherSub: (n) => `共度${n}次，往后还有`,
     times: (n) => `${n}次`,
     interval: "见面间隔",
     together: "相处的时间",
@@ -190,6 +196,13 @@ export default function PersonView({ person }: { person: Person }) {
     [draft, state.profile],
   );
   const growth = useMemo(() => computeGrowth(person), [person]);
+  /*
+   * 「만났어요」를 한 번이라도 쓴 사람만 기록으로 센다. 안 쓰는 사람에게 "놓친 만남 12번"이 쌓이면
+   * 탓하는 숫자가 된다 — 그런 사람에게는 놓친 만남을 숨기고 이야기 비율도 어림 그대로 둔다.
+   */
+  const recording = (person.meetings?.length ?? 0) > 0;
+  const addedAt = new Date(person.createdAt).getTime();
+  const recordedYears = Number.isNaN(addedAt) ? 0 : Math.max(0, (Date.now() - addedAt) / 86_400_000 / DAYS_PER_YEAR);
   const myAge = state.profile ? resolveAge(state.profile) : null;
   const theirAge = resolveAge(person);
   // 화면을 켜 둔 채 자정을 넘기면 「오늘」 문장과 말투 바꾸기도 새날 기준으로 바뀐다.
@@ -210,8 +223,10 @@ export default function PersonView({ person }: { person: Person }) {
         // 출생 시 기대수명보다 나이가 많으시면 축하 한 줄을 붙인다.
         averageLife: lookupLifeExpectancy(person.countryCode, person.sex),
         country: COUNTRIES.find((c) => c.code === (person.countryCode ?? DEFAULT_COUNTRY_CODE))?.name,
+        recorded: recording ? { years: recordedYears, met: result.together.met } : undefined,
       }),
-    [draft, result.total, today, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, person.countryCode, person.sex, state.profile?.nickname],
+    // recordedYears는 날이 바뀔 때만 의미 있게 달라지므로 today로 갈음한다.
+    [draft, result.total, result.together.met, recording, today, myAge, theirAge, state.settings.tone, state.settings.showPast, person.frequency, person.countryCode, person.sex, state.profile?.nickname],
   );
   // 다시 들어온 사람에게만 말투 바꾸기를 보인다. createdAt은 UTC라 기기 날짜로 바꿔 비교한다.
   const created = new Date(person.createdAt);
@@ -233,7 +248,8 @@ export default function PersonView({ person }: { person: Person }) {
   }, [person, state.profile, state.settings.showPast]);
   const together = {
     met: result.together.met,
-    missed: result.together.missed,
+    missed: recording ? result.together.missed : 0,
+    showMissed: recording,
     estimated: estimate?.count ?? 0,
     estimatedYears: estimate?.years ?? 0,
   };
@@ -266,7 +282,7 @@ export default function PersonView({ person }: { person: Person }) {
           photo: imageFor(person),
           label: person.name,
           title: pairTitle(person.name),
-          subtitle: copy.meetingLabel,
+          subtitle: together.met + together.estimated >= 1 ? t.togetherSub(formatCount(together.met + together.estimated)) : copy.meetingLabel,
           value: formatCount(result.total),
           unit: t.timesUnit,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,

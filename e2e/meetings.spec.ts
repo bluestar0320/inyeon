@@ -41,7 +41,8 @@ test("이번 기간에 만나면 함께한 만남 +1·앞으로 −1, 계획보�
   await expect.poll(number).toBeGreaterThan(100);
   const before = await number();
   const together = page.getByTestId("together");
-  await expect(together).toHaveText(/^함께한 만남 0번 · 놓친 만남 0번/);
+  // 아직 한 번도 안 눌렀으면 놓친 만남은 보이지 않는다.
+  await expect(together).toHaveText(/^함께한 만남 0번 · 앞으로 \d+번$/);
 
   await page.getByRole("button", { name: "만났어요" }).click();
   await expect(together).toHaveText(/^함께한 만남 1번 · 놓친 만남 0번/);
@@ -54,17 +55,17 @@ test("이번 기간에 만나면 함께한 만남 +1·앞으로 −1, 계획보�
   await expect.poll(number).toBe(after);
 });
 
-test("끝난 기간에 기록이 없으면 놓친 만남으로 센다", async ({ page }) => {
+test("「만났어요」를 쓰는 사람에게는 끝난 기간에 기록이 없으면 놓친 만남으로 센다", async ({ page }) => {
   await setUpProfile(page, 30);
-  // 서울 시간으로 두 달 전 1일에 넣은 월 1회 인연 — 지난달·지지난달이 놓친 만남이다.
+  // 서울 시간으로 두 달 전 1일에 넣은 월 1회 인연. 그달엔 만났고 지난달은 놓쳤다.
   const seoul = new Date(Date.now() + 9 * 3_600_000);
   const added = new Date(Date.UTC(seoul.getUTCFullYear(), seoul.getUTCMonth() - 2, 1)).toISOString().slice(0, 10);
   await page.evaluate(({ key, added }) => {
     const v = JSON.parse(localStorage.getItem(key)!);
     v.people = [{ id: "p1", name: "엄마", relation: "부모님", ageYears: 60, ageAsOf: "2026-01-01", lifeExpectancy: 85, lifeExpectancyManual: true,
-      frequency: { count: 1, unit: "month" }, filters: [], createdAt: `${added}T00:00:00+09:00`, updatedAt: `${added}T00:00:00+09:00` }];
+      frequency: { count: 1, unit: "month" }, filters: [], meetings: [added], createdAt: `${added}T00:00:00+09:00`, updatedAt: `${added}T00:00:00+09:00` }];
     localStorage.setItem(key, JSON.stringify(v));
   }, { key: STORAGE_KEY, added });
   await page.goto("/people/detail/?id=p1");
-  await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 0번 · 놓친 만남 2번/);
+  await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 1번 · 놓친 만남 1번/);
 });

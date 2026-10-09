@@ -217,7 +217,7 @@ test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으�
   await page.waitForURL(/\/people\/detail/);
 
   // 함께한 쪽(어림값 포함)과 남은 쪽이 한 줄에 같이 나온다.
-  await expect(page.getByTestId("together")).toHaveText(/함께한 만남 [1-9][\d,]*번 · 놓친 만남 0번 · 앞으로 \d+번/);
+  await expect(page.getByTestId("together")).toHaveText(/함께한 만남 [1-9][\d,]*번 · 앞으로 \d+번/);
   // 어림값이라는 사실을 숨기지 않는다.
   await expect(page.getByText(/어림했어요/)).toBeVisible();
 

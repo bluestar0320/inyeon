@@ -157,7 +157,7 @@ test("남은 만남을 점으로 보이고, 시작점이 있으면 그때부터�
   await seed(page, "친구", "민수");
   const dots = page.getByTestId("dots");
   await expect(dots).toBeVisible();
-  await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 0번 · 놓친 만남 0번/);
+  await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 0번 · 앞으로 \d+번$/);
   await expect(dots.getByText(/「만났어요」를 누르면/)).toBeVisible();
   await seed(page, "어머니", "엄마", 0, "2012-03-01");
   await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 [1-9][\d,]*번/);

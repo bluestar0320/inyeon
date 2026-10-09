@@ -330,3 +330,13 @@ test("이름과 관계가 같은 말이면 관계를 따로 붙이지 않는다"
   assert.equal(relationTag("엄마", undefined), undefined);
   assert.equal(relationTag("엄마", "  "), undefined);
 });
+
+test("「만났어요」 기록이 있으면 앱에 넣은 뒤 기간은 어림 대신 기록으로 비율을 센다", () => {
+  const base = { rel: "friend", frequency: { count: 1, unit: "week" }, since: "2016-10-07", myAge: 35, theirAge: 35, remaining: 1000, now: NOW };
+  const guessed = pastShare(base).pct;
+  // 1년 동안 매주 만났다고 어림했지만 실제로는 한 번도 기록이 없다 → 비율이 줄어든다.
+  assert.ok(pastShare({ ...base, recorded: { years: 1, met: 0 } }).pct < guessed);
+  // 어림만큼 기록했으면 같다.
+  const perYear = 365.2425 / 7;
+  assert.equal(pastShare({ ...base, recorded: { years: 1, met: perYear } }).pct, guessed);
+});
