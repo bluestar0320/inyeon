@@ -284,7 +284,8 @@ test("the concept example: dating until a target marriage age", () => {
   assert.equal(result.horizonYears, 5);
   assert.equal(result.sharedYears, 5);
   assert.equal(result.limitedBy, "horizon");
-  assert.ok(Math.abs(result.total - (5 * DAYS_PER_YEAR) / 7) < 1e-9);
+  // 이번 주의 칸은 주가 끝날 때까지 온전히 남겨 두므로(lib/meetings.ts) 한 칸 안쪽으로 다를 수 있다.
+  assert.ok(Math.abs(result.total - (5 * DAYS_PER_YEAR) / 7) < 1);
 });
 
 test("a fixed number of years works as a horizon too", () => {

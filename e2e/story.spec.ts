@@ -61,12 +61,14 @@ test("처음 만든 날엔 말투 바꾸기가 없고, 다시 오면 있다", as
   expect(saved).toBe("warm");
 });
 
-test("만났어요를 누르면 한 마디가 뜨고, 남은 횟수는 그대로다", async ({ page }) => {
+test("만났어요를 누르면 한 마디가 뜨고, 남은 횟수가 하나 준다", async ({ page }) => {
   await seed(page, "어머니", "엄마");
-  const before = await page.locator("p.numeral").first().textContent();
+  const number = async () => Number((await page.locator("p.numeral").first().innerText()).replace(/[^0-9]/g, ""));
+  await expect.poll(number).toBeGreaterThan(100);
+  const before = await number();
   await page.getByRole("button", { name: "만났어요" }).click();
   await expect(page.getByText(/올해 1번째/)).toBeVisible();
-  expect(await page.locator("p.numeral").first().textContent()).toBe(before);
+  await expect.poll(number).toBe(before - 1);
 });
 
 test("설정을 건드리지 않은 사람의 기본 말투는 「찡하게」다", async ({ page }) => {
@@ -151,12 +153,14 @@ test("화면을 켜 둔 채 자정을 넘기면 새날로 본다 — 오늘 만�
   await expect(page.getByTestId("story-tone")).toBeVisible();
 });
 
-test("남은 만남을 점으로 보이고, 시작점이 있으면 지나간 만남을 흐린 점으로 앞에 깐다", async ({ page }) => {
+test("남은 만남을 점으로 보이고, 시작점이 있으면 그때부터의 만남을 함께한 만남으로 어림해 앞에 깐다", async ({ page }) => {
   await seed(page, "친구", "민수");
   const dots = page.getByTestId("dots");
   await expect(dots).toBeVisible();
-  await expect(dots.getByText(/지금까지/)).toHaveCount(0);
+  await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 0번 · 놓친 만남 0번/);
+  await expect(dots.getByText(/「만났어요」를 누르면/)).toBeVisible();
   await seed(page, "어머니", "엄마", 0, "2012-03-01");
-  await expect(dots.getByText(/지금까지 \d+번 · 앞으로 \d+번/)).toBeVisible();
+  await expect(page.getByTestId("together")).toHaveText(/^함께한 만남 [1-9][\d,]*번/);
+  await expect(dots.getByText(/어림했어요/)).toBeVisible();
   await dots.screenshot({ path: "test-results/dots.png" });
 });

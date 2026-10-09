@@ -217,19 +217,26 @@ export default function PersonView({ person }: { person: Person }) {
   const created = new Date(person.createdAt);
   const pad = (n: number) => String(n).padStart(2, "0");
   const returning = `${created.getFullYear()}-${pad(created.getMonth() + 1)}-${pad(created.getDate())}` !== today;
-  // 설정을 끄면 시작점이 있어도 안 보인다. 어림값이라 끌 수 있어야 한다.
-  const past = useMemo(
-    () =>
-      state.settings.showPast
-        ? computePast(
-            person.frequency,
-            person.since,
-            undefined,
-            pastLimit(resolveAge(person), state.profile ? resolveAge(state.profile) : null),
-          )
-        : null,
-    [person, state.profile, state.settings.showPast],
-  );
+  /*
+   * 지금까지 함께한 만남 = 「언제부터」부터 앱에 넣은 날까지의 어림값 + 그 뒤 「만났어요」 기록.
+   * 어림값은 설정으로 끌 수 있다(어림이라서). 기록은 실제로 누른 것이라 늘 보인다.
+   */
+  const estimate = useMemo(() => {
+    if (!state.settings.showPast) return null;
+    const added = new Date(person.createdAt);
+    return computePast(
+      person.frequency,
+      person.since,
+      Number.isNaN(added.getTime()) ? undefined : added,
+      pastLimit(resolveAge(person), state.profile ? resolveAge(state.profile) : null),
+    );
+  }, [person, state.profile, state.settings.showPast]);
+  const together = {
+    met: result.together.met,
+    missed: result.together.missed,
+    estimated: estimate?.count ?? 0,
+    estimatedYears: estimate?.years ?? 0,
+  };
 
   const age = resolveAge(person);
   const horizonText =
@@ -268,9 +275,8 @@ export default function PersonView({ person }: { person: Person }) {
           story: story ? [story.now, (story.assumed ? undefined : story.past) ?? story.today].filter((line): line is string => Boolean(line)) : undefined,
         }}
         story={story && <StoryLines story={story} personId={person.id} returning={returning} />}
-        met={{ count: result.metThisPeriod, unit: draftSetup.frequency.unit }}
+        together={together}
         shareFileName={[person.name, t.times(formatCount(result.total))]}
-        past={past}
         stats={[
           { label: t.interval, value: formatInterval(result.intervalDays) },
           {

@@ -216,11 +216,10 @@ test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으�
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/\/people\/detail/);
 
-  // 지나온 쪽과 남은 쪽이 한 줄에 같이 나온다.
-  const bar = page.getByText(/지금까지 \d+번 · 앞으로 \d+번/);
-  await expect(bar).toBeVisible();
+  // 함께한 쪽(어림값 포함)과 남은 쪽이 한 줄에 같이 나온다.
+  await expect(page.getByTestId("together")).toHaveText(/함께한 만남 [1-9][\d,]*번 · 놓친 만남 0번 · 앞으로 \d+번/);
   // 어림값이라는 사실을 숨기지 않는다.
-  await expect(page.getByText(/어림값입니다/)).toBeVisible();
+  await expect(page.getByText(/어림했어요/)).toBeVisible();
 
   const headlineBefore = await headline(page);
 
@@ -230,7 +229,8 @@ test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으�
   await page.goto("/people");
   await page.locator("a.card").first().click();
   await page.waitForURL(/\/people\/detail/);
-  await expect(page.getByText(/지금까지 \d+번/)).toBeHidden();
+  await expect(page.getByText(/어림했어요/)).toBeHidden();
+  await expect(page.getByTestId("together")).toHaveText(/함께한 만남 0번/);
   expect(await headline(page)).toBe(headlineBefore);
 });
 

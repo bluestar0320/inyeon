@@ -14,7 +14,7 @@ import type {
 } from "./types";
 import { defineCopy, tr } from "./i18n.ts";
 import { lookupLifeExpectancy } from "./lifeExpectancy.ts";
-import { extraMeetings, metThisPeriod } from "./meetings.ts";
+import { ledger, type Ledger } from "./meetings.ts";
 
 export const DAYS_PER_YEAR = 365.2425;
 
@@ -293,8 +293,8 @@ export interface RelationshipResult extends CountResult {
   togetherDays: number | null;
   /** "내가 n세 될 때까지"의 n이 이미 지났는지. 0번의 이유를 화면에서 밝힌다. */
   horizonPassed: boolean;
-  /** 이번 기간(이번 달 등)에 「만났어요」로 기록한 만남 수. */
-  metThisPeriod: number;
+  /** 「만났어요」 기록으로 센 함께한·놓친 만남(lib/meetings.ts). 인연을 넣은 날부터 센다. */
+  together: Ledger;
 }
 
 /** 목표 시점까지 남은 기간. horizon이 life면 상한이 없으므로 null. */
@@ -316,6 +316,14 @@ function personHorizonYears(
  * 내가 먼저 떠날 수도 있으므로 둘 중 짧은 쪽을 쓰고, 결혼처럼 목표 시점이 따로
  * 있으면 그것까지 포함해 가장 먼저 끝나는 것을 기준으로 삼는다.
  */
+/** 기기 시간대의 날짜(YYYY-MM-DD). createdAt처럼 UTC로 적힌 시각도 그 사람의 날짜로 바꾼다. */
+function localDate(iso: string | undefined, fallback: Date): string {
+  const parsed = iso ? new Date(iso) : fallback;
+  const d = Number.isNaN(parsed.getTime()) ? fallback : parsed;
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 export function computeRelationship(
   person: Person,
   profile: Profile | null,
@@ -353,12 +361,13 @@ export function computeRelationship(
 
   const perYear = toPerYear(person.frequency);
   const counted = countOccurrences({ years: sharedYears, perYear, filters: person.filters });
-  // 예측보다 더 만난 만큼은 이미 쓴 만남이다(lib/meetings.ts). 예측 안의 만남은 빼지 않는다 — 두 번 세게 된다.
-  const p = (n: number) => String(n).padStart(2, "0");
-  const today = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
-  const meetings = person.meetings ?? [];
-  const extra = extraMeetings(meetings, person.frequency, today);
-  counted.total = Math.max(0, counted.total - extra);
+  // 오늘 기준의 칸: 이번 기간에 만난 칸은 앞으로에서 빼고, 아직 안 만난 칸은 기간이 끝날 때까지 남긴다.
+  const together = ledger(person.meetings ?? [], person.frequency, localDate(person.createdAt, now), localDate(undefined, now));
+  if (counted.total > 0) {
+    counted.total = Math.max(0, counted.total + together.adjust);
+    // 이번 기간의 칸을 남겨 두느라 「최대 N번」을 넘으면 안 된다.
+    if (counted.cappedAt !== null) counted.total = Math.min(counted.total, counted.cappedAt);
+  }
 
   const intervalDays = perYear > 0 ? DAYS_PER_YEAR / perYear : null;
   const hours = person.hoursPerMeeting;
@@ -381,7 +390,7 @@ export function computeRelationship(
       person.horizon?.kind === "untilMyAge" &&
       profile !== null &&
       (resolveAge(profile, now) ?? 0) >= person.horizon.age,
-    metThisPeriod: metThisPeriod(meetings, person.frequency, today),
+    together,
   };
 }
 

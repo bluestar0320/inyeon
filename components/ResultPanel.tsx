@@ -6,7 +6,6 @@ import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
 import type { CountResult, PastResult } from "@/lib/calc";
-import type { FrequencyUnit } from "@/lib/types";
 import { dotsFor } from "@/lib/dots";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
@@ -21,8 +20,9 @@ const COPY = defineCopy({
     pastNote: (years: string) => `${years} 동안 지금 빈도로 이어졌다고 봤을 때의 어림값입니다.`,
     span: "계산 기간",
     perDot: (n: string) => `점 하나 = ${n}번`,
-    met: (period: string, n: number) => `${period} 함께한 만남 ${n}번`,
-    period: { day: "오늘", week: "이번 주", month: "이번 달", quarter: "이번 분기", year: "올해", year2: "최근 2년", year3: "최근 3년", year5: "최근 5년", year10: "최근 10년" } as Record<FrequencyUnit, string>,
+    together: (met: string, missed: string, left: string) => `함께한 만남 ${met}번 · 놓친 만남 ${missed}번 · 앞으로 ${left}번`,
+    estimated: (years: string) => `「언제부터」부터 앱에 넣은 날까지(${years})는 지금 빈도로 어림했어요.`,
+    startHint: "만날 때마다 「만났어요」를 누르면 함께한 만남이 쌓여요.",
   },
   en: {
     unit: "times",
@@ -32,8 +32,9 @@ const COPY = defineCopy({
     pastNote: (years) => `A rough estimate, assuming the same frequency over ${years}.`,
     span: "Time span",
     perDot: (n) => `Each dot = ${n} times`,
-    met: (period, n) => `Met ${n} ${n === 1 ? "time" : "times"} ${period}`,
-    period: { day: "today", week: "this week", month: "this month", quarter: "this quarter", year: "this year", year2: "in the last 2 years", year3: "in the last 3 years", year5: "in the last 5 years", year10: "in the last 10 years" },
+    together: (met, missed, left) => `Together ${met} · Missed ${missed} · ${left} to go`,
+    estimated: (years) => `From your start date until you added them (${years}) is estimated at the current frequency.`,
+    startHint: "Tap “We met” each time you meet and your time together adds up.",
   },
   ja: {
     unit: "回",
@@ -43,8 +44,9 @@ const COPY = defineCopy({
     pastNote: (years) => `${years}のあいだ今の頻度で続いたと考えたときの目安です。`,
     span: "計算期間",
     perDot: (n) => `点ひとつ = ${n}回`,
-    met: (period, n) => `${period}会えたのは${n}回`,
-    period: { day: "今日", week: "今週", month: "今月", quarter: "この四半期", year: "今年", year2: "この2年", year3: "この3年", year5: "この5年", year10: "この10年" },
+    together: (met, missed, left) => `一緒に過ごした${met}回 · 会えなかった${missed}回 · これから${left}回`,
+    estimated: (years) => `「いつから」から登録した日まで(${years})は今の頻度で見積もっています。`,
+    startHint: "会うたびに「会えました」を押すと、一緒に過ごした回数が積み重なります。",
   },
   es: {
     unit: "veces",
@@ -54,8 +56,9 @@ const COPY = defineCopy({
     pastNote: (years) => `Estimación aproximada, suponiendo la misma frecuencia durante ${years}.`,
     span: "Periodo",
     perDot: (n) => `Cada punto = ${n} veces`,
-    met: (period, n) => `${n} ${n === 1 ? "encuentro" : "encuentros"} ${period}`,
-    period: { day: "hoy", week: "esta semana", month: "este mes", quarter: "este trimestre", year: "este año", year2: "en los últimos 2 años", year3: "en los últimos 3 años", year5: "en los últimos 5 años", year10: "en los últimos 10 años" },
+    together: (met, missed, left) => `Juntos ${met} · Perdidos ${missed} · Quedan ${left}`,
+    estimated: (years) => `Desde la fecha de inicio hasta que lo añadiste (${years}) se estima con la frecuencia actual.`,
+    startHint: "Pulsa «Nos vimos» cada vez y tus encuentros se irán sumando.",
   },
   zh: {
     unit: "次",
@@ -65,8 +68,9 @@ const COPY = defineCopy({
     pastNote: (years) => `按照过去${years}一直保持现在的频率估算，仅供参考。`,
     span: "计算期间",
     perDot: (n) => `每个点 = ${n}次`,
-    met: (period, n) => `${period}已见面${n}次`,
-    period: { day: "今天", week: "本周", month: "本月", quarter: "本季度", year: "今年", year2: "近2年", year3: "近3年", year5: "近5年", year10: "近10年" },
+    together: (met, missed, left) => `共度${met}次 · 错过${missed}次 · 往后${left}次`,
+    estimated: (years) => `从「开始时间」到添加当天（${years}）按现在的频率估算。`,
+    startHint: "每次见面都点一下「见过了」，共度的次数会一点点累积。",
   },
 });
 
@@ -81,7 +85,7 @@ export default function ResultPanel({
   shareFileName,
   past,
   story,
-  met,
+  together,
 }: {
   label: string;
   result: CountResult;
@@ -95,16 +99,27 @@ export default function ResultPanel({
   past?: PastResult | null;
   /** 큰 숫자 아래의 이야기. 있으면 sentence 대신 이것을 보인다. */
   story?: ReactNode;
-  /** 이번 기간에 「만났어요」로 기록한 만남. 남은 점의 앞쪽을 "함께한 점" 색으로 칠한다. */
-  met?: { count: number; unit: FrequencyUnit };
+  /**
+   * 인연만: 「만났어요」로 센 함께한·놓친 만남(lib/meetings.ts). estimated는 「언제부터」부터 앱에 넣은 날까지의
+   * 어림값으로, 함께한 쪽에 더해 보인다. 있으면 past 대신 이것을 그린다.
+   */
+  together?: { met: number; missed: number; estimated: number; estimatedYears: number };
 }) {
   const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
-  const hasPast = Boolean(past && past.count >= 1);
-  const dots = dotsFor(hasPast ? past!.count : 0, result.total);
-  // 한 번만 만나도 점 하나는 칠한다. 점이 여러 번을 묶고 있어도 "방금 하나 썼다"가 보여야 한다.
-  const metDots = met && met.count > 0 ? Math.min(dots.left, Math.max(1, Math.round(met.count / dots.unit))) : 0;
+  const hasPast = !together && Boolean(past && past.count >= 1);
+  const metTotal = together ? together.met + together.estimated : 0;
+  const dots = together
+    ? dotsFor(metTotal, result.total, together.missed)
+    : dotsFor(hasPast ? past!.count : 0, result.total);
+  // 함께한 만남은 한 번이라도 점 하나로 보인다. 점이 여러 번을 묶고 있어도 "방금 하나 함께했다"가 보여야 한다.
+  const pastDots = together && metTotal >= 1 ? Math.max(1, dots.past) : dots.past;
+  const kinds = [
+    ...Array<string>(pastDots).fill(together ? "bg-accent-500" : "bg-hero-line"),
+    ...Array<string>(dots.missed).fill("border border-ink-400"),
+    ...Array<string>(dots.left).fill("bg-ink-800"),
+  ];
 
   /*
    * 아직 셀 수 없을 때(나이를 안 넣었을 때)는 한 줄로만 둔다. 큰 "-"가 화면 위 절반을
@@ -136,25 +151,26 @@ export default function ResultPanel({
       )}
 
       {/*
-        남은 만남을 점으로 센다. 시작점이 있으면 지나온 만남을 흐린 점으로 앞에 깐다 —
-        "얼마나 지나왔고 얼마나 남았는가"를 숫자보다 먼저 눈으로 본다.
+        남은 만남을 점으로 센다. 인연은 함께한 만남(주황)·놓친 만남(빈 점)·앞으로(진한 점) 순서로,
+        순간은 지나온 만남을 흐린 점으로 앞에 깐다 — "얼마나 함께했고 얼마나 남았는가"를 숫자보다 먼저 본다.
         많으면 묶는다(lib/dots.ts). 숫자는 바로 위·아래 글자에 있으므로 점은 읽어 주지 않는다.
       */}
       {dots.left > 0 && (
         <div data-testid="dots" className="border-t border-hero-line pt-5">
           <div aria-hidden="true" className="flex flex-wrap gap-1.5">
-            {Array.from({ length: dots.past + dots.left }, (_, i) => (
-              <span
-                key={i}
-                className={`h-2 w-2 rounded-full ${i < dots.past ? "bg-hero-line" : i < dots.past + metDots ? "bg-accent-500" : "bg-ink-800"}`}
-              />
+            {kinds.map((kind, i) => (
+              <span key={i} className={`h-2 w-2 rounded-full ${kind}`} />
             ))}
           </div>
-          {metDots > 0 && (
-            <p data-testid="met-dots" className="mt-2 flex items-center gap-1.5 text-xs text-ink-600">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-accent-500" />
-              {t.met(t.period[met!.unit], met!.count)}
-            </p>
+          {together && (
+            <>
+              <p data-testid="together" className="mt-2 text-sm font-medium text-ink-800">
+                {t.together(formatCount(metTotal), formatCount(together.missed), formatCount(result.total))}
+              </p>
+              <p className="mt-0.5 text-[11px] text-ink-400">
+                {together.estimated >= 1 ? t.estimated(formatYears(together.estimatedYears)) : metTotal + together.missed === 0 ? t.startHint : null}
+              </p>
+            </>
           )}
           {hasPast && (
             <p className="mt-2 text-xs text-ink-600">

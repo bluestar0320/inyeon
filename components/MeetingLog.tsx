@@ -57,9 +57,9 @@ export function lastMetLine(person: Person): string | null {
 }
 
 /*
- * 상세 화면의 「만났어요」. 이번 기간의 예측 안이면 남은 점 하나가 "함께한 점" 색으로 바뀌고,
- * 예측보다 더 만나면 남은 횟수가 하나 준다(lib/meetings.ts). 기록이 쌓이며 "마지막으로 만난 지
- * 며칠"이 보이고, 그게 알림 없이도 다시 열어 볼 이유가 된다.
+ * 상세 화면의 「만났어요」. 이번 기간의 칸을 쓰면 함께한 만남이 하나 늘고 앞으로가 하나 준다.
+ * 기간이 기록 없이 끝나면 그 칸은 놓친 만남이 된다(lib/meetings.ts). 기록이 쌓이며 "마지막으로
+ * 만난 지 며칠"이 보이고, 그게 알림 없이도 다시 열어 볼 이유가 된다.
  */
 export default function MeetingLog({ person }: { person: Person }) {
   const t = tr(COPY);
