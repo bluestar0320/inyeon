@@ -134,7 +134,7 @@ test("상대가 태어나기 전부터 만났다고 셀 수 없다", async ({ pa
   await seed(page, { people: [person("a", "친구", { ageYears: 25, since: "1990-01-01" })] });
   await page.goto("/people/detail?id=a");
   // 25세 친구와 1990년부터 = 36년이 아니라 25년까지만 센다.
-  await expect(page.getByText(/25\.0년 동안|25년 동안/)).toBeVisible();
+  await expect(page.getByText(/\((25\.0년|25년)\)는 지금 빈도로 어림했어요/)).toBeVisible();
 });
 
 test("조건을 겹겹이 걸어도 숫자가 폭주하지 않는다", async ({ page }) => {
