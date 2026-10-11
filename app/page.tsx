@@ -10,6 +10,7 @@ import { lastMetLine } from "@/components/MeetingLog";
 import PhotoStack from "@/components/PhotoStack";
 import StatCard from "@/components/StatCard";
 import { backupDue } from "@/lib/backup";
+import { birthdayLine, upcomingBirthdays } from "@/lib/birthdays";
 import {
   computeGrowth,
   computeMarriage,
@@ -247,6 +248,18 @@ export default function HomePage() {
           {t.backupNudge}
         </Link>
       )}
+
+      {/* 2주 안에 생일이 오는 사람. 생년월일을 넣은 사람만 — 나이만 적었으면 날짜를 모른다. */}
+      {upcomingBirthdays(state.people).map(({ person, days }) => (
+        <Link
+          key={person.id}
+          href={`/people/detail?id=${person.id}`}
+          prefetch={false}
+          className="block rounded-xl border border-ink-200/70 px-4 py-3 text-xs leading-relaxed text-ink-600 transition hover:border-ink-400"
+        >
+          {birthdayLine(person, days)}
+        </Link>
+      ))}
 
       {/* 사진 속 사람이 첫 화면이다. 내 남은 시간은 그 다음에 — 감정은 숫자보다 얼굴에서 먼저 온다. */}
       <section className="space-y-3">
