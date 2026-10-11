@@ -105,9 +105,10 @@ npm start            # out/ 을 로컬에서 서빙 (기본 3123)
 
 ### APK (직접 확인용)
 
-Actions 탭 → **APK 만들기** → Run workflow → 끝나면 아티팩트 `inyeon-debug-apk`를
-내려받아 설치합니다. 서명되지 않은 디버그 빌드라 설치할 때 "알 수 없는 출처" 경고가
-뜹니다. **배포용이 아니라 손에 쥐고 보기 위한 것입니다.**
+Actions 탭 → **APK 만들기** → Run workflow → 끝나면 아티팩트 `inyeon-apk`를
+내려받아 설치합니다. 정식 키로 서명한 release 빌드이고, 키는 Actions 비밀값에만
+있습니다(`signing/README.md`). 스토어 밖에서 받는 파일이라 설치할 때 "알 수 없는 출처"
+경고가 뜹니다.
 
 정적 파일을 APK 안에 통째로 넣으므로 인터넷 없이도 그대로 돕니다. 다만 WebView에는
 `navigator.share`도 `<a download>`도 없어서, 공유 카드만 네이티브 경로를 따로 탑니다
