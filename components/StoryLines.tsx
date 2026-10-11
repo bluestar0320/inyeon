@@ -11,7 +11,7 @@ const COPY = defineCopy({
   ko: { assumed: "스무 살까지 함께 살았다고 치면", change: "바꾸기", tone: "말투" },
   en: { assumed: "Assuming you lived together until 20", change: "Change", tone: "Tone" },
   ja: { assumed: "20歳まで一緒に暮らしたとすると", change: "変える", tone: "言い方" },
-  es: { assumed: "Suponiendo que vivisteis juntos hasta los 20", change: "Cambiar", tone: "Tono" },
+  es: { assumed: "Suponiendo que vivieron juntos hasta los 20", change: "Cambiar", tone: "Tono" },
   zh: { assumed: "假设你20岁前和对方住在一起", change: "修改", tone: "语气" },
 });
 

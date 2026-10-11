@@ -31,7 +31,7 @@ const COPY = defineCopy({
   es: {
     met: "Nos vimos",
     logged: (n, year) => `${n} encuentros anotados · ${year} este año`,
-    none: "Pulsa una vez cada vez que os veáis.",
+    none: "Pulsa una vez cada vez que se vean.",
     saved: "Encuentro de hoy anotado.",
   },
   zh: {
@@ -46,7 +46,7 @@ const SINCE = defineCopy({
   ko: (days: number) => (days === 0 ? "마지막 만남 오늘" : `마지막 만남 ${days}일 전`),
   en: (days) => (days === 0 ? "Last met today" : `Last met ${days} days ago`),
   ja: (days) => (days === 0 ? "最後に会ったのは今日" : `最後に会ったのは${days}日前`),
-  es: (days) => (days === 0 ? "Os visteis hoy" : `Os visteis hace ${days} días`),
+  es: (days) => (days === 0 ? "Se vieron hoy" : `Se vieron hace ${days} días`),
   zh: (days) => (days === 0 ? "上次见面：今天" : `上次见面：${days}天前`),
 });
 

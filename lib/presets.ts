@@ -119,7 +119,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
     ["Solo durante un tiempo", "Cosas que solo puedes hacer mientras el cuerpo aguante. Cuenta desde ahora hasta cierto año"],
     [
       "Excluir un periodo",
-      "Descuenta una temporada en la que no podréis veros, como estudiar fuera, una misión o un proyecto largo",
+      "Descuenta una temporada en la que no podrán verse, como estudiar fuera, una misión o un proyecto largo",
     ],
     ["Ajustar frecuencia", "Aplica un multiplicador a todo cuando creas que lo harás menos (o más) de lo previsto"],
     ["Máximo de veces", "Cuando crees que, pase lo que pase, no superará esta cifra"],

@@ -340,3 +340,20 @@ test("「만났어요」 기록이 있으면 앱에 넣은 뒤 기간은 어림 
   const perYear = 365.2425 / 7;
   assert.equal(pastShare({ ...base, recorded: { years: 1, met: perYear } }).pct, guessed);
 });
+
+// 숫자 아래 한 줄(tone.ts copyFor)도 같은 규칙을 따른다. tone.ts는 확장자 없는 import라 여기서는 이야기만 본다.
+test("딱 한 번 남으면 영어·스페인어도 단수로 말한다", () => {
+  const wrong = { en: /\b1 (more )?times\b|\b1 \w+s left\b/, es: /\b1 veces\b|[Qq]uedan 1\b/ };
+  for (const lang of ["en", "es"]) {
+    setLang(lang);
+    for (const tone of ["calm", "warm", "aware"]) {
+      for (const theirAge of [40, 85]) {
+        const s = buildStory({ person: person({ name: "Tom", relation: "" }), remaining: 1, myAge: 35, theirAge, tone, today: "2026-10-07", now: NOW });
+        assert.ok(s.now && !wrong[lang].test(s.now), `${lang}/${tone}: ${s.now}`);
+      }
+      const m = momentStory({ moment: { id: "m1", title: "Paris", frequency: { count: 1, unit: "year" }, filters: [] }, remaining: 1, tone, today: "2026-10-07" });
+      assert.ok(m.now && !wrong[lang].test(m.now), `${lang}/${tone}: ${m.now}`);
+    }
+  }
+  setLang("ko");
+});

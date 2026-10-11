@@ -410,8 +410,30 @@ const BY_TONE: Record<Tone, Record<Lang, ToneCopy>> = {
 /** 고를 수 있는 톤. 설정 화면이 이 순서로 보여준다. */
 export const TONE_ORDER: Tone[] = ["calm", "warm", "aware"];
 
+/** 영어·스페인어는 1이면 단수다. 말투마다 고치지 않고 1일 때만 이 문장으로 바꾼다. */
+const ONE: Partial<Record<Lang, Pick<ToneCopy, "meetingSentence" | "momentSentence" | "marriageSentence">>> = {
+  en: {
+    meetingSentence: (name) => `One more time with ${name}.`,
+    momentSentence: (title) => `${title}: one more time.`,
+    marriageSentence: (targetAge) => `One more chance to meet someone new before you turn ${targetAge}.`,
+  },
+  es: {
+    meetingSentence: (name) => `Una vez más con ${name}.`,
+    momentSentence: (title) => `${title}: una vez más.`,
+    marriageSentence: (targetAge) => `Hasta los ${targetAge}, una ocasión más de conocer a alguien.`,
+  },
+};
+
 export function copyFor(tone: Tone): ToneCopy {
-  return (BY_TONE[tone] ?? BY_TONE.calm)[getLang()];
+  const copy = (BY_TONE[tone] ?? BY_TONE.calm)[getLang()];
+  const one = ONE[getLang()];
+  if (!one) return copy;
+  return {
+    ...copy,
+    meetingSentence: (name, count) => (count === "1" ? one.meetingSentence(name, count) : copy.meetingSentence(name, count)),
+    momentSentence: (title, count) => (count === "1" ? one.momentSentence(title, count) : copy.momentSentence(title, count)),
+    marriageSentence: (age, count) => (count === "1" ? one.marriageSentence(age, count) : copy.marriageSentence(age, count)),
+  };
 }
 
 const HORIZON_PASSED = {

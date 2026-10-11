@@ -150,7 +150,7 @@ const COPY = defineCopy({
     viewCompare: "Comparar",
     noProfile: "Sin tus datos, contamos solo con el tiempo restante de la otra persona.",
     fillProfile: "Completar mis datos",
-    emptyBody: "Nombre, edad y cada cuánto os veis: no hace falta más.",
+    emptyBody: "Nombre, edad y cada cuánto se ven: no hace falta más.",
     addFirst: "Añadir tu primera persona",
     noMatch: (query) => `Nadie coincide con “${query}”.`,
     growth: "Calendario de crecimiento",

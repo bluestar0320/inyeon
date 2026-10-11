@@ -354,6 +354,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
     },
     en: {
       moment: {
+        one: [
+          "{title}: one more time. Don’t let this one slip by.",
+          "{title}: one more time. Take someone along.",
+          "{title}: one more time. Be there for all of it.",
+        ],
         rarely: [
           "{title}, {count} more times. It comes back every year, so it felt like it always would. Counted, it's this many.",
           "{title} comes once a year. Of the {count} left, this year's only happens this year.",
@@ -427,6 +432,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        one: [
+          "One more time with {name}. Stay a little longer at the door.",
+          "Just one more time across the table from {name}. Take your time with it.",
+          "There is one more time with {name}. Let it be an unhurried one.",
+        ],
         senior: [
           "You'll sit down with {name} {count} more times. Each time, {name} will probably be at the door before you knock.",
           "{count} more times. More than the number, it's what {name} will want to tell you each time.",
@@ -980,6 +990,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
     },
     es: {
       moment: {
+        one: [
+          "{title}: una vez más. Que no se te escape.",
+          "{title}: una vez más. Ve con alguien.",
+          "{title}: queda una. Vívela despacio.",
+        ],
         rarely: [
           "{title}: quedan {count}. Como vuelve cada año, parecía que no se iba a acabar nunca.",
           "{title} llega una vez al año. De las {count} veces que quedan, la de este año no se repite.",
@@ -1053,6 +1068,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        one: [
+          "Una vez más con {name}. Quédate un rato más en la puerta.",
+          "Queda una vez más frente a {name}. Que sea sin prisa.",
+          "Una vez más con {name}. Que no se te pase.",
+        ],
         senior: [
           "Quedan {count} visitas a {name}. En cada una, te estará esperando ya en la puerta.",
           "{count} veces más. Más que el número, dan ganas de saber qué historias te contará {name} en cada una.",
@@ -1910,6 +1930,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
     },
     en: {
       moment: {
+        one: [
+          "{title}: one more time.",
+          "{title}: once more. Put it on the calendar.",
+          "{title}: one more time. Plan it ahead.",
+        ],
         rarely: [
           "{title}, {count} more times. It comes once a year.",
           "{title}: {count}. One a year, each in its turn.",
@@ -1981,6 +2006,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        one: [
+          "One more time with {name}.",
+          "One more time with {name}. Set the date.",
+          "There is one more meeting with {name}. Leave room in the day for it.",
+        ],
         senior: [
           "{count} more times with {name}. One meal at a time, slowly.",
           "{count} more times. Each time, {name} will probably put the kettle on.",
@@ -2837,6 +2867,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
     },
     es: {
       moment: {
+        one: [
+          "{title}: una vez más.",
+          "{title}: queda una. Apúntala en el calendario.",
+          "{title}: una vez más. Planéala con tiempo.",
+        ],
         rarely: [
           "{title}: {count} veces más. Una por año.",
           "{title}, {count} veces. Cada año pasa una.",
@@ -2908,6 +2943,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        one: [
+          "Una vez más con {name}.",
+          "Queda un encuentro más con {name}. Fija la fecha.",
+          "Una vez más con {name}. Deja el día libre.",
+        ],
         senior: [
           "Quedan {count} visitas a {name}. Una comida cada vez, sin prisa.",
           "{count} veces más. En cada una, {name} te servirá un café.",
@@ -3455,6 +3495,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
     },
     en: {
       moment: {
+        one: [
+          "{title}: one more time. Enjoy every bit of it.",
+          "{title}: one more to look forward to.",
+          "{title}, one more time. Make a day of it.",
+        ],
         rarely: [
           "{title} comes around every year, and you still get {count} more.",
           "{title}, {count} more times. Something to look forward to every single year.",
@@ -3527,6 +3572,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        one: [
+          "There is still one more time with {name}. Save up a good story for it.",
+          "One more visit with {name} to look forward to.",
+          "One more time with {name}, and it is coming up. Plan something fun.",
+        ],
         senior: [
           "There are still {count} times to sit down with {name}, and {name} will have food on the table before your coat is off.",
           "{count} more times {name} gets to open the door and say, \"There you are!\"",
@@ -4391,6 +4441,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
     },
     es: {
       moment: {
+        one: [
+          "{title}: una vez más. Disfrútala.",
+          "{title}: queda una más para esperar con ganas.",
+          "{title}: una vez más. Haz de ese día algo especial.",
+        ],
         rarely: [
           "{title} vuelve cada año, y todavía te quedan {count}.",
           "{title}: {count} veces más. Es como tener algo bonito que esperar cada año.",
@@ -4463,6 +4518,11 @@ export const BANK: Record<Tone, Partial<Record<Lang, SlotBank>>> = {
         ],
       },
       now: {
+        one: [
+          "Todavía queda una vez más con {name}. Guarda una buena historia para contarle.",
+          "Una vez más con {name}, y ya se acerca.",
+          "Queda una visita más con {name} para disfrutar.",
+        ],
         senior: [
           "Todavía quedan {count} visitas a {name}. En cada una, habrá comida en la mesa antes de que te sientes.",
           "{count} veces más en que {name} te recibirá con un «¡pasa, pasa!».",

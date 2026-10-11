@@ -280,7 +280,10 @@ export function buildStory(i: {
    */
   const senior = typeof i.theirAge === "number" && i.theirAge >= SENIOR_AGE && i.remaining <= SENIOR_MAX_COUNT;
   const nowKeys = [`${rel}.${count}`, count, "*"];
+  // 딱 한 번 남았으면 단수 문장부터 찾는다(영어·스페인어만 둔다 — "1 more times"가 되지 않게).
+  const one = vars.count === "1" ? ["one"] : [];
   const nowChain = [
+    ...one,
     ...(senior ? (then ? ["senior.after", "senior"] : ["senior"]) : []),
     ...(then ? [`after.${count}`, "after.*"] : []),
     ...nowKeys,
@@ -325,7 +328,7 @@ export function momentStory(i: { moment: Moment; remaining: number; tone: Tone; 
   const vars = { title: i.moment.title, count: formatCount(i.remaining), me: i.me?.trim() || tr(ME) };
   const seed = `${i.moment.id}${i.today}`;
   const story: Story = {
-    now: pick("moment", [freq, "*"], i.tone, `${seed}now`, vars),
+    now: pick("moment", [...(vars.count === "1" ? ["one"] : []), freq, "*"], i.tone, `${seed}now`, vars),
     today: pick("momentToday", [freq, "*"], i.tone, `${seed}today`, vars),
     assumed: false,
   };

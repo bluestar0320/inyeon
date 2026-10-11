@@ -128,7 +128,7 @@ const COPY = defineCopy({
     people: "Personas",
     seeAll: "Ver todo",
     emptyPeopleBody:
-      "Padres, amigos, hijos — cualquiera que forme parte de tu vida. Con su edad y cada cuánto os veis, verás cuántas veces más podéis estar juntos.",
+      "Padres, amigos, hijos — cualquiera que forme parte de tu vida. Con su edad y cada cuánto se ven, verás cuántas veces más pueden estar juntos.",
     addPerson: "Añadir persona",
     times: "veces",
     timesValue: (n) => `${n} ${n === 1 ? "vez" : "veces"}`,

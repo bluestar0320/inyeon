@@ -101,7 +101,7 @@ const COPY = defineCopy<{ toggle: string; tips: Record<HintKey, Tip>; sourceLabe
       sibling: { body: "8 de cada 10 coreanos de 65+ (78,7 %) ven a hermanos y familiares menos de una vez al mes.", source: `${SURVEY.es}, tabla 5-20` },
       friend: { body: "El 59,7 % de los coreanos de 65+ ve a amigos o vecinos al menos una vez por semana. Los amigos cercanos acaban siendo a quienes más ves.", source: `${SURVEY.es}, tabla 5-22` },
       season: { body: "En el último siglo, los veranos en Corea se alargaron 20 días y los inviernos se acortaron 22. La primavera llega 17 días antes y en 2021 los cerezos de Seúl florecieron antes que nunca.", source: KMA.es },
-      person: { body: "Imagina dónde viviréis, a qué os dedicaréis y cómo estaréis dentro de 20 años. ¿Cuántas veces al año os sentaríais juntos?" },
+      person: { body: "Imagina dónde vivirán, a qué se dedicarán y cómo estarán dentro de 20 años. ¿Cuántas veces al año se sentarían juntos?" },
       moment: { body: "Imagínate dentro de 20 años: tu tiempo, tu energía, tu casa. ¿Cuántas veces al año seguirías haciendo esto?" },
     },
   },

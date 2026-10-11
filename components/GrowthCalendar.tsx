@@ -76,7 +76,7 @@ const COPY = defineCopy({
   es: {
     title: "Calendario de crecimiento",
     grownUp: (name, age) => `${name} ya ha pasado de los ${age}.`,
-    until: (name, age) => `Lo que aún podéis compartir hasta que ${name} cumpla ${age}.`,
+    until: (name, age) => `Lo que aún pueden compartir hasta que ${name} cumpla ${age}.`,
     ageMissing: "Añade la edad o la fecha de nacimiento para calcularlo.",
     grownUpHint: "Sube la edad adulta para volver a contar.",
     timeLeftBefore: "Os quedan ",

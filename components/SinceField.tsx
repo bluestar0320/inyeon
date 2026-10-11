@@ -39,7 +39,7 @@ const COPY = defineCopy({
     before: "Hasta ahora, unas ",
     times: (n) => `${n} veces`,
     after: (years) => ` (en ${years}). Es una estimación; puedes desactivarla en Ajustes.`,
-    hint: "Cuándo empezasteis a veros con esta frecuencia. No la fecha de nacimiento, sino el momento en que empezó vuestro ritmo actual. Si lo dejas en blanco, no se cuenta.",
+    hint: "Cuándo empezaron a verse con esta frecuencia. No la fecha de nacimiento, sino el momento en que empezó su ritmo actual. Si lo dejas en blanco, no se cuenta.",
   },
   zh: {
     label: "从何时开始（选填）",
