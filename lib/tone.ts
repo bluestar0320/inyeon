@@ -111,75 +111,72 @@ const AWARE_KO: ToneCopy = {
 const CALM_EN: ToneCopy = {
   label: "Plainly",
   description: "Treats the numbers as material for planning.",
-  greeting: "Let's count what lies ahead.",
+  greeting: "Count it up, then settle on just the next plan.",
   meetingLabel: "Times you can still meet",
   momentLabel: "Times you can still do it",
   lifeLabel: "Time ahead",
   marriageLabel: "People you can still meet",
-  meetingSentence: (name, count) => `You can see ${name} ${count} more times.`,
-  momentSentence: (title, count) => `You can enjoy ${title} ${count} more times.`,
-  marriageSentence: (targetAge, count) =>
-    `You can meet ${count} new people before you turn ${targetAge}.`,
+  meetingSentence: (name, count) => `You'll see ${name} ${count} more times. Set the next date ahead of time.`,
+  momentSentence: (title, count) => `${title}: ${count} more times.`,
+  marriageSentence: (targetAge, count) => `${count} chances to meet someone new before you turn ${targetAge}.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "This count is based on your remaining time.";
-    if (limitedBy === "them") return `This count is based on ${name}'s remaining time.`;
-    if (limitedBy === "both") return "You both have about the same time left.";
-    if (limitedBy === "horizon") return "This count runs until the date you set.";
-    return "Add ages and we'll show whose time sets the limit.";
+    if (limitedBy === "me") return "Counted by your own time.";
+    if (limitedBy === "them") return `Counted by ${name}'s time.`;
+    if (limitedBy === "both") return "Your two times run about the same.";
+    if (limitedBy === "horizon") return "Counted up to the date you set.";
+    return "Add both ages and we'll show whose time it's counted by.";
   },
   emptyPeople: "Start with one person you see often.",
-  emptyMoments: "Write down one thing you want to do this year.",
-  emptyMarriage: "If you have an age in mind, we can count toward it.",
+  emptyMoments: "Write down one thing you'd like to do this year.",
+  emptyMarriage: "Pick a target age, and we'll count toward it.",
 };
 
 const WARM_EN: ToneCopy = {
   label: "Warmly",
   description: "Brings to mind the people and moments behind the numbers.",
-  greeting: "What's beside you now is what matters most.",
+  greeting: "If a face comes to mind today, send a happy hello.",
   meetingLabel: "Days you still get together",
   momentLabel: "Moments still ahead of you",
   lifeLabel: "The time you've been given",
   marriageLabel: "Meetings still to come",
   meetingSentence: (name, count) =>
-    `You still have ${count} more times to sit down with ${name}. Each one is a gift.`,
-  momentSentence: (title, count) =>
-    `${title}: ${count} more times to savor. Give this one your whole heart.`,
+    `Still ${count} more times to sit down with ${name}. Already looking forward to the next one.`,
+  momentSentence: (title, count) => `${title}, ${count} more times. Have fun with this one.`,
   marriageSentence: (targetAge, count) =>
-    `${count} new meetings are waiting before you turn ${targetAge}. One person is all it takes.`,
+    `${count} new people to meet before you turn ${targetAge}. One of them is all it takes.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "Your time runs out first. So stay close while you can.";
-    if (limitedBy === "them")
-      return `${name}'s time runs out first. That's why today's visit matters so much.`;
-    if (limitedBy === "both") return "Your times flow on side by side.";
-    if (limitedBy === "horizon") return "This is the story up to the day you chose.";
-    return "Add ages and we'll show whose time we're counting by.";
+    if (limitedBy === "me") return "Counted by your own time. Share one more laugh while you're together.";
+    if (limitedBy === "them") return `Counted by ${name}'s time. A call today would be happy news.`;
+    if (limitedBy === "both") return "Your two times walk along side by side.";
+    if (limitedBy === "horizon") return "Counted all the days together, up to the date you chose.";
+    return "Add both ages and we'll show whose time it's counted by.";
   },
-  emptyPeople: "Start with someone who warms your heart.",
-  emptyMoments: "Write down something that makes your heart skip.",
-  emptyMarriage: "Waiting for the right person can be counted, too.",
+  emptyPeople: "Start with someone who's been on your mind lately.",
+  emptyMoments: "Write down one thing that makes you excited just thinking about it.",
+  emptyMarriage: "Even the days of waiting for someone can be counted.",
 };
 
 const AWARE_EN: ToneCopy = {
   label: "Clearly",
   description: "Makes it plain that what's left is finite.",
-  greeting: "The number of times left is already set.",
+  greeting: "Counted out, it's fewer than you'd think.",
   meetingLabel: "Meetings left",
   momentLabel: "Times left",
   lifeLabel: "Time left",
   marriageLabel: "Chances left",
-  meetingSentence: (name, count) => `Meetings left with ${name}: ${count}.`,
-  momentSentence: (title, count) => `${title}, times left: ${count}.`,
-  marriageSentence: (targetAge, count) => `Chances left before ${targetAge}: ${count}.`,
+  meetingSentence: (name, count) => `${count} more times across the table from ${name}.`,
+  momentSentence: (title, count) => `${title}, ${count} more times.`,
+  marriageSentence: (targetAge, count) => `${count} chances to meet someone new before you turn ${targetAge}.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "Your time ends first.";
-    if (limitedBy === "them") return `${name}'s time ends first.`;
-    if (limitedBy === "both") return "Both of your times end at about the same point.";
-    if (limitedBy === "horizon") return "Your target date comes before either lifetime ends.";
-    return "Add ages to see whose time ends first.";
+    if (limitedBy === "me") return "Counted by your own time. It's shorter than you'd think.";
+    if (limitedBy === "them") return `Counted by ${name}'s time. That's why a call today counts for more.`;
+    if (limitedBy === "both") return "Your two times run almost side by side.";
+    if (limitedBy === "horizon") return "The date you set comes first.";
+    return "Add both ages and we'll show whose time it's counted by.";
   },
-  emptyPeople: "No one counted yet.",
-  emptyMoments: "Nothing counted yet.",
-  emptyMarriage: "Set a target age to count the chances left.",
+  emptyPeople: "No one counted yet. If someone just came to mind, start there.",
+  emptyMoments: "Nothing counted yet. Start with something you've been putting off.",
+  emptyMarriage: "Set a target age, and we'll count the chances.",
 };
 
 /* ---- 日本語 ---- */
@@ -187,73 +184,75 @@ const AWARE_EN: ToneCopy = {
 const CALM_JA: ToneCopy = {
   label: "淡々と",
   description: "数字を計画の材料として扱います。",
-  greeting: "これから残っているものを数えてみましょう。",
+  greeting: "数えてみて、次の約束をひとつ決めておけば十分です。",
   meetingLabel: "これから会える回数",
   momentLabel: "これからできる回数",
   lifeLabel: "これからの時間",
   marriageLabel: "これから出会える人",
-  meetingSentence: (name, count) => `${name}とはこれから${count}回会えます。`,
-  momentSentence: (title, count) => `${title}はこれから${count}回できます。`,
-  marriageSentence: (targetAge, count) => `${targetAge}歳までに新しい人と${count}回出会えます。`,
+  meetingSentence: (name, count) => `${name}とは、これから${count}回会えます。次の日にちは先に決めておきましょう。`,
+  momentSentence: (title, count) => `「${title}」は、これから${count}回です。`,
+  marriageSentence: (targetAge, count) => `${targetAge}歳までに、新しい人と出会う機会は${count}回です。`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "この回数は自分の残り時間が基準です。";
-    if (limitedBy === "them") return `この回数は${name}の残り時間が基準です。`;
-    if (limitedBy === "both") return "二人の残り時間はほぼ同じです。";
-    if (limitedBy === "horizon") return "この回数は決めておいた時点が基準です。";
-    return "年齢を入れると、どちらが基準かお知らせします。";
+    if (limitedBy === "me") return "自分の時間を基準に数えました。";
+    if (limitedBy === "them") return `${name}の時間を基準に数えました。`;
+    if (limitedBy === "both") return "二人の時間は、ほぼ同じように流れています。";
+    if (limitedBy === "horizon") return "決めておいた日までを数えました。";
+    return "年齢を入れると、誰の時間で数えたかをお知らせします。";
   },
-  emptyPeople: "よく会う人を一人、書いてみましょう。",
-  emptyMoments: "今年ぜひやりたいことを一つ書いてみましょう。",
-  emptyMarriage: "目標の年齢があれば、数えてみることができます。",
+  emptyPeople: "よく会う人を、まず一人書いておきましょう。",
+  emptyMoments: "今年やってみたいことを、ひとつ書いておきましょう。",
+  emptyMarriage: "目標の年齢を決めれば、落ち着いて数えてみます。",
 };
 
 const WARM_JA: ToneCopy = {
   label: "あたたかく",
   description: "数字の向こうにいる人やひとときを思い浮かべます。",
-  greeting: "いま、そばにあるものがいちばん大切です。",
+  greeting: "今日ふと浮かぶ顔があったら、うれしい連絡をひとつ送ってみましょう。",
   meetingLabel: "一緒に過ごせる日",
   momentLabel: "また味わえるひととき",
   lifeLabel: "わたしに与えられた時間",
   marriageLabel: "これからの出会い",
   meetingSentence: (name, count) =>
-    `${name}と向かい合える日は、まだ${count}回あります。一回一回が贈りものです。`,
-  momentSentence: (title, count) => `${title}を、あと${count}回味わえます。今度の一回も、心をこめて。`,
+    `${name}と向かい合える日が、まだ${count}回もあります。次に会う日が、もう楽しみですね。`,
+  momentSentence: (title, count) =>
+    `「${title}」を、まだ${count}回楽しめます。今回の一回も、思いきり楽しみましょう。`,
   marriageSentence: (targetAge, count) =>
-    `${targetAge}歳までに${count}回の新しい出会いが待っています。そのうちの一人で十分です。`,
+    `${targetAge}歳までに、新しい出会いが${count}回待っています。そのなかの一人で十分です。`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "わたしの時間が先に暮れていきます。だから、そばにいられるうちに。";
+    if (limitedBy === "me") return "自分の時間を基準に数えました。そばにいるうちに、もう一度笑いかけてあげてください。";
     if (limitedBy === "them")
-      return `${name}の時間が先に暮れていきます。だから今日の一回がいっそう大切です。`;
-    if (limitedBy === "both") return "二人の時間が、並んで流れていきます。";
-    if (limitedBy === "horizon") return "決めておいたその日までの物語です。";
-    return "年齢を入れると、誰の時間を基準に数えるかお知らせします。";
+      return `${name}の時間を基準に数えました。今日の電話一本が、うれしい知らせになるはずです。`;
+    if (limitedBy === "both") return "二人の時間が、並んで歩いていきます。";
+    if (limitedBy === "horizon") return "決めておいたその日まで、一緒に過ごせる日を数えました。";
+    return "年齢を入れると、誰の時間で数えたかをお知らせします。";
   },
-  emptyPeople: "思い浮かべると心があたたかくなる人を、一人書いてみましょう。",
-  emptyMoments: "考えるだけで胸がはずむことを、一つ書いてみましょう。",
-  emptyMarriage: "誰かを待つ気持ちも、数えることができます。",
+  emptyPeople: "このごろよく思い出す人を、一人書いてみましょう。",
+  emptyMoments: "考えるだけでわくわくすることを、ひとつ書いてみましょう。",
+  emptyMarriage: "いつか出会う人を待つ日々も、数えてみましょう。",
 };
 
 const AWARE_JA: ToneCopy = {
   label: "はっきりと",
   description: "残りが有限であることをはっきり示します。",
-  greeting: "残りの回数は、もう決まっています。",
+  greeting: "数えてみると、思ったより少ないものです。",
   meetingLabel: "残りの再会",
   momentLabel: "残りの回数",
   lifeLabel: "残りの時間",
   marriageLabel: "残りの機会",
-  meetingSentence: (name, count) => `${name}との残りの再会、${count}回。`,
-  momentSentence: (title, count) => `${title}、残り${count}回。`,
-  marriageSentence: (targetAge, count) => `${targetAge}歳までの残りの機会、${count}回。`,
+  meetingSentence: (name, count) => `${name}と向かい合える日は、あと${count}回です。`,
+  momentSentence: (title, count) => `「${title}」は、あと${count}回です。`,
+  marriageSentence: (targetAge, count) => `${targetAge}歳までに新しく出会う機会は、あと${count}回です。`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "先に終わるのは自分の時間です。";
-    if (limitedBy === "them") return `先に終わるのは${name}の時間です。`;
-    if (limitedBy === "both") return "二人の時間はほぼ同時に終わります。";
-    if (limitedBy === "horizon") return "寿命より目標の時点が先に来ます。";
-    return "年齢を入れると、どちらが先に終わるか計算されます。";
+    if (limitedBy === "me") return "この数は、自分の時間に合わせて数えました。思ったより短いですね。";
+    if (limitedBy === "them")
+      return `この数は、${name}の時間に合わせて数えました。だから今日の連絡一本が、いっそう大きいんです。`;
+    if (limitedBy === "both") return "二人の時間は、ほとんど並んで流れています。";
+    if (limitedBy === "horizon") return "決めておいたその日のほうが、先に来ます。";
+    return "年齢を入れると、誰の時間で数えるかをお知らせします。";
   },
-  emptyPeople: "まだ誰も数えていません。",
-  emptyMoments: "まだ何も数えていません。",
-  emptyMarriage: "目標の年齢を決めると、残りの機会が計算されます。",
+  emptyPeople: "まだ誰も数えていません。ふと浮かんだ人がいたら、その人から。",
+  emptyMoments: "まだ何も数えていません。後回しにしていることを、ひとつ書いてみましょう。",
+  emptyMarriage: "目標の年齢を決めると、残りの機会を数えます。",
 };
 
 /* ---- Español ---- */
@@ -261,76 +260,73 @@ const AWARE_JA: ToneCopy = {
 const CALM_ES: ToneCopy = {
   label: "Con serenidad",
   description: "Trata los números como material para planificar.",
-  greeting: "Contemos lo que queda por delante.",
-  meetingLabel: "Veces que aún podéis veros",
+  greeting: "Cuenta lo que queda y fija solo la próxima cita.",
+  meetingLabel: "Encuentros por delante",
   momentLabel: "Veces que aún puedes hacerlo",
   lifeLabel: "Tiempo por delante",
   marriageLabel: "Personas que aún puedes conocer",
-  meetingSentence: (name, count) => `Puedes ver a ${name} ${count} veces más.`,
-  momentSentence: (title, count) => `Puedes disfrutar de ${title} ${count} veces más.`,
+  meetingSentence: (name, count) => `Con ${name} quedan ${count} encuentros. Fija ya la próxima fecha.`,
+  momentSentence: (title, count) => `${title}: ${count} veces más.`,
   marriageSentence: (targetAge, count) =>
-    `Puedes conocer a ${count} personas nuevas antes de los ${targetAge}.`,
+    `Hasta los ${targetAge}, quedan ${count} ocasiones de conocer a alguien nuevo.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "Este número se basa en tu tiempo restante.";
-    if (limitedBy === "them") return `Este número se basa en el tiempo restante de ${name}.`;
-    if (limitedBy === "both") return "A los dos os queda un tiempo parecido.";
-    if (limitedBy === "horizon") return "Este número llega hasta la fecha que elegiste.";
-    return "Añade las edades y te diremos qué tiempo marca el límite.";
+    if (limitedBy === "me") return "Contado según tu tiempo.";
+    if (limitedBy === "them") return `Contado según el tiempo de ${name}.`;
+    if (limitedBy === "both") return "Los dos tiempos corren parecidos.";
+    if (limitedBy === "horizon") return "Contado hasta la fecha que elegiste.";
+    return "Con las edades, te diremos según qué tiempo se cuenta.";
   },
-  emptyPeople: "Empieza por una persona a la que ves a menudo.",
-  emptyMoments: "Escribe algo que quieras hacer este año.",
-  emptyMarriage: "Si tienes una edad en mente, podemos contar hasta ella.",
+  emptyPeople: "Empieza por alguien a quien ves a menudo.",
+  emptyMoments: "Anota una cosa que quieras hacer este año.",
+  emptyMarriage: "Elige una edad y lo contamos con calma.",
 };
 
 const WARM_ES: ToneCopy = {
   label: "Con ternura",
   description: "Hace pensar en las personas y los momentos detrás de los números.",
-  greeting: "Lo que tienes cerca ahora es lo más valioso.",
-  meetingLabel: "Días que aún compartiréis",
+  greeting: "Si hoy te viene alguien a la cabeza, mándale un mensaje bonito.",
+  meetingLabel: "Días para compartir",
   momentLabel: "Momentos que aún te esperan",
   lifeLabel: "El tiempo que se te ha dado",
   marriageLabel: "Encuentros por venir",
   meetingSentence: (name, count) =>
-    `Aún te quedan ${count} veces para sentarte frente a ${name}. Cada una es un regalo.`,
-  momentSentence: (title, count) =>
-    `${title}: ${count} veces más para disfrutarlo. Vive esta con todo el corazón.`,
+    `Todavía quedan ${count} veces para sentarte frente a ${name}. Ya dan ganas de que llegue la próxima.`,
+  momentSentence: (title, count) => `${title}: todavía ${count} veces más. Disfruta esta con ganas.`,
   marriageSentence: (targetAge, count) =>
-    `Te esperan ${count} encuentros nuevos antes de los ${targetAge}. Basta con una persona.`,
+    `Hasta los ${targetAge}, te esperan ${count} encuentros nuevos. Con una sola persona basta.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "Tu tiempo se apaga antes. Por eso, quédate cerca mientras puedas.";
-    if (limitedBy === "them")
-      return `El tiempo de ${name} se apaga antes. Por eso la visita de hoy vale tanto.`;
-    if (limitedBy === "both") return "Vuestros tiempos avanzan uno junto al otro.";
-    if (limitedBy === "horizon") return "Es la historia hasta el día que elegiste.";
-    return "Añade las edades y te diremos con qué tiempo contamos.";
+    if (limitedBy === "me") return "Contado según tu tiempo. Cuando estés cerca, ríete un poco más.";
+    if (limitedBy === "them") return `Contado según el tiempo de ${name}. Una llamada hoy será una buena noticia.`;
+    if (limitedBy === "both") return "Los dos tiempos van de la mano.";
+    if (limitedBy === "horizon") return "Contamos los días buenos hasta la fecha que elegiste.";
+    return "Con las edades, te diremos según qué tiempo contamos.";
   },
-  emptyPeople: "Empieza por alguien que te caliente el corazón.",
-  emptyMoments: "Escribe algo que te ilusione solo con pensarlo.",
-  emptyMarriage: "Esperar a esa persona también se puede contar.",
+  emptyPeople: "Empieza por alguien que te venga a la cabeza estos días.",
+  emptyMoments: "Anota algo que te ilusione solo con pensarlo.",
+  emptyMarriage: "Los días de espera hasta conocer a alguien también se pueden contar.",
 };
 
 const AWARE_ES: ToneCopy = {
   label: "Con claridad",
   description: "Deja claro que lo que queda es finito.",
-  greeting: "Las veces que quedan ya están contadas.",
+  greeting: "Al contarlas, son menos de lo que parecía.",
   meetingLabel: "Encuentros restantes",
   momentLabel: "Veces restantes",
   lifeLabel: "Tiempo restante",
   marriageLabel: "Oportunidades restantes",
-  meetingSentence: (name, count) => `Encuentros restantes con ${name}: ${count}.`,
-  momentSentence: (title, count) => `${title}, veces restantes: ${count}.`,
-  marriageSentence: (targetAge, count) =>
-    `Oportunidades restantes hasta los ${targetAge}: ${count}.`,
+  meetingSentence: (name, count) => `Te quedan ${count} veces para sentarte frente a ${name}.`,
+  momentSentence: (title, count) => `${title}: quedan ${count}.`,
+  marriageSentence: (targetAge, count) => `Hasta los ${targetAge}, quedan ${count} ocasiones de conocer a alguien.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "Tu tiempo termina primero.";
-    if (limitedBy === "them") return `El tiempo de ${name} termina primero.`;
-    if (limitedBy === "both") return "Vuestros tiempos terminan casi a la vez.";
-    if (limitedBy === "horizon") return "La fecha objetivo llega antes que el final de ambas vidas.";
-    return "Añade las edades para ver qué tiempo termina primero.";
+    if (limitedBy === "me") return "Contado según tu tiempo. Es más corto de lo que parece.";
+    if (limitedBy === "them") return `Contado según el tiempo de ${name}. Por eso una llamada hoy pesa tanto.`;
+    if (limitedBy === "both") return "Los dos tiempos corren casi a la par.";
+    if (limitedBy === "horizon") return "La fecha que elegiste llega antes.";
+    return "Con las edades, te diremos según qué tiempo se cuenta.";
   },
-  emptyPeople: "Aún no has contado a nadie.",
-  emptyMoments: "Aún no has contado nada.",
-  emptyMarriage: "Fija una edad objetivo para contar las oportunidades restantes.",
+  emptyPeople: "Aún no has contado a nadie. Si alguien te vino a la cabeza, empieza por esa persona.",
+  emptyMoments: "Aún no has contado nada. Empieza por algo que llevas tiempo aplazando.",
+  emptyMarriage: "Elige una edad y contamos las ocasiones que quedan.",
 };
 
 /* ---- 中文 ---- */
@@ -338,71 +334,71 @@ const AWARE_ES: ToneCopy = {
 const CALM_ZH: ToneCopy = {
   label: "平静地",
   description: "把数字当作规划的材料。",
-  greeting: "数一数今后还剩下的。",
-  meetingLabel: "今后还能见面的次数",
-  momentLabel: "今后还能做的次数",
-  lifeLabel: "今后的时间",
-  marriageLabel: "今后还能遇见的人",
-  meetingSentence: (name, count) => `今后还能和${name}见面${count}次。`,
-  momentSentence: (title, count) => `${title}今后还能做${count}次。`,
-  marriageSentence: (targetAge, count) => `${targetAge}岁之前还能认识${count}位新朋友。`,
+  greeting: "数一数，再把下一次见面定下来，就够了。",
+  meetingLabel: "往后能见面的次数",
+  momentLabel: "往后能做的次数",
+  lifeLabel: "往后的时间",
+  marriageLabel: "往后能遇见的人",
+  meetingSentence: (name, count) => `往后和${name}还能见${count}次。下次的日子，先定下来。`,
+  momentSentence: (title, count) => `${title}，往后还有${count}次。`,
+  marriageSentence: (targetAge, count) => `到${targetAge}岁，认识新的人的机会还有${count}次。`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "这个次数以你剩余的时间为准。";
-    if (limitedBy === "them") return `这个次数以${name}剩余的时间为准。`;
-    if (limitedBy === "both") return "你们俩剩余的时间差不多。";
-    if (limitedBy === "horizon") return "这个次数以你设定的时间点为准。";
-    return "填写年龄后，会告诉你以谁的时间为准。";
+    if (limitedBy === "me") return "按你的时间来数的。";
+    if (limitedBy === "them") return `按${name}的时间来数的。`;
+    if (limitedBy === "both") return "你们俩的时间差不多。";
+    if (limitedBy === "horizon") return "数到你定的那一天为止。";
+    return "填上年龄，就告诉你是按谁的时间数的。";
   },
-  emptyPeople: "先写下一位常见面的人吧。",
-  emptyMoments: "写下一件今年一定想做的事吧。",
-  emptyMarriage: "如果心里有目标年龄，可以数一数。",
+  emptyPeople: "先写下一个常见面的人就好。",
+  emptyMoments: "写下一件今年想做的事。",
+  emptyMarriage: "定好目标年龄，就慢慢数一数。",
 };
 
 const WARM_ZH: ToneCopy = {
   label: "温暖地",
   description: "让你想起数字背后的人与时光。",
-  greeting: "此刻陪在身边的，最珍贵。",
-  meetingLabel: "还能相聚的日子",
-  momentLabel: "还能再享受的时光",
+  greeting: "今天想起了谁，就给谁发个消息吧。",
+  meetingLabel: "还能一起过的日子",
+  momentLabel: "还能再来的时候",
   lifeLabel: "属于我的时间",
-  marriageLabel: "即将到来的相遇",
-  meetingSentence: (name, count) => `和${name}相对而坐的日子还有${count}次。每一次都是礼物。`,
-  momentSentence: (title, count) => `${title}，还能再享受${count}次。这一次也请全心全意。`,
+  marriageLabel: "还会有的相遇",
+  meetingSentence: (name, count) => `和${name}面对面坐的日子，还有${count}次呢。下一次已经开始盼了。`,
+  momentSentence: (title, count) => `${title}，还能再来${count}次。这一次，也尽兴就好。`,
   marriageSentence: (targetAge, count) =>
-    `${targetAge}岁之前，还有${count}次新的相遇在等你。其中一个人就足够了。`,
+    `到${targetAge}岁，还有${count}次新的相遇在等着。遇到一个人，就够了。`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "我的时间会先走到尽头。所以趁还在身边，多陪一陪。";
-    if (limitedBy === "them") return `${name}的时间会先走到尽头。所以今天的这一次更加珍贵。`;
-    if (limitedBy === "both") return "你们的时间并肩流淌。";
-    if (limitedBy === "horizon") return "这是到你选定那一天为止的故事。";
-    return "填写年龄后，会告诉你以谁的时间来计算。";
+    if (limitedBy === "me") return "按你的时间来数的。在身边的时候，多笑一笑就好。";
+    if (limitedBy === "them") return `按${name}的时间来数的。今天打个电话，就是一件让人高兴的事。`;
+    if (limitedBy === "both") return "你们俩的时间，并排走着。";
+    if (limitedBy === "horizon") return "数到你定的那一天，一起的日子都在这里。";
+    return "填上年龄，就告诉你是按谁的时间数的。";
   },
-  emptyPeople: "先写下一位想起来就心里温暖的人吧。",
-  emptyMoments: "写下一件光是想想就让你心动的事吧。",
-  emptyMarriage: "等待那个人的心情，也可以数一数。",
+  emptyPeople: "最近常想起的人，先写一个吧。",
+  emptyMoments: "写下一件想想就开心的事。",
+  emptyMarriage: "等着那个人的日子，也可以数一数。",
 };
 
 const AWARE_ZH: ToneCopy = {
   label: "清醒地",
   description: "清楚地表明剩下的次数是有限的。",
-  greeting: "剩下的次数，早已注定。",
-  meetingLabel: "剩余的相见",
-  momentLabel: "剩余的次数",
-  lifeLabel: "剩余的时间",
-  marriageLabel: "剩余的机会",
-  meetingSentence: (name, count) => `和${name}剩余的相见，${count}次。`,
-  momentSentence: (title, count) => `${title}，剩余${count}次。`,
-  marriageSentence: (targetAge, count) => `${targetAge}岁之前剩余的机会，${count}次。`,
+  greeting: "数一数，比想的要少。",
+  meetingLabel: "剩下的见面",
+  momentLabel: "剩下的次数",
+  lifeLabel: "剩下的时间",
+  marriageLabel: "剩下的机会",
+  meetingSentence: (name, count) => `和${name}面对面坐的日子，往后${count}次。`,
+  momentSentence: (title, count) => `${title}，往后${count}次。`,
+  marriageSentence: (targetAge, count) => `到${targetAge}岁，认识新的人的机会是${count}次。`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "先结束的是你的时间。";
-    if (limitedBy === "them") return `先结束的是${name}的时间。`;
-    if (limitedBy === "both") return "你们的时间几乎同时结束。";
-    if (limitedBy === "horizon") return "目标时间点比寿命先到来。";
-    return "填写年龄后，会计算出谁的时间先结束。";
+    if (limitedBy === "me") return "这个数字按你的时间来数。比想的短吧。";
+    if (limitedBy === "them") return `这个数字按${name}的时间来数。所以今天的一个电话，分量更重。`;
+    if (limitedBy === "both") return "你们俩的时间，几乎并排走着。";
+    if (limitedBy === "horizon") return "你定的那一天，会先到。";
+    return "填上年龄，就告诉你按谁的时间来数。";
   },
-  emptyPeople: "还没有数任何人。",
-  emptyMoments: "还没有数任何事。",
-  emptyMarriage: "设定目标年龄，就能算出剩余的机会。",
+  emptyPeople: "还没有数过谁。忽然想起了谁，就从那个人开始。",
+  emptyMoments: "还什么都没数。先写下一件一直往后拖的事。",
+  emptyMarriage: "定好目标年龄，就帮你数一数剩下的机会。",
 };
 
 const BY_TONE: Record<Tone, Record<Lang, ToneCopy>> = {
