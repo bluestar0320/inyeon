@@ -311,14 +311,15 @@ export default function PersonView({ person }: { person: Person }) {
           ...(result.togetherDays === null ? [] : [{ label: t.together, value: formatDays(result.togetherDays) }]),
         ]}
       />
-      {/* 편지(이야기)를 먼저 읽고, 그다음에 만난 걸 적는다. 예전에는 기록 단추가 숫자 위에 있어 편지가 한참 아래로 밀렸다. */}
-      <MeetingLog person={person} />
 
       <p className="px-1 text-xs text-ink-400">
         {result.horizonPassed && person.horizon?.kind === "untilMyAge"
           ? horizonPassedSentence(person.horizon.age)
           : copy.limitedBySentence(result.limitedBy, person.name)}
       </p>
+
+      {/* 편지(이야기)를 먼저 읽고, 그다음에 만난 걸 적는다. 예전에는 기록 단추가 숫자 위에 있어 편지가 한참 아래로 밀렸다. */}
+      <MeetingLog person={person} />
 
       <div className="card">
         {/* 이름은 화면 제목과 히어로에 이미 두 번 나왔다. 여기서 또 쓰지 않는다. */}

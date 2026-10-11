@@ -179,3 +179,24 @@ test("함께한 만남을 「올해」로 바꾸면 올해 몫만 세고, 고른
   await page.getByRole("button", { name: "지금까지" }).click();
   await expect.poll(met).toBeGreaterThan(100);
 });
+
+test("만났어요 뒤에 한 줄 기억을 남기면 날짜와 함께 쌓이고, 비워도 그만이다", async ({ page }) => {
+  await seed(page, "어머니", "엄마");
+  await page.getByRole("button", { name: "만났어요" }).click();
+  const input = page.getByLabel(/오늘 엄마와 어땠어요/);
+  await expect(input).toBeVisible();
+  await input.fill("칼국수 먹고 시장 한 바퀴");
+  await page.getByRole("button", { name: "남기기" }).click();
+  await expect(page.getByText("칼국수 먹고 시장 한 바퀴")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("칼국수 먹고 시장 한 바퀴")).toBeVisible();
+  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).people[0].memories, STORAGE_KEY);
+  expect(saved).toHaveLength(1);
+  // 편지 아래에 그 사람에게 보낼 한마디 단추가 있다(부모님께는 「께」).
+  await expect(page.getByTestId("send-message")).toHaveText("엄마께 한마디 보내기");
+  await page.getByTestId("story").screenshot({ path: "test-results/letter.png" });
+  // 묻는 칸은 건너뛸 수 있다.
+  await page.getByRole("button", { name: "만났어요" }).click();
+  await page.getByRole("button", { name: "다음에" }).click();
+  await expect(page.getByLabel(/오늘 엄마와 어땠어요/)).toHaveCount(0);
+});
