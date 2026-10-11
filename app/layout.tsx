@@ -6,6 +6,7 @@ import Analytics from "@/components/Analytics";
 import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import PaperBackground from "@/components/PaperBackground";
+import BirthdayNotifier from "@/components/BirthdayNotifier";
 import ServiceWorker from "@/components/ServiceWorker";
 import ThemeApplier from "@/components/ThemeApplier";
 import SaveWarning from "@/components/SaveWarning";
@@ -98,6 +99,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ServiceWorker />
         <LangRoot>
           <SkipLink />
+          {/* 언어가 정해진 뒤에 알림 문구를 만들도록 LangRoot 안에 둔다. */}
+          <BirthdayNotifier />
           <Nav />
           <SaveWarning />
           {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}

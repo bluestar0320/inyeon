@@ -239,6 +239,7 @@ function repairSettings(raw: unknown): Settings {
     showPast: typeof value.showPast === "boolean" ? value.showPast : DEFAULT_SETTINGS.showPast,
     language: oneOf(value.language, LANGS.map((lang) => lang.value), undefined),
     lastBackupAt: text(value.lastBackupAt),
+    birthdayNotify: value.birthdayNotify === true ? true : undefined,
   };
 }
 

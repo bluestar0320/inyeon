@@ -8,6 +8,7 @@ import { CONTACT_EMAIL } from "@/lib/contact";
 import { todayISO } from "@/lib/format";
 import { LANGS, defineCopy, locale, tr } from "@/lib/i18n";
 import { LIFE_TABLE_YEAR } from "@/lib/lifeTable";
+import { askBirthdayPermission } from "@/lib/nativeBirthdays";
 import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
 import { exportState, looksLikeBackup, useActions, useAppState } from "@/lib/store";
 import { offerUndo } from "@/lib/undo";
@@ -42,6 +43,12 @@ const COPY = defineCopy({
     textTitle: "글씨 크기",
     textHint: "화면 전체가 같이 커집니다.",
     textSizes: { normal: "보통", large: "크게", xlarge: "아주 크게" },
+    notifyTitle: "생일 알림 받기",
+    notifyHint:
+      "생년월일을 넣은 인연의 생일 일주일 전과 당일 아침 9시에 알려 드려요. 부모님은 생신으로 챙겨 드리고, 알림은 이 휴대폰 안에서만 울립니다.",
+    notifyOn: "켜기",
+    notifyOff: "끄기",
+    notifyDenied: "알림이 막혀 있어요. 휴대폰 설정에서 이 앱의 알림을 허용하면 켤 수 있어요.",
     installTitle: "홈 화면에 두기",
     installHint:
       "설치하면 앱 서랍에 자기 아이콘으로 들어가고, 받아 둔 화면으로 인터넷 없이도 열립니다. 기록은 그대로 이어집니다.",
@@ -107,6 +114,12 @@ const COPY = defineCopy({
     textTitle: "Text size",
     textHint: "Everything on screen grows with it.",
     textSizes: { normal: "Normal", large: "Large", xlarge: "Extra large" },
+    notifyTitle: "Birthday reminders",
+    notifyHint:
+      "A week before and on the day, at 9 a.m., for people whose birth date you added. Reminders stay on this phone.",
+    notifyOn: "On",
+    notifyOff: "Off",
+    notifyDenied: "Notifications are blocked. Allow them for this app in your phone settings, then try again.",
     installTitle: "Add to home screen",
     installHint:
       "Once installed, it gets its own icon in your app drawer and opens even offline. Your records carry over as they are.",
@@ -173,6 +186,12 @@ const COPY = defineCopy({
     textTitle: "文字の大きさ",
     textHint: "画面全体が一緒に大きくなります。",
     textSizes: { normal: "ふつう", large: "大きく", xlarge: "もっと大きく" },
+    notifyTitle: "誕生日のお知らせ",
+    notifyHint:
+      "生年月日を入れた人の誕生日の一週間前と当日の朝9時にお知らせします。お知らせはこの端末の中だけで届きます。",
+    notifyOn: "オン",
+    notifyOff: "オフ",
+    notifyDenied: "通知がオフになっています。端末の設定でこのアプリの通知を許可すると使えます。",
     installTitle: "ホーム画面に追加",
     installHint:
       "インストールするとアプリ一覧に専用のアイコンが入り、保存済みの画面でオフラインでも開けます。記録はそのまま引き継がれます。",
@@ -238,6 +257,12 @@ const COPY = defineCopy({
     textTitle: "Tamaño del texto",
     textHint: "Toda la pantalla crece a la vez.",
     textSizes: { normal: "Normal", large: "Grande", xlarge: "Muy grande" },
+    notifyTitle: "Avisos de cumpleaños",
+    notifyHint:
+      "Una semana antes y el mismo día, a las 9 de la mañana, para quienes tengan fecha de nacimiento. Los avisos se quedan en este teléfono.",
+    notifyOn: "Activar",
+    notifyOff: "Desactivar",
+    notifyDenied: "Las notificaciones están bloqueadas. Permítelas para esta app en los ajustes del teléfono y vuelve a intentarlo.",
     installTitle: "Añadir a la pantalla de inicio",
     installHint:
       "Al instalarla tendrá su propio icono entre tus apps y se abrirá incluso sin conexión. Tus registros se mantienen tal cual.",
@@ -304,6 +329,12 @@ const COPY = defineCopy({
     textTitle: "字体大小",
     textHint: "整个画面会一起变大。",
     textSizes: { normal: "标准", large: "大", xlarge: "特大" },
+    notifyTitle: "生日提醒",
+    notifyHint:
+      "为填了出生日期的亲友，在生日前一周和当天早上9点提醒你。提醒只在这台手机上发出。",
+    notifyOn: "开启",
+    notifyOff: "关闭",
+    notifyDenied: "通知被关闭了。在手机设置里允许本应用的通知后再试一次。",
     installTitle: "添加到主屏幕",
     installHint: "安装后会在应用列表里有自己的图标，没有网络也能打开已保存的页面。记录会原样保留。",
     dataTitle: "我的数据",
@@ -371,6 +402,7 @@ export default function SettingsPage() {
   const { saveSettings, replaceAll, clearAll } = useActions();
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [notifyBlocked, setNotifyBlocked] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const t = tr(COPY);
 
@@ -647,6 +679,42 @@ export default function SettingsPage() {
       <div className="space-y-2">
         <h2 className="px-1 text-xs font-semibold tracking-[0.1em] text-ink-600">{t.groupApp}</h2>
         <div className="card divide-y divide-ink-200/70 py-1">
+      {/* 알림은 APK에서만 걸 수 있다. 웹에서는 칸을 보이지 않는다. 허락은 켤 때만 묻는다. */}
+      {isNativeApp() && (
+        <section className="space-y-3 py-4">
+          <div>
+            <p className="text-sm font-semibold text-ink-800">{t.notifyTitle}</p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.notifyHint}</p>
+          </div>
+          <div className="flex gap-1.5" role="group" aria-label={t.notifyTitle}>
+            {[
+              { on: true, label: t.notifyOn },
+              { on: false, label: t.notifyOff },
+            ].map((option) => {
+              const active = (state.settings.birthdayNotify === true) === option.on;
+              return (
+                <button
+                  key={String(option.on)}
+                  type="button"
+                  aria-pressed={active}
+                  className={`chip ${active ? "chip-active" : ""}`}
+                  onClick={async () => {
+                    if (option.on && !(await askBirthdayPermission())) {
+                      setNotifyBlocked(true);
+                      return;
+                    }
+                    setNotifyBlocked(false);
+                    saveSettings({ birthdayNotify: option.on || undefined });
+                  }}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          {notifyBlocked && <p className="text-xs leading-relaxed text-ink-600">{t.notifyDenied}</p>}
+        </section>
+      )}
       <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.installTitle}</p>
