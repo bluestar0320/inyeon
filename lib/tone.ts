@@ -33,55 +33,54 @@ export interface ToneCopy {
 const CALM_KO: ToneCopy = {
   label: "담담하게",
   description: "숫자를 계획의 재료로 다룹니다.",
-  greeting: "앞으로의 날들을 차분히 세어 봐요.",
+  greeting: "세어 보고, 다음 약속 하나만 정해 두면 돼요.",
   meetingLabel: "앞으로 만날 수 있는 횟수",
   momentLabel: "앞으로 할 수 있는 횟수",
   lifeLabel: "나에게 남은 시간",
   marriageLabel: "앞으로 만날 수 있는 사람",
-  meetingSentence: (name, count) => `${josa(name, "와/과")} 앞으로 ${count}번 만날 수 있어요.`,
-  momentSentence: (title, count) => `${josa(title, "은/는")} 앞으로 ${count}번 할 수 있어요.`,
-  marriageSentence: (targetAge, count) =>
-    `${targetAge}세까지 새로운 사람을 ${count}번 만날 수 있어요.`,
+  meetingSentence: (name, count) => `${josa(name, "와/과")} 앞으로 ${count}번 만나요. 다음 날짜는 미리 정해 둬요.`,
+  momentSentence: (title, count) => `${josa(title, "은/는")} 앞으로 ${count}번이에요.`,
+  marriageSentence: (targetAge, count) => `${targetAge}세까지 새로운 사람을 만날 기회는 ${count}번이에요.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "이 횟수는 내 남은 시간이 기준이에요.";
-    if (limitedBy === "them") return `이 횟수는 ${name}의 남은 시간이 기준이에요.`;
-    if (limitedBy === "both") return "두 사람의 남은 시간이 비슷해요.";
-    if (limitedBy === "horizon") return "이 횟수는 정해 둔 목표 시점이 기준이에요.";
-    return "나이를 채우면 기준이 되는 쪽을 알려드려요.";
+    if (limitedBy === "me") return "내 시간을 기준으로 셌어요.";
+    if (limitedBy === "them") return `${name}의 시간을 기준으로 셌어요.`;
+    if (limitedBy === "both") return "두 사람의 시간이 비슷하게 흘러요.";
+    if (limitedBy === "horizon") return "정해 둔 날까지를 셌어요.";
+    return "나이를 채우면 누구의 시간으로 셌는지 알려 드려요.";
   },
-  emptyPeople: "자주 보는 사람부터 한 명 적어 두면 돼요.",
-  emptyMoments: "올해 하고 싶은 일을 하나 적어 두면 돼요.",
-  emptyMarriage: "목표로 하는 나이가 있다면 세어 볼 수 있어요.",
+  emptyPeople: "자주 보는 사람 한 명부터 적어 두면 돼요.",
+  emptyMoments: "올해 해 보고 싶은 일 하나를 적어 둬요.",
+  emptyMarriage: "목표로 하는 나이를 정하면 차분히 세어 볼게요.",
 };
 
 /*
- * 숫자를 줄어드는 재고가 아니라 남아 있는 선물로 읽게 한다. 슬픔을 짜내지 않는다 —
+ * 숫자를 줄어드는 재고가 아니라 아직 남아 있는 반가운 날들로 읽게 한다. 슬픔을 짜내지 않는다 —
  * "이제 몇 번밖에"가 아니라 "아직 이만큼"이 이 톤의 방향이다.
  */
 const WARM_KO: ToneCopy = {
   label: "따뜻하게",
   description: "숫자 너머의 사람과 순간을 떠올리게 합니다.",
-  greeting: "오늘 문득 떠오른 얼굴이 있다면, 그 사람부터요.",
+  greeting: "오늘 생각나는 얼굴이 있다면, 반가운 연락 하나 보내 봐요.",
   meetingLabel: "함께할 수 있는 날",
   momentLabel: "다시 누릴 수 있는 순간",
   lifeLabel: "나에게 주어진 시간",
   marriageLabel: "다가올 만남",
   meetingSentence: (name, count) =>
-    `${josa(name, "와/과")} 마주 앉을 날이 아직 ${count}번 있어요. 그때마다 할 얘기가 생기겠죠.`,
+    `${josa(name, "와/과")} 마주 앉을 날이 아직 ${count}번이나 있어요. 다음 만남이 벌써 기다려져요.`,
   momentSentence: (title, count) =>
-    `${josa(title, "을/를")} 앞으로 ${count}번 더 누릴 수 있어요. 이번 한 번도 실컷 즐겨요.`,
+    `${josa(title, "을/를")} 앞으로 ${count}번 더 할 수 있어요. 이번 한 번도 신나게 해요.`,
   marriageSentence: (targetAge, count) =>
-    `${targetAge}세까지 ${count}번의 새로운 만남이 있어요. 그중 한 사람이면 충분하죠.`,
+    `${targetAge}세까지 새로운 만남이 ${count}번 기다리고 있어요. 그중 한 사람이면 충분하죠.`,
   limitedBySentence: (limitedBy, name) => {
-    if (limitedBy === "me") return "내 시간을 기준으로 셌어요. 곁에 있을 때 조금 더 오래 머물러도 괜찮아요.";
-    if (limitedBy === "them") return `${name}의 시간을 기준으로 셌어요. 오늘 거는 전화 한 통이 그래서 더 반가울 거예요.`;
-    if (limitedBy === "both") return "두 사람의 시간이 나란히 흘러가요.";
-    if (limitedBy === "horizon") return "정해 둔 그날까지의 이야기예요.";
-    return "나이를 채우면 누구의 시간을 기준으로 세는지 알려드려요.";
+    if (limitedBy === "me") return "내 시간을 기준으로 셌어요. 곁에 있을 때 한 번 더 웃어 주면 돼요.";
+    if (limitedBy === "them") return `${name}의 시간을 기준으로 셌어요. 오늘 거는 전화 한 통이 반가운 소식이 될 거예요.`;
+    if (limitedBy === "both") return "두 사람의 시간이 나란히 걸어가요.";
+    if (limitedBy === "horizon") return "정해 둔 그날까지, 함께할 날들을 셌어요.";
+    return "나이를 채우면 누구의 시간으로 셌는지 알려 드려요.";
   },
-  emptyPeople: "요즘 자주 생각나는 사람, 한 명부터 적어 볼까요.",
-  emptyMoments: "다음 계절이 기다려지는 일을 하나 적어 봐요.",
-  emptyMarriage: "함께할 사람을 기다리는 마음도 셀 수 있어요.",
+  emptyPeople: "요즘 자주 생각나는 사람, 한 명부터 적어 봐요.",
+  emptyMoments: "생각만 해도 설레는 일을 하나 적어 봐요.",
+  emptyMarriage: "언젠가 만날 사람을 기다리는 날들도 세어 볼 수 있어요.",
 };
 
 const AWARE_KO: ToneCopy = {
