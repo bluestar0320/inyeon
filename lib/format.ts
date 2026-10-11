@@ -194,13 +194,33 @@ export function todayISO(): string {
 /**
  * 날짜 칸에 친 글자를 다듬는다. 폰의 날짜 칸은 달력만 띄워서 몇십 년 전 연도를 고르기가
  * 고역이라, 숫자 자판으로 치게 하고 여기서 YYYY-MM-DD 모양으로 맞춘다.
- * 여덟 자리가 다 차고 실제 있는 날(1900년 ~ max)일 때만 iso를 준다.
+ * 1965.3.12나 1965. 3. 12.처럼 점·빈칸으로 끊어 쳐도 받는다 — 끊은 자리에서 칸을 넘기고
+ * 한 자리 달은 앞에 0을 붙인다. 숫자만 치면 4·2·2자리로 채운다.
+ * 연·월·일이 다 있고 실제 있는 날(1900년 ~ max)일 때만 iso를 준다.
  */
 export function typedDate(raw: string, max: string): { text: string; iso: string | null } {
-  const digits = raw.replace(/\D/g, "").slice(0, 8);
-  const text = [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6)].filter(Boolean).join("-");
-  if (digits.length < 8) return { text, iso: null };
-  const d = new Date(`${text}T00:00:00`);
-  const real = !Number.isNaN(d.getTime()) && d.getDate() === Number(digits.slice(6));
-  return { text, iso: real && text >= "1900-01-01" && text <= max ? text : null };
+  const sizes = [4, 2, 2];
+  const fields = [""];
+  let closed = false;
+  for (const ch of raw) {
+    const i = fields.length - 1;
+    if (/\d/.test(ch)) {
+      if (fields[i].length >= sizes[i] || closed) {
+        if (i === 2) break;
+        fields.push("");
+      }
+      fields[fields.length - 1] += ch;
+      closed = false;
+    } else if (fields[i] && i < 2) {
+      if (i === 1) fields[1] = fields[1].padStart(2, "0");
+      closed = true;
+    }
+  }
+  const text = fields.join("-") + (closed ? "-" : "");
+  const [y, m, day = ""] = fields;
+  if (y.length < 4 || !day) return { text, iso: null };
+  const iso = `${y}-${m}-${day.padStart(2, "0")}`;
+  const d = new Date(`${iso}T00:00:00`);
+  const real = !Number.isNaN(d.getTime()) && d.getDate() === Number(day);
+  return { text, iso: real && iso >= "1900-01-01" && iso <= max ? iso : null };
 }

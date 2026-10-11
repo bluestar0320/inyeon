@@ -29,7 +29,7 @@ export default function DateInput({
       type="text"
       inputMode="numeric"
       autoComplete="off"
-      maxLength={10}
+      maxLength={14}
       value={text ?? value ?? ""}
       onFocus={(e) => {
         setText(value ?? "");

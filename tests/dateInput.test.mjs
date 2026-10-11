@@ -20,3 +20,15 @@ test("없는 날짜·미래·너무 옛날은 받지 않는다", () => {
 test("8자리를 넘는 숫자는 버린다", () => {
   assert.equal(typedDate("196503129", "2026-10-08").text, "1965-03-12");
 });
+
+test("점이나 빈칸으로 끊어 쳐도 맞춘다", () => {
+  assert.deepEqual(typedDate("1965.3.12", "2026-10-08"), { text: "1965-03-12", iso: "1965-03-12" });
+  assert.equal(typedDate("1965. 3. 12.", "2026-10-08").iso, "1965-03-12");
+  assert.equal(typedDate("1965/03/12", "2026-10-08").iso, "1965-03-12");
+  assert.deepEqual(typedDate("1965.3.", "2026-10-08"), { text: "1965-03-", iso: null });
+  assert.equal(typedDate("1965.3.5", "2026-10-08").iso, "1965-03-05");
+  // 치는 중: 화면에 보인 글자에 이어 치면 그대로 이어진다.
+  assert.equal(typedDate("1965-03-1" + "2", "2026-10-08").iso, "1965-03-12");
+  // 지우는 중: 끝의 -를 지우면 달에서 멈춘다.
+  assert.deepEqual(typedDate("1965-03", "2026-10-08"), { text: "1965-03", iso: null });
+});
