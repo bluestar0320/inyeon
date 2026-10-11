@@ -218,3 +218,15 @@ test("영문 이름에도 조사를 맞춰 붙인다", async ({ page }) => {
   await page.goto("/people/edit?id=b");
   await expect(page.getByText(/Kate와 앞으로/)).toBeVisible();
 });
+
+test("보안 규칙(CSP)이 걸려 있고, 화면 어디서도 그 규칙에 막히는 게 없다", async ({ page }) => {
+  const blocked: string[] = [];
+  page.on("console", (m) => { if (/Content Security Policy/i.test(m.text())) blocked.push(m.text()); });
+  await seed(page, { people: [person("a", "엄마", { birthDate: "1965-01-01" })] });
+  for (const path of ["/", "/people", "/people/detail?id=a", "/people/new", "/settings", "/moments"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+  }
+  await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute("content", /connect-src 'self'/);
+  expect(blocked).toEqual([]);
+});

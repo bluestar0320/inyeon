@@ -16,6 +16,7 @@ import { SITE_URL } from "@/lib/contact";
 import { STORAGE_KEY } from "@/lib/storageKey";
 import { PAPER_COUNT } from "@/lib/paper";
 import { THEME_COLOR } from "@/lib/themeColor";
+import { GOATCOUNTER_CODE } from "@/lib/analytics";
 
 export const metadata: Metadata = {
   title: "몇 번 더",
@@ -84,10 +85,28 @@ const THEME_SCRIPT = `
 })();
 `;
 
+/*
+ * 두 번째 잠금장치. 혹시 남이 짠 코드가 끼어들어도 기록을 다른 곳으로 못 보내게,
+ * 연결은 이 사이트와 방문자 집계 한 곳으로만 묶는다. 인라인 스크립트는 Next가
+ * 정적 내보내기에 직접 심으므로 막을 수 없다. 개발 서버는 eval·웹소켓을 써서 운영 빌드에만 건다.
+ */
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob:${GOATCOUNTER_CODE ? ` https://${GOATCOUNTER_CODE}.goatcounter.com` : ""}`,
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join("; ");
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <head>
+        {process.env.NODE_ENV === "production" && <meta httpEquiv="Content-Security-Policy" content={CSP} />}
         {/* 명조 글꼴(사진 아래 글씨). 기기마다 다른 명조 대신 같은 글꼴로 보이게 한다. 못 받으면 기기 명조로 넘어간다. */}
         <link rel="stylesheet" href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fonts/nanum-myeongjo/font.css`} />
       </head>

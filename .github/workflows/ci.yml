@@ -5,6 +5,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# 코드를 읽기만 한다. 혹시 단계 하나가 털려도 저장소를 고치지 못하게.
+permissions:
+  contents: read
+
 jobs:
   # 브라우저가 필요 없는 검사. 빠르게 돌아 대부분의 실수를 여기서 잡는다.
   # 러너는 ubuntu-latest 대신 24.04에 묶어 둔다. latest가 26으로 넘어가면

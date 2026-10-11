@@ -5,6 +5,10 @@ name: APK 만들기
 on:
   workflow_dispatch:
 
+# 코드를 읽기만 한다. 혹시 단계 하나가 털려도 저장소를 고치지 못하게.
+permissions:
+  contents: read
+
 jobs:
   apk:
     name: 디버그 APK
