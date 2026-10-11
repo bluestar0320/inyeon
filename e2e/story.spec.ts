@@ -164,3 +164,18 @@ test("남은 만남을 점으로 보이고, 시작점이 있으면 그때부터�
   await expect(dots.getByText(/어림했어요/)).toBeVisible();
   await dots.screenshot({ path: "test-results/dots.png" });
 });
+
+test("함께한 만남을 「올해」로 바꾸면 올해 몫만 세고, 고른 기간을 기억한다", async ({ page }) => {
+  // 월 1회 · 2012년부터 · 어제 넣은 사람: 지금까지는 백 번 넘게, 올해는 열 번 남짓.
+  await seed(page, "어머니", "엄마", 1, "2012-03-01");
+  const met = async () => Number((await page.getByTestId("together").innerText()).match(/함께한 만남 ([\d,]+)번/)![1].replace(/,/g, ""));
+  await expect.poll(met).toBeGreaterThan(100);
+  await page.getByRole("button", { name: "올해" }).click();
+  await expect(page.getByRole("button", { name: "올해" })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(met).toBeLessThan(13);
+  await page.getByTestId("dots").screenshot({ path: "test-results/scope.png" });
+  await page.reload();
+  await expect(page.getByRole("button", { name: "올해" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "지금까지" }).click();
+  await expect.poll(met).toBeGreaterThan(100);
+});

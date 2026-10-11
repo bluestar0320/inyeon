@@ -24,6 +24,10 @@ const COPY = defineCopy({
     togetherShort: (met: string, left: string) => `함께한 만남 ${met}번 · 앞으로 ${left}번`,
     estimated: (years: string) => `「언제부터」부터 앱에 넣은 날까지(${years})는 지금 빈도로 어림했어요.`,
     startHint: "만날 때마다 「만났어요」를 누르면 함께한 만남이 쌓여요.",
+    scope: "함께한 만남을 셀 기간",
+    scopeAll: "지금까지",
+    scopeYear: "올해",
+    estimatedYear: (years: string) => `올해 앱에 넣기 전까지(${years})는 지금 빈도로 어림했어요.`,
   },
   en: {
     unit: "times",
@@ -37,6 +41,10 @@ const COPY = defineCopy({
     togetherShort: (met, left) => `Together ${met} · ${left} to go`,
     estimated: (years) => `From your start date until you added them (${years}) is estimated at the current frequency.`,
     startHint: "Tap “We met” each time you meet and your time together adds up.",
+    scope: "Count time together over",
+    scopeAll: "So far",
+    scopeYear: "This year",
+    estimatedYear: (years) => `This year before you added them (${years}) is estimated at the current frequency.`,
   },
   ja: {
     unit: "回",
@@ -50,6 +58,10 @@ const COPY = defineCopy({
     togetherShort: (met, left) => `一緒に過ごした${met}回 · これから${left}回`,
     estimated: (years) => `「いつから」から登録した日まで(${years})は今の頻度で見積もっています。`,
     startHint: "会うたびに「会えました」を押すと、一緒に過ごした回数が積み重なります。",
+    scope: "一緒に過ごした回数を数える期間",
+    scopeAll: "これまで",
+    scopeYear: "今年",
+    estimatedYear: (years) => `今年、登録する前まで(${years})は今の頻度で見積もっています。`,
   },
   es: {
     unit: "veces",
@@ -63,6 +75,10 @@ const COPY = defineCopy({
     togetherShort: (met, left) => `Juntos ${met} · Quedan ${left}`,
     estimated: (years) => `Desde la fecha de inicio hasta que lo añadiste (${years}) se estima con la frecuencia actual.`,
     startHint: "Pulsa «Nos vimos» cada vez y tus encuentros se irán sumando.",
+    scope: "Contar los encuentros de",
+    scopeAll: "Hasta ahora",
+    scopeYear: "Este año",
+    estimatedYear: (years) => `Lo de este año antes de añadirlo (${years}) se estima con la frecuencia actual.`,
   },
   zh: {
     unit: "次",
@@ -76,6 +92,10 @@ const COPY = defineCopy({
     togetherShort: (met, left) => `共度${met}次 · 往后${left}次`,
     estimated: (years) => `从「开始时间」到添加当天（${years}）按现在的频率估算。`,
     startHint: "每次见面都点一下「见过了」，共度的次数会一点点累积。",
+    scope: "共度次数的统计范围",
+    scopeAll: "至今",
+    scopeYear: "今年",
+    estimatedYear: (years) => `今年添加之前（${years}）按现在的频率估算。`,
   },
 });
 
@@ -108,7 +128,16 @@ export default function ResultPanel({
    * 인연만: 「만났어요」로 센 함께한·놓친 만남(lib/meetings.ts). estimated는 「언제부터」부터 앱에 넣은 날까지의
    * 어림값으로, 함께한 쪽에 더해 보인다. 있으면 past 대신 이것을 그린다.
    */
-  together?: { met: number; missed: number; showMissed: boolean; estimated: number; estimatedYears: number };
+  together?: {
+    met: number;
+    missed: number;
+    showMissed: boolean;
+    estimated: number;
+    estimatedYears: number;
+    /** 함께한 만남을 지금까지 셀지, 올해만 셀지. 주면 고르는 단추가 붙는다. */
+    scope?: "all" | "year";
+    onScope?: (next: "all" | "year") => void;
+  };
 }) {
   const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
@@ -169,13 +198,31 @@ export default function ResultPanel({
           </div>
           {together && (
             <>
+              {together.onScope && (
+                <div role="group" aria-label={t.scope} className="mt-3 flex gap-3 text-[11px] text-ink-400">
+                  {(["all", "year"] as const).map((key) => {
+                    const active = (together.scope ?? "all") === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={active}
+                        className={active ? "font-semibold text-ink-800" : "underline"}
+                        onClick={() => together.onScope?.(key)}
+                      >
+                        {key === "all" ? t.scopeAll : t.scopeYear}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <p data-testid="together" className="mt-2 text-sm font-medium text-ink-800">
                 {together.showMissed
                   ? t.together(formatCount(metTotal), formatCount(together.missed), formatCount(result.total))
                   : t.togetherShort(formatCount(metTotal), formatCount(result.total))}
               </p>
               <p className="mt-0.5 text-[11px] text-ink-400">
-                {together.estimated >= 1 ? t.estimated(formatYears(together.estimatedYears)) : !together.showMissed ? t.startHint : null}
+                {together.estimated >= 1 ? (together.scope === "year" ? t.estimatedYear : t.estimated)(formatYears(together.estimatedYears)) : !together.showMissed ? t.startHint : null}
               </p>
             </>
           )}

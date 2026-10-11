@@ -195,6 +195,7 @@ function repairPerson(raw: unknown): Person | null {
     name: text(item.name) ?? "",
     relation: text(item.relation),
     meetings: cleanMeetings(item.meetings),
+    togetherScope: item.togetherScope === "year" ? "year" : undefined,
     // 한 번에 보내는 시간은 0~24시간. 음수가 들어오면 상세에 "한 번에 -3시간"이 찍혔다.
     hoursPerMeeting: finite(item.hoursPerMeeting) && item.hoursPerMeeting > 0
       ? Math.min(24, item.hoursPerMeeting)

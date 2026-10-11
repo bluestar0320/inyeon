@@ -31,6 +31,7 @@ import { pairTitle } from "@/lib/shareCard";
 import { buildStory, relationTag } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
+import { ledger } from "@/lib/meetings";
 import { useToday } from "@/lib/useToday";
 import type { Person } from "@/lib/types";
 
@@ -42,6 +43,7 @@ const COPY = defineCopy({
     timesUnit: "번",
     // 공유 카드: "어머니와 나 / 함께한 37번, 그리고 앞으로 / 255번".
     togetherSub: (n: string) => `함께한 ${n}번, 그리고 앞으로`,
+    togetherSubYear: (n: string) => `올해 함께한 ${n}번, 그리고 앞으로`,
     times: (n: string) => `${n}번`,
     interval: "만남 간격",
     together: "함께 보낼 시간",
@@ -67,6 +69,7 @@ const COPY = defineCopy({
     years: (n) => `The next ${n} ${n === 1 ? "year" : "years"}`,
     timesUnit: "times",
     togetherSub: (n) => `${n} together, and still to come`,
+    togetherSubYear: (n) => `${n} together this year, and still to come`,
     times: (n) => `${n} times`,
     interval: "Every",
     together: "Time together",
@@ -92,6 +95,7 @@ const COPY = defineCopy({
     years: (n) => `これから${n}年`,
     timesUnit: "回",
     togetherSub: (n) => `一緒に${n}回、そしてこれから`,
+    togetherSubYear: (n) => `今年一緒に${n}回、そしてこれから`,
     times: (n) => `${n}回`,
     interval: "会う間隔",
     together: "一緒に過ごす時間",
@@ -117,6 +121,7 @@ const COPY = defineCopy({
     years: (n) => `Los próximos ${n} ${n === 1 ? "año" : "años"}`,
     timesUnit: "veces",
     togetherSub: (n) => `${n} juntos, y aún por delante`,
+    togetherSubYear: (n) => `${n} juntos este año, y aún por delante`,
     times: (n) => `${n} veces`,
     interval: "Cada",
     together: "Tiempo juntos",
@@ -142,6 +147,7 @@ const COPY = defineCopy({
     years: (n) => `今后${n}年`,
     timesUnit: "次",
     togetherSub: (n) => `共度${n}次，往后还有`,
+    togetherSubYear: (n) => `今年共度${n}次，往后还有`,
     times: (n) => `${n}次`,
     interval: "见面间隔",
     together: "相处的时间",
@@ -236,22 +242,36 @@ export default function PersonView({ person }: { person: Person }) {
    * 지금까지 함께한 만남 = 「언제부터」부터 앱에 넣은 날까지의 어림값 + 그 뒤 「만났어요」 기록.
    * 어림값은 설정으로 끌 수 있다(어림이라서). 기록은 실제로 누른 것이라 늘 보인다.
    */
+  /*
+   * 「올해」를 고르면 1월 1일부터 센다: 어림은 「언제부터」와 1월 1일 중 늦은 날부터, 기록은 올해 칸만.
+   */
+  const scope: "all" | "year" = person.togetherScope ?? "all";
+  const yearStart = `${today.slice(0, 4)}-01-01`;
   const estimate = useMemo(() => {
     if (!state.settings.showPast) return null;
     const added = new Date(person.createdAt);
+    const since = scope === "year" && person.since ? (person.since > yearStart ? person.since : yearStart) : person.since;
     return computePast(
       person.frequency,
-      person.since,
+      since,
       Number.isNaN(added.getTime()) ? undefined : added,
       pastLimit(resolveAge(person), state.profile ? resolveAge(state.profile) : null),
     );
-  }, [person, state.profile, state.settings.showPast]);
+  }, [person, state.profile, state.settings.showPast, scope, yearStart]);
+  const counted = useMemo(() => {
+    if (scope !== "year") return result.together;
+    const createdDay = `${created.getFullYear()}-${pad(created.getMonth() + 1)}-${pad(created.getDate())}`;
+    return ledger(person.meetings ?? [], person.frequency, createdDay > yearStart ? createdDay : yearStart, today);
+  }, [scope, result.together, person.meetings, person.frequency, person.createdAt, yearStart, today]);
   const together = {
-    met: result.together.met,
-    missed: recording ? result.together.missed : 0,
+    met: counted.met,
+    missed: recording ? counted.missed : 0,
     showMissed: recording,
     estimated: estimate?.count ?? 0,
     estimatedYears: estimate?.years ?? 0,
+    scope,
+    onScope: (next: "all" | "year") =>
+      savePerson({ ...person, togetherScope: next === "year" ? "year" : undefined, updatedAt: new Date().toISOString() }),
   };
 
   const age = resolveAge(person);
@@ -282,7 +302,9 @@ export default function PersonView({ person }: { person: Person }) {
           photo: imageFor(person),
           label: person.name,
           title: pairTitle(person.name),
-          subtitle: together.met + together.estimated >= 1 ? t.togetherSub(formatCount(together.met + together.estimated)) : copy.meetingLabel,
+          subtitle: together.met + together.estimated >= 1
+            ? (scope === "year" ? t.togetherSubYear : t.togetherSub)(formatCount(together.met + together.estimated))
+            : copy.meetingLabel,
           value: formatCount(result.total),
           unit: t.timesUnit,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,

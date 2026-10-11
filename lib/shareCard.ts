@@ -230,7 +230,6 @@ export function drawCard(
   theme: CardTheme,
   wordmark: string,
   image?: CanvasImageSource & { width: number; height: number },
-  url?: string,
 ): void {
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
@@ -384,14 +383,8 @@ export function drawCard(
 
   ctx.fillStyle = theme.accent;
   ctx.font = `600 34px ${FONT_STACK}`;
-  ctx.fillText(wordmark, cx, y.rule + (url ? 50 : 70));
-
-  // 카드가 퍼졌을 때 "이거 어디서 했어?"에 답하는 한 줄.
-  if (url) {
-    ctx.fillStyle = theme.muted;
-    ctx.font = `28px ${FONT_STACK}`;
-    ctx.fillText(url, cx, y.rule + 98);
-  }
+  // 주소는 찍지 않는다 — 사진마다 주소가 붙으면 광고처럼 보인다(사용자 요청).
+  ctx.fillText(wordmark, cx, y.rule + 70);
 }
 
 export function toBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {

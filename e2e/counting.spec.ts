@@ -16,7 +16,7 @@ test("컨셉의 예시가 화면에 그대로 나온다: 어머니 60세·수명
 
   await expect.poll(() => headline(page)).toBe("240번");
   // 기본 말투(찡하게)의 문장이다.
-  await expect(page.getByText("먼저 끝나는 쪽은 어머니의 시간")).toBeVisible();
+  await expect(page.getByText("어머니의 시간에 맞춰 셌어요")).toBeVisible();
 });
 
 test("자녀는 내 남은 시간이 기준이 된다", async ({ page }) => {
@@ -25,7 +25,7 @@ test("자녀는 내 남은 시간이 기준이 된다", async ({ page }) => {
   await page.getByLabel("이름").fill("아이");
   await page.getByLabel("나이", { exact: true }).fill("5");
 
-  await expect(page.getByText("먼저 끝나는 쪽은 내 시간")).toBeVisible();
+  await expect(page.getByText("내 시간에 맞춰 셌어요")).toBeVisible();
 });
 
 test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다", async ({ page }) => {
@@ -99,7 +99,7 @@ test("데이트 계산: 목표 나이까지만 세고 그 사실을 밝힌다", 
   await page.getByRole("button", { name: "내가 n세 될 때까지" }).click();
   await page.getByLabel("목표 나이").fill("35");
 
-  await expect(page.getByText("수명보다 목표 시점이 먼저")).toBeVisible();
+  await expect(page.getByText("정해 둔 그날이 먼저 와요")).toBeVisible();
 });
 
 test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ page }) => {

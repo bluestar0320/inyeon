@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 
 import { count } from "@/lib/analytics";
-import { SITE_URL } from "@/lib/contact";
 import { defineCopy, tr } from "@/lib/i18n";
 import { isNativeApp, saveFileNatively, shareFileNatively } from "@/lib/nativeShare";
 import {
@@ -81,7 +80,7 @@ export default function ShareButton({
       // 글꼴을 못 받아도 카드는 그린다(오프라인 등).
     }
     const image = spec.photo ? await loadImage(spec.photo) : null;
-    drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined, SITE_URL);
+    drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined);
     const blob = await toBlob(canvas);
     if (!blob) throw new Error("이미지를 만들지 못했습니다.");
     return new File([blob], safeFileName(fileNameParts), { type: "image/png" });

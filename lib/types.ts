@@ -100,6 +100,8 @@ export interface Person extends LifeSpan {
   ownPhoto?: string;
   /** 「만났어요」로 남긴 날짜들(YYYY-MM-DD, 오래된 순). lib/meetings.ts */
   meetings?: string[];
+  /** 상세의 「함께한 만남」을 어느 기간으로 셀지. 없으면 지금까지. */
+  togetherScope?: "year";
   frequency: Frequency;
   /** 한 번 만날 때 함께 보내는 시간(시간 단위). 총 체류 시간 환산에 쓴다. */
   hoursPerMeeting?: number;
