@@ -141,8 +141,9 @@ export default function MomentView({ moment }: { moment: Moment }) {
   const [draftSetup, setDraftSetup] = useState({ frequency: moment.frequency, filters: moment.filters });
 
   const draft = useMemo(() => ({ ...moment, ...draftSetup }), [moment, draftSetup]);
-  const result = useMemo(() => computeMoment(draft, state.profile), [draft, state.profile]);
+  // 화면을 켜 둔 채 자정을 넘기면 큰 숫자도 새날 기준으로 다시 센다.
   const today = useToday();
+  const result = useMemo(() => computeMoment(draft, state.profile), [draft, state.profile, today]);
   const story = useMemo(
     () => momentStory({ moment: draft, remaining: result.total, tone: state.settings.tone, today, me: state.profile?.nickname }),
     [draft, result.total, state.settings.tone, today, state.profile?.nickname],

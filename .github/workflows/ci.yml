@@ -7,13 +7,15 @@ on:
 
 jobs:
   # 브라우저가 필요 없는 검사. 빠르게 돌아 대부분의 실수를 여기서 잡는다.
+  # 러너는 ubuntu-latest 대신 24.04에 묶어 둔다. latest가 26으로 넘어가면
+  # Playwright가 브라우저 의존 패키지를 못 깔 수 있다 — 지원을 확인한 뒤 올린다.
   check:
     name: 타입·단위 테스트
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # 단위 테스트가 Node 내장 타입 스트리핑으로 lib/calc.ts를 그대로 불러 돌린다.
           # 22.18 미만에서는 동작하지 않는다.
@@ -30,11 +32,11 @@ jobs:
 
   e2e:
     name: 브라우저 시나리오·접근성
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -46,7 +48,7 @@ jobs:
         id: pw
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
@@ -67,7 +69,7 @@ jobs:
 
       - name: 실패 기록 남기기
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |

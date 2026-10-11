@@ -191,9 +191,11 @@ export default function PersonView({ person }: { person: Person }) {
   const [draftSetup, setDraftSetup] = useState({ frequency: person.frequency, filters: person.filters });
 
   const draft = useMemo(() => ({ ...person, ...draftSetup }), [person, draftSetup]);
+  // 화면을 켜 둔 채 자정을 넘기면 큰 숫자와 「오늘」 문장, 말투 바꾸기도 새날 기준으로 바뀐다.
+  const today = useToday();
   const result = useMemo(
     () => computeRelationship(draft, state.profile),
-    [draft, state.profile],
+    [draft, state.profile, today],
   );
   const growth = useMemo(() => computeGrowth(person), [person]);
   /*
@@ -205,8 +207,6 @@ export default function PersonView({ person }: { person: Person }) {
   const recordedYears = Number.isNaN(addedAt) ? 0 : Math.max(0, (Date.now() - addedAt) / 86_400_000 / DAYS_PER_YEAR);
   const myAge = state.profile ? resolveAge(state.profile) : null;
   const theirAge = resolveAge(person);
-  // 화면을 켜 둔 채 자정을 넘기면 「오늘」 문장과 말투 바꾸기도 새날 기준으로 바뀐다.
-  const today = useToday();
   const story = useMemo(
     () =>
       buildStory({

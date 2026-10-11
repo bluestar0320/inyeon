@@ -367,6 +367,9 @@ export function computeRelationship(
     counted.total = Math.max(0, counted.total + together.adjust);
     // 이번 기간의 칸을 남겨 두느라 「최대 N번」을 넘으면 안 된다.
     if (counted.cappedAt !== null) counted.total = Math.min(counted.total, counted.cappedAt);
+    // 연도별 표도 같은 칸을 센다 — 고치는 몫은 모두 이번 기간, 곧 올해 몫이다.
+    const first = counted.slices[0];
+    if (first) counted.slices[0] = { ...first, adjusted: Math.max(0, first.adjusted + together.adjust) };
   }
 
   const intervalDays = perYear > 0 ? DAYS_PER_YEAR / perYear : null;

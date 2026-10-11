@@ -603,3 +603,13 @@ test("몇 년에 한 번(2·3·5·10년)도 셀 수 있다", async () => {
   assert.equal(formatFrequency({ count: 1, unit: "year10" }), "1 time every 10 years");
   setLang("ko");
 });
+
+test("year table counts the same meetings as the big number", () => {
+  const now = new Date("2026-03-15T03:00:00Z");
+  const base = { frequency: { count: 1, unit: "week" }, createdAt: "2026-01-05T00:00:00Z" };
+  for (const meetings of [[], ["2026-03-14"], ["2026-03-09", "2026-03-10", "2026-03-14"]]) {
+    const result = computeRelationship(person({ ...base, meetings }), profile(), now);
+    const sum = result.slices.reduce((acc, s) => acc + s.adjusted, 0);
+    assert.ok(Math.abs(sum - result.total) < 1e-6, `${meetings.length}: ${sum} vs ${result.total}`);
+  }
+});

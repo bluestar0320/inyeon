@@ -37,9 +37,15 @@ const COPY = defineCopy({
   },
 });
 
-/** 해마다 값이 같으면(= 조건 필터가 형태를 바꾸지 않으면) 막대는 정보를 담지 못한다. */
+/**
+ * 해마다 값이 같으면(= 조건 필터가 형태를 바꾸지 않으면) 막대는 정보를 담지 못한다.
+ * 올해는 「만났어요」 기록으로 고쳐진 값이라 비교에서 뺀다.
+ */
+function steadyYears(slices: YearSlice[]): YearSlice[] {
+  return slices.filter((s) => s.index > 0 && s.span > 0.99);
+}
 function isFlat(slices: YearSlice[]): boolean {
-  const full = slices.filter((s) => s.span > 0.99);
+  const full = steadyYears(slices);
   if (full.length < 2) return true;
   const first = full[0].adjusted;
   return full.every((s) => Math.abs(s.adjusted - first) < 0.01);
@@ -61,7 +67,7 @@ export default function YearBreakdown({ slices }: { slices: YearSlice[] }) {
   const lastYear = thisYear + slices.length - 1;
 
   if (isFlat(slices)) {
-    const perYear = slices[0].adjusted;
+    const perYear = (steadyYears(slices)[0] ?? slices[0]).adjusted;
     return (
       <p className="text-[11px] leading-relaxed text-ink-400">
         {t.flat(thisYear, lastYear, formatCount(perYear))}
