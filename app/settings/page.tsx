@@ -15,6 +15,8 @@ import { TONE_ORDER, copyFor } from "@/lib/tone";
 import type { Theme } from "@/lib/types";
 
 const THEMES: Theme[] = ["system", "light", "dark"];
+// 보통은 따로 저장하지 않는다(textSize가 없으면 보통).
+const TEXT_SIZES = ["normal", "large", "xlarge"] as const;
 
 const COPY = defineCopy({
   ko: {
@@ -37,6 +39,9 @@ const COPY = defineCopy({
     themeTitle: "화면",
     themeHint: "시스템을 고르면 기기 설정을 따라갑니다.",
     themes: { system: "시스템", light: "밝게", dark: "어둡게" } as Record<Theme, string>,
+    textTitle: "글씨 크기",
+    textHint: "화면 전체가 같이 커집니다.",
+    textSizes: { normal: "보통", large: "크게", xlarge: "아주 크게" },
     installTitle: "홈 화면에 두기",
     installHint:
       "설치하면 앱 서랍에 자기 아이콘으로 들어가고, 받아 둔 화면으로 인터넷 없이도 열립니다. 기록은 그대로 이어집니다.",
@@ -99,6 +104,9 @@ const COPY = defineCopy({
     themeTitle: "Appearance",
     themeHint: "System follows your device setting.",
     themes: { system: "System", light: "Light", dark: "Dark" },
+    textTitle: "Text size",
+    textHint: "Everything on screen grows with it.",
+    textSizes: { normal: "Normal", large: "Large", xlarge: "Extra large" },
     installTitle: "Add to home screen",
     installHint:
       "Once installed, it gets its own icon in your app drawer and opens even offline. Your records carry over as they are.",
@@ -162,6 +170,9 @@ const COPY = defineCopy({
     themeTitle: "画面",
     themeHint: "システムを選ぶと端末の設定に合わせます。",
     themes: { system: "システム", light: "ライト", dark: "ダーク" },
+    textTitle: "文字の大きさ",
+    textHint: "画面全体が一緒に大きくなります。",
+    textSizes: { normal: "ふつう", large: "大きく", xlarge: "もっと大きく" },
     installTitle: "ホーム画面に追加",
     installHint:
       "インストールするとアプリ一覧に専用のアイコンが入り、保存済みの画面でオフラインでも開けます。記録はそのまま引き継がれます。",
@@ -224,6 +235,9 @@ const COPY = defineCopy({
     themeTitle: "Apariencia",
     themeHint: "Sistema sigue el ajuste del dispositivo.",
     themes: { system: "Sistema", light: "Claro", dark: "Oscuro" },
+    textTitle: "Tamaño del texto",
+    textHint: "Toda la pantalla crece a la vez.",
+    textSizes: { normal: "Normal", large: "Grande", xlarge: "Muy grande" },
     installTitle: "Añadir a la pantalla de inicio",
     installHint:
       "Al instalarla tendrá su propio icono entre tus apps y se abrirá incluso sin conexión. Tus registros se mantienen tal cual.",
@@ -287,6 +301,9 @@ const COPY = defineCopy({
     themeTitle: "外观",
     themeHint: "选择系统时跟随设备设置。",
     themes: { system: "系统", light: "浅色", dark: "深色" },
+    textTitle: "字体大小",
+    textHint: "整个画面会一起变大。",
+    textSizes: { normal: "标准", large: "大", xlarge: "特大" },
     installTitle: "添加到主屏幕",
     installHint: "安装后会在应用列表里有自己的图标，没有网络也能打开已保存的页面。记录会原样保留。",
     dataTitle: "我的数据",
@@ -522,6 +539,28 @@ export default function SettingsPage() {
               {t.themes[theme]}
             </button>
           ))}
+        </div>
+      </section>
+      <section className="space-y-3 py-4">
+        <div>
+          <p className="text-sm font-semibold text-ink-800">{t.textTitle}</p>
+          <p className="mt-1 text-xs text-ink-400">{t.textHint}</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {TEXT_SIZES.map((size) => {
+            const active = (state.settings.textSize ?? "normal") === size;
+            return (
+              <button
+                key={size}
+                type="button"
+                aria-pressed={active}
+                className={`chip ${active ? "chip-active" : ""}`}
+                onClick={() => saveSettings({ textSize: size === "normal" ? undefined : size })}
+              >
+                {t.textSizes[size]}
+              </button>
+            );
+          })}
         </div>
       </section>
         </div>

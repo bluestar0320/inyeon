@@ -202,9 +202,13 @@ export type Tone = "calm" | "warm" | "aware";
 /** 화면 테마. system이면 기기 설정을 따라간다. */
 export type Theme = "system" | "light" | "dark";
 
+/** 글씨 크기. 없으면 보통. 부모님 폰에서 쓰기 좋게 화면 전체를 키운다(app/globals.css). */
+export type TextSize = "large" | "xlarge";
+
 export interface Settings {
   tone: Tone;
   theme: Theme;
+  textSize?: TextSize;
   /** "지금까지 몇 번"을 같이 보여줄지. 시작점(since)을 넣은 항목에만 나온다. */
   showPast: boolean;
   /** 화면 언어. 없으면 기기 언어를 따른다. */

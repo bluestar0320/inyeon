@@ -205,6 +205,53 @@ test.describe("테마", () => {
     expect(await isDark()).toBe(true);
   });
 
+  test("글씨 크기를 크게로 고르면 새로고침 뒤에도 커진 채로, 옆으로 밀리지 않는다", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await setUpProfile(page, 30);
+    await page.goto("/settings");
+    const title = page.getByText("글씨 크기", { exact: true });
+    const before = (await title.boundingBox())!.height;
+    await page.getByRole("button", { name: "크게", exact: true }).click();
+    await expect(page.getByRole("button", { name: "크게", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+    // 리액트가 붙기 전에 이미 커져 있어야 한다. 늦으면 작게 그렸다가 출렁인다.
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
+    expect(await page.evaluate(() => document.documentElement.dataset.text)).toBe("large");
+    await page.waitForLoadState("load");
+    expect((await title.boundingBox())!.height).toBeGreaterThan(before * 1.1);
+
+    // 가장 큰 단계에서도 첫 화면과 설정이 화면 폭 안에 들어와야 한다.
+    await page.getByRole("button", { name: "아주 크게", exact: true }).click();
+    for (const path of ["/settings", "/"]) {
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+    // 아래 탭 막대도 화면 안에 다 들어온다.
+    const nav = page.locator("nav.fixed").first();
+    const box = (await nav.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(361);
+
+    // 보통으로 돌리면 저장소에서도 빠진다.
+    await page.goto("/settings");
+    await page.getByRole("button", { name: "보통", exact: true }).click();
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.text ?? null)).toBe(null);
+  });
+
+  test("저장소에 엉뚱한 글씨 크기가 들어 있으면 보통으로 본다", async ({ page }) => {
+    await setUpProfile(page, 30);
+    await page.evaluate((key) => {
+      const raw = JSON.parse(localStorage.getItem(key)!);
+      raw.settings.textSize = "huge";
+      localStorage.setItem(key, JSON.stringify(raw));
+    }, STORAGE_KEY);
+    await page.goto("/settings");
+    await expect(page.getByRole("button", { name: "보통", exact: true })).toHaveAttribute("aria-pressed", "true");
+    expect(await page.evaluate(() => document.documentElement.dataset.text ?? null)).toBe(null);
+  });
+
   test("시스템 설정을 따라간다", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/");

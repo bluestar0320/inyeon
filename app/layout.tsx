@@ -57,14 +57,17 @@ export const viewport: Viewport = {
 };
 
 /**
- * 화면이 그려지기 전에 테마를 정한다. React가 붙기를 기다리면 밝은 화면이 한 번
+ * 화면이 그려지기 전에 테마와 글씨 크기를 정한다. React가 붙기를 기다리면 밝은 화면이 한 번
  * 번쩍인 뒤에 어두워진다. 저장소를 못 읽는 환경에서도 앱은 떠야 하므로 통째로 감쌌다.
  */
 const THEME_SCRIPT = `
 (function () {
   try {
     var raw = localStorage.getItem(${JSON.stringify(STORAGE_KEY)});
-    var theme = raw ? (JSON.parse(raw).settings || {}).theme : "system";
+    var settings = raw ? JSON.parse(raw).settings || {} : {};
+    var theme = raw ? settings.theme : "system";
+    // 글씨 크기도 그리기 전에 정한다. 늦으면 작은 글씨로 한 번 그렸다가 커지며 화면이 출렁인다.
+    if (settings.textSize === "large" || settings.textSize === "xlarge") document.documentElement.dataset.text = settings.textSize;
     var dark = theme === "dark" ||
       ((theme === "system" || !theme) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
