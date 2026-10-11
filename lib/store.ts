@@ -66,6 +66,7 @@ const UNITS = ["day", "week", "month", "quarter", "year", "year2", "year3", "yea
 const FILTER_KINDS = ["multiplier", "decay", "window", "cap"];
 const TONES = ["calm", "warm", "aware"];
 const THEMES = ["system", "light", "dark"];
+const TEXT_SIZES = ["large", "xlarge"];
 
 /*
  * 저장소와 불러온 파일에서 온 기록을 믿지 않는다.
@@ -233,6 +234,7 @@ function repairSettings(raw: unknown): Settings {
   return {
     tone: oneOf(value.tone, TONES, DEFAULT_SETTINGS.tone),
     theme: oneOf(value.theme, THEMES, DEFAULT_SETTINGS.theme),
+    textSize: oneOf(value.textSize, TEXT_SIZES, undefined),
     showPast: typeof value.showPast === "boolean" ? value.showPast : DEFAULT_SETTINGS.showPast,
     language: oneOf(value.language, LANGS.map((lang) => lang.value), undefined),
     lastBackupAt: text(value.lastBackupAt),

@@ -6,13 +6,21 @@ import { useAppState } from "@/lib/store";
 import { applyThemeColor } from "@/lib/themeColor";
 
 /**
- * 설정값과 기기 설정을 보고 <html>에 dark 클래스를 붙였다 뗀다.
+ * 설정값과 기기 설정을 보고 <html>에 dark 클래스를 붙였다 뗀다. 글씨 크기(data-text)도 같이 맡는다.
  * 첫 화면은 layout의 인라인 스크립트가 이미 칠해 두므로, 여기서는 설정을 바꿨을 때와
  * 기기 설정이 바뀌었을 때를 맡는다.
  */
 export default function ThemeApplier() {
   const { state, hydrated } = useAppState();
   const theme = state.settings.theme;
+  const textSize = state.settings.textSize;
+
+  // 글씨 크기는 data-text 하나로 끝난다(app/globals.css). 보통이면 떼어 낸다.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (textSize) document.documentElement.dataset.text = textSize;
+    else delete document.documentElement.dataset.text;
+  }, [textSize, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return undefined;
