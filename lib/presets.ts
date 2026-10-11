@@ -68,7 +68,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
     ["Changes over the years", "Set how often now and how often N years from now; the years in between follow smoothly. Works for fewer, or more, like after retiring"],
     [
       "Cherry blossoms fade",
-      "A starting point that assumes warming continues at today's pace. It puts blooming becoming unreliable, starting in warmer regions, about 30 years from now. This varies a lot by region and scenario, so adjust it yourself.",
+      "A starting point that assumes warming continues at today's pace. It assumes blooming becomes unreliable in about 30 years, starting in warmer regions. This varies a lot by region and scenario, so adjust it yourself.",
     ],
     [
       "Less snow",
@@ -122,7 +122,7 @@ const FILTER_COPY = defineCopy<[label: string, hint: string][]>({
       "Descuenta una temporada en la que no podrán verse, como estudiar fuera, una misión o un proyecto largo",
     ],
     ["Ajustar frecuencia", "Aplica un multiplicador a todo cuando creas que lo harás menos (o más) de lo previsto"],
-    ["Máximo de veces", "Cuando crees que, pase lo que pase, no superará esta cifra"],
+    ["Máximo de veces", "Cuando creas que, pase lo que pase, no superará esta cifra"],
   ],
   zh: [
     ["逐年变化", "填上现在的频率和N年后的频率，中间的年份会平滑衔接。减少或像退休后那样增加都可以"],
@@ -204,7 +204,7 @@ const MOMENT_COPY = defineCopy<[title: string, hint?: string][]>({
     ["海外旅行"],
     ["帰省"],
     ["本を一冊読む"],
-    ["サーフィン", "波の条件が悪くなる分、「年ごとに減る」フィルターも一緒にかけてみてください。"],
+    ["サーフィン", "波の条件が悪くなる分、「年ごとに変わる」フィルターも一緒にかけてみてください。"],
     ["好きなバンドのライブ"],
     ["雪の降る日"],
     ["犬の散歩"],
@@ -230,7 +230,7 @@ const MOMENT_COPY = defineCopy<[title: string, hint?: string][]>({
     ["出国旅行"],
     ["过节回家"],
     ["读完一本书"],
-    ["冲浪", "海浪条件会变差，不妨同时加上“逐年减少”筛选。"],
+    ["冲浪", "海浪条件会变差，不妨同时加上“逐年变化”筛选。"],
     ["喜欢的乐队的演出"],
     ["下雪的日子"],
     ["遛狗"],

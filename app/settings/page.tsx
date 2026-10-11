@@ -264,7 +264,7 @@ const COPY = defineCopy({
     lifeSource: (year: number) =>
       `La app incluye las tablas de vida por edad (${year}) de las Perspectivas de la Población Mundial 2024 de la ONU (World Population Prospects 2024). Cubren 37 países por edad y sexo, así que personas del mismo país obtienen valores distintos según su edad. Pueden diferir de las cifras oficiales de cada país en menos de un año.`,
     lifeWhy:
-      "La conocida «esperanza de vida media» se mide desde el nacimiento. Quien ya ha llegado a los 68 no entra en esa media que rebajan quienes se fueron jóvenes, así que en realidad vivirá más. Por eso se usa la tabla por edad tal cual.",
+      "La conocida «esperanza de vida media» se mide desde el nacimiento. Quien ya ha llegado a los 68 no entra en esa media que rebajan quienes se fueron jóvenes, así que puede esperar vivir más. Por eso se usa la tabla por edad tal cual.",
     lifeEditable: "Puedes cambiar la esperanza de vida tú mismo cuando quieras.",
   },
   zh: {

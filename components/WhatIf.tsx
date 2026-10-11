@@ -6,7 +6,7 @@ import type { HintKey } from "@/components/DecayHint";
 import FilterEditor from "@/components/FilterEditor";
 import FrequencyInput from "@/components/FrequencyInput";
 import { toPerYear } from "@/lib/calc";
-import { formatCount, formatFrequency } from "@/lib/format";
+import { formatCount, formatFrequency, josa } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { newId } from "@/lib/presets";
 import { offerUndo } from "@/lib/undo";
@@ -20,7 +20,7 @@ const COPY = defineCopy({
     frequency: "만약 이 빈도라면",
     compare: (now: string, saved: string) => `지금 ${now}번 · 저장된 값은 ${saved}번`,
     revert: "원래 값으로",
-    removed: (label: string) => `시나리오 "${label}"을 지웠습니다.`,
+    removed: (label: string) => `시나리오 ${josa(label, "을/를")} 지웠습니다.`,
     apply: "이대로 저장",
     namePlaceholder: "이름 (예: 매달 2번 만나면)",
     nameAria: "시나리오 이름",
@@ -71,7 +71,7 @@ const COPY = defineCopy({
     frequency: "Y si fuera con esta frecuencia",
     compare: (now, saved) => `Ahora ${now} · guardado ${saved}`,
     revert: "Volver a lo guardado",
-    removed: (label) => `Escenario "${label}" eliminado.`,
+    removed: (label) => `Escenario «${label}» eliminado.`,
     apply: "Guardar así",
     namePlaceholder: "Nombre (p. ej., dos veces al mes)",
     nameAria: "Nombre del escenario",
@@ -88,7 +88,7 @@ const COPY = defineCopy({
     frequency: "如果是这个频率",
     compare: (now, saved) => `现在${now}次 · 已保存的是${saved}次`,
     revert: "恢复保存值",
-    removed: (label) => `已删除方案"${label}"。`,
+    removed: (label) => `已删除方案“${label}”。`,
     apply: "就这样保存",
     namePlaceholder: "名称（例：每月见2次）",
     nameAria: "方案名称",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { addMeeting, cleanMeetings, daysSinceLast, ledger, metThisYear } from "../lib/meetings.ts";
+import { MEMORY_MAX_LENGTH, addMeeting, cleanMeetings, cleanMemories, daysSinceLast, ledger, metThisYear, setMemory } from "../lib/meetings.ts";
 
 test("오늘 만남을 더하면 날짜가 쌓이고, 같은 날 두 번 눌러도 두 번 센다", () => {
   const once = addMeeting([], "2026-10-02");
@@ -59,4 +59,17 @@ test("세기 시작한 날이 기간 한가운데면 그 기간은 남은 날만
 test("주 5회는 한 주에 다섯 칸, 여러 해 단위도 센다", () => {
   assert.equal(ledger(["2026-09-28", "2026-09-29"], { count: 5, unit: "week" }, "2026-09-28", "2026-10-08").missed, 3);
   assert.equal(ledger([], { count: 1, unit: "year2" }, "2022-10-08", "2026-10-08").missed, 2);
+});
+
+test("한 줄 기억: 날짜마다 하나, 빈 글은 지우고, 다듬고, 이상한 값은 버린다", () => {
+  let m = setMemory([], "2026-10-05", "  엄마랑\n칼국수  ");
+  assert.deepEqual(m, [{ date: "2026-10-05", text: "엄마랑 칼국수" }]);
+  m = setMemory(m, "2026-10-01", "산책");
+  m = setMemory(m, "2026-10-05", "칼국수 먹고 시장 구경");
+  assert.deepEqual(m.map((x) => x.date), ["2026-10-01", "2026-10-05"]);
+  assert.equal(m[1].text, "칼국수 먹고 시장 구경");
+  assert.equal(setMemory(m, "2026-10-01", "   ").length, 1);
+  assert.equal(setMemory([], "2026-10-05", "가".repeat(500))[0].text.length, MEMORY_MAX_LENGTH);
+  assert.deepEqual(cleanMemories([{ date: "2026-13-01", text: "x" }, { date: "2026-10-02", text: 3 }, "x", null, { date: "2026-10-03", text: "<b>hi</b>" }]), [{ date: "2026-10-03", text: "<b>hi</b>" }]);
+  assert.equal(cleanMemories("nope"), undefined);
 });

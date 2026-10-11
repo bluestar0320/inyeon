@@ -34,7 +34,7 @@ const COPY = defineCopy({
     body: "Puede que haya un problema con tus registros guardados. Vuelve a intentarlo y, si no funciona, descarga tus registros en un archivo, bórralos y empieza de nuevo. Los registros solo están en este dispositivo, así que borrarlos no se puede deshacer.",
     retry: "Reintentar",
     download: "Descargar registros",
-    reset: "Borrar registros y empezar",
+    reset: "Borrar registros y empezar de nuevo",
   },
   zh: {
     fileName: "还有几次-记录.json",

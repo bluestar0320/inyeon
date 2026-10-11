@@ -79,7 +79,7 @@ const COPY = defineCopy({
     until: (name, age) => `Lo que aún pueden compartir hasta que ${name} cumpla ${age}.`,
     ageMissing: "Añade la edad o la fecha de nacimiento para calcularlo.",
     grownUpHint: "Sube la edad adulta para volver a contar.",
-    timeLeftBefore: "Os quedan ",
+    timeLeftBefore: "Les quedan ",
     timeLeftAfter: " juntos.",
     timesUnit: "veces",
     times: (n) => `${n} veces`,
@@ -96,7 +96,7 @@ const COPY = defineCopy({
   zh: {
     title: "成长日历",
     grownUp: (name, age) => `${name}已经过了${age}岁。`,
-    until: (name, age) => `到${name}${age}岁之前，还能一起度过的这些。`,
+    until: (name, age) => `${name}${age}岁之前，还能一起度过的时光。`,
     ageMissing: "填写年龄或生日后即可计算。",
     grownUpHint: "把成年年龄调大一些，就会重新计算。",
     timeLeftBefore: "还能一起度过",

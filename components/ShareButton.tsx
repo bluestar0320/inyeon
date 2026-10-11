@@ -29,7 +29,7 @@ const COPY = defineCopy({
   ko: { wordmark: "몇번더?", save: "이미지 저장", share: "공유하기", working: "만드는 중…", shared: "공유했어요", saved: "저장했어요", failed: "잘 안 됐어요" },
   en: { wordmark: "How many more?", save: "Save image", share: "Share", working: "Creating…", shared: "Shared", saved: "Saved", failed: "Something went wrong" },
   ja: { wordmark: "あと何回？", save: "画像を保存", share: "共有", working: "作成中…", shared: "共有しました", saved: "保存しました", failed: "うまくいきませんでした" },
-  es: { wordmark: "¿Cuántas veces más?", save: "Guardar imagen", share: "Compartir", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "No se pudo" },
+  es: { wordmark: "¿Cuántas veces más?", save: "Guardar imagen", share: "Compartir", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "Algo salió mal" },
   zh: { wordmark: "还有几次？", save: "保存图片", share: "分享", working: "生成中…", shared: "已分享", saved: "已保存", failed: "未能完成" },
 });
 

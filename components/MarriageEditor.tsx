@@ -114,7 +114,7 @@ const COPY = defineCopy({
     yearsToGo: (years) => `Faltan ${years} para tu objetivo.`,
     frequency: "Cada cuánto conoces a alguien nuevo",
     frequencyHint: (n) =>
-      `Incluye citas, quedadas y cualquier ocasión de conocer a alguien. Se calcula como ${n} veces al año.`,
+      `Incluye citas, reuniones y cualquier ocasión de conocer a alguien. Se calcula como ${n} veces al año.`,
     byYear: "Año a año",
     note: "Nota (opcional)",
     save: "Guardar",

@@ -19,7 +19,7 @@ import { THEME_COLOR } from "@/lib/themeColor";
 export const metadata: Metadata = {
   title: "몇 번 더",
   description:
-    "남은 시간과 남은 만남을 횟수로 계산합니다. 리마인딩이 아니라 플래닝을 위한 계산기.",
+    "남은 시간과 남은 만남을 횟수로 계산합니다. 알림이 아니라 계획을 돕는 계산기.",
   // iOS는 manifest의 display를 무시하므로 따로 알려 줘야 전체 화면으로 열린다.
   appleWebApp: { capable: true, title: "몇번더", statusBarStyle: "default" },
   // 메신저에 링크를 붙였을 때 뜨는 미리보기. 그림은 scripts/og-image.mjs로 만든다.

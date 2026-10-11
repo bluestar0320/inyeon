@@ -101,7 +101,7 @@ const COPY = defineCopy({
       added: "追加が新しい順",
     },
     sortHint: {
-      fewest: "残りの再会が少ない順です。",
+      fewest: "あと会える回数が少ない順です。",
       soonest: "よく会う順です。",
       name: "名前順です。",
       added: "最近追加した順です。",

@@ -56,8 +56,8 @@ export const READS: Read[] = [
         summary: "Friends, not children. How often 10,000 Koreans aged 65+ meet the people in their lives.",
         body: [
           "Korea’s 2023 Survey of Older Koreans asked more than 10,000 people aged 65 and over how often they meet family and friends in person.",
-          "The people they see most are not their children. 59.7% meet friends, neighbours or acquaintances at least once a week — more than twice the 22.7% who see even their most-visited child that often.",
-          "With children, they talk instead: 64.9% are in touch with their most-contacted child at least weekly. Seeing a face and hearing a voice move separately.",
+          "The people they see most are not their children. 59.7% meet friends, neighbors or acquaintances at least once a week — more than twice the 22.7% who see even their most-visited child that often.",
+          "With children, they talk instead: 64.9% are in touch with their most-contacted child at least weekly. Calls and visits don't move together.",
           "Siblings and relatives drift further away: 78.7% see them less than once a month.",
           "When you write down how many more times you’ll meet someone, picture where they will live in 20 years and who will be close by. The people nearby become the people you see.",
         ],

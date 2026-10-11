@@ -35,6 +35,33 @@ export function cleanMeetings(value: unknown): string[] | undefined {
     .slice(-MAX);
 }
 
+/** 「만났어요」 뒤에 남기는 한 줄. 날짜마다 하나 — 같은 날 다시 쓰면 고친다. */
+export interface Memory {
+  date: string;
+  text: string;
+}
+
+export const MEMORY_MAX_LENGTH = 120;
+const MEMORY_MAX = 2000;
+
+/** 빈 글이면 그날 기억을 지운다. 글은 다듬어(앞뒤 공백·줄바꿈) 길이 상한까지만 둔다. */
+export function setMemory(memories: Memory[], date: string, text: string): Memory[] {
+  const clean = text.replace(/\s+/g, " ").trim().slice(0, MEMORY_MAX_LENGTH);
+  const rest = memories.filter((m) => m.date !== date);
+  return (clean ? [...rest, { date, text: clean }] : rest).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(-MEMORY_MAX);
+}
+
+/** 저장소·백업에서 온 값을 믿지 않는다. 화면에 그대로 찍히는 글이라 모양과 길이를 다시 확인한다. */
+export function cleanMemories(value: unknown): Memory[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  let out: Memory[] = [];
+  for (const m of value) {
+    if (m && typeof m === "object" && typeof m.date === "string" && DATE.test(m.date) && typeof m.text === "string")
+      out = setMemory(out, m.date, m.text);
+  }
+  return out.length ? out : undefined;
+}
+
 function isoOf(n: number): string {
   return new Date(n * 86_400_000).toISOString().slice(0, 10);
 }

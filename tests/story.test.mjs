@@ -357,3 +357,14 @@ test("딱 한 번 남으면 영어·스페인어도 단수로 말한다", () => 
   }
   setLang("ko");
 });
+
+test("한마디 보내기: 관계에 맞는 말투, 앱의 숫자는 넣지 않는다", async () => {
+  const { messageFor } = await import("../lib/message.ts");
+  for (const lang of ["ko", "en", "ja", "es", "zh"])
+    for (const rel of ["parent", "grandparent", "partner", "child", "friend", "other"])
+      for (let seed = 0; seed < 3; seed++) {
+        const line = messageFor(lang, rel, "엄마", seed);
+        assert.ok(line && !/[{}]|\d/.test(line), `${lang}/${rel}: ${line}`);
+      }
+  assert.match(messageFor("ko", "parent", "엄마", 0), /^엄마, .*요\.$/);
+});

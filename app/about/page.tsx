@@ -26,7 +26,7 @@ const ABOUT: Record<DocLang, { title: string; lead: string; more: string; sectio
   },
   en: {
     title: "How Many More",
-    lead: "Counting the time and meetings you have left — in times.",
+    lead: "Counting the time you have left with people, one meeting at a time.",
     more: "Browse the reads →",
     sections: [
       { title: "What it counts", body: "How many more times you can see the people you love, and how many more times you can enjoy moments like cherry blossoms or the summer sea. It sends no reminders. What you do with the number is entirely yours." },

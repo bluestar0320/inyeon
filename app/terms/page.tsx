@@ -14,7 +14,7 @@ const TERMS: Record<DocLang, { title: string; sections: DocSection[] }> = {
       { title: "이용자의 책임", body: "다른 사람에 관해 적는 정보는 본인만 보는 개인 메모로 써 주세요. 결과 이미지를 공유할 때 다른 사람의 이름이 들어가지 않았는지 확인해 주세요." },
       { title: "기록의 보관", body: "기록은 이 기기 안에만 저장됩니다. 기기를 바꾸거나 브라우저 데이터를 지우면 기록이 사라질 수 있으니, 필요하면 설정의 「내보내기」로 백업해 두세요." },
       { title: "서비스 변경 및 중단", body: "계산 방식, 화면, 통계 자료는 더 나은 서비스를 위해 바뀔 수 있습니다. 필요한 경우 일부 기능이 바뀌거나 중단될 수 있습니다." },
-      { title: "사진과 공유 이미지", body: "앱에 들어 있는 사진은 AI로 만든 이미지입니다. 결과 이미지는 개인적으로 공유하는 목적으로 자유롭게 쓸 수 있습니다. 「내 사진으로」로 넣은 사진은 카드를 만드는 데만 쓰이고 저장되지 않습니다." },
+      { title: "사진과 공유 이미지", body: "앱에 들어 있는 사진은 AI로 만든 이미지입니다. 결과 이미지는 개인적으로 공유하는 목적으로 자유롭게 쓸 수 있습니다. 「내 사진 넣기」로 고른 사진은 카드를 만드는 데만 쓰이고 저장되지 않습니다." },
       { title: "면책", body: "계산 결과의 정확성이나 특정 효과를 보장하지 않습니다. 이용자의 입력 오류, 기기·브라우저 문제처럼 서비스가 통제하기 어려운 사유로 생긴 문제에 대해서는 관련 법령이 허용하는 범위에서 책임이 제한될 수 있습니다." },
       { title: "문의", body: `이용과 관련한 문의: ${CONTACT_EMAIL}` },
     ],
@@ -23,7 +23,7 @@ const TERMS: Record<DocLang, { title: string; sections: DocSection[] }> = {
     title: "Terms of Use",
     sections: [
       { title: "What this service is", body: "“How Many More” counts the meetings and moments you have left, based on age, life expectancy and how often you meet. It sends no notifications and contacts no one." },
-      { title: "About the results", body: "Life expectancy comes from the United Nations World Population Prospects life tables, and counts are estimates from the frequency you enter. They do not tell anyone’s actual lifespan or future and must not be used for medical, financial or legal decisions." },
+      { title: "About the results", body: "Life expectancy comes from the United Nations World Population Prospects life tables, and counts are estimates from the frequency you enter. They do not predict anyone’s actual lifespan or future and must not be used for medical, financial or legal decisions." },
       { title: "Your responsibilities", body: "Use what you write about other people only as a private note for yourself. Before sharing a result image, check whether it shows someone else’s name." },
       { title: "Keeping your records", body: "Your records are stored only on this device. Changing devices or clearing browser data can erase them, so back them up with Export in Settings if needed." },
       { title: "Changes and suspension", body: "The calculation, screens and statistics may change to improve the service. Some features may change or be suspended when necessary." },

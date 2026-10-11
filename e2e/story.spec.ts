@@ -67,7 +67,7 @@ test("만났어요를 누르면 한 마디가 뜨고, 남은 횟수가 하나 �
   await expect.poll(number).toBeGreaterThan(100);
   const before = await number();
   await page.getByRole("button", { name: "만났어요" }).click();
-  await expect(page.getByText(/올해 1번째/)).toBeVisible();
+  await expect(page.getByText(/올해 첫 번째/)).toBeVisible();
   await expect.poll(number).toBe(before - 1);
 });
 

@@ -47,8 +47,6 @@ const COPY = defineCopy({
     times: (n: string) => `${n}번`,
     interval: "만남 간격",
     together: "함께 보낼 시간",
-    myTime: "내 남은 시간",
-    theirTime: (name: string) => `${name} 남은 시간`,
     info: "정보",
     edit: "수정하기",
     age: "나이",
@@ -73,8 +71,6 @@ const COPY = defineCopy({
     times: (n) => `${n} times`,
     interval: "Every",
     together: "Time together",
-    myTime: "Your time ahead",
-    theirTime: (name) => `${name}'s time ahead`,
     info: "Details",
     edit: "Edit",
     age: "Age",
@@ -99,8 +95,6 @@ const COPY = defineCopy({
     times: (n) => `${n}回`,
     interval: "会う間隔",
     together: "一緒に過ごす時間",
-    myTime: "自分の残り時間",
-    theirTime: (name) => `${name}の残り時間`,
     info: "情報",
     edit: "編集する",
     age: "年齢",
@@ -125,8 +119,6 @@ const COPY = defineCopy({
     times: (n) => `${n} veces`,
     interval: "Cada",
     together: "Tiempo juntos",
-    myTime: "Tu tiempo por delante",
-    theirTime: (name) => `Tiempo de ${name}`,
     info: "Datos",
     edit: "Editar",
     age: "Edad",
@@ -142,7 +134,7 @@ const COPY = defineCopy({
     removed: (name) => `Se eliminó a ${name}.`,
   },
   zh: {
-    life: "余生",
+    life: "今后一直",
     untilMyAge: (age) => `到我${age}岁为止`,
     years: (n) => `今后${n}年`,
     timesUnit: "次",
@@ -151,8 +143,6 @@ const COPY = defineCopy({
     times: (n) => `${n}次`,
     interval: "见面间隔",
     together: "相处的时间",
-    myTime: "我剩余的时间",
-    theirTime: (name) => `${name}剩余的时间`,
     info: "信息",
     edit: "编辑",
     age: "年龄",
@@ -293,7 +283,6 @@ export default function PersonView({ person }: { person: Person }) {
         value={person.ownPhoto}
         onChange={(ownPhoto) => savePerson({ ...person, ownPhoto, updatedAt: new Date().toISOString() })}
       />
-      <MeetingLog person={person} />
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
@@ -312,19 +301,18 @@ export default function PersonView({ person }: { person: Person }) {
           // 독립 나이를 가정한 비율은 카드에 그 단서를 붙일 자리가 없어 싣지 않는다.
           story: story ? [story.now, (story.assumed ? undefined : story.past) ?? story.today].filter((line): line is string => Boolean(line)) : undefined,
         }}
-        story={story && <StoryLines story={story} personId={person.id} returning={returning} />}
+        story={story && <StoryLines story={story} personId={person.id} returning={returning} person={person} />}
         together={together}
         shareFileName={[person.name, t.times(formatCount(result.total))]}
         stats={[
           { label: t.interval, value: formatInterval(result.intervalDays) },
-          {
-            label: t.together,
-            value: result.togetherDays === null ? "-" : formatDays(result.togetherDays),
-          },
-          { label: t.myTime, value: formatYears(result.myYears) },
-          { label: t.theirTime(person.name), value: formatYears(result.theirYears) },
+          // 한 번에 보내는 시간을 안 적었으면 "-"만 덩그러니 남으니 칸을 뺀다.
+          // 남은 수명(내 시간·상대 시간)은 싣지 않는다 — 이 앱이 세는 건 만남이지 수명이 아니다.
+          ...(result.togetherDays === null ? [] : [{ label: t.together, value: formatDays(result.togetherDays) }]),
         ]}
       />
+      {/* 편지(이야기)를 먼저 읽고, 그다음에 만난 걸 적는다. 예전에는 기록 단추가 숫자 위에 있어 편지가 한참 아래로 밀렸다. */}
+      <MeetingLog person={person} />
 
       <p className="px-1 text-xs text-ink-400">
         {result.horizonPassed && person.horizon?.kind === "untilMyAge"

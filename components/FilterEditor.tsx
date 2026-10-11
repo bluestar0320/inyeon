@@ -49,7 +49,7 @@ const COPY = defineCopy({
     capAria: "최대 횟수",
     capAfter: "번까지",
     title: "조건 필터",
-    intro: "기본값을 밀어 넣지 않습니다. 이 항목에만 해당하는 조건을 직접 세워 보세요.",
+    intro: "미리 정해 둔 조건은 없습니다. 이 항목에 맞는 조건만 직접 더해 보세요.",
   },
   en: {
     unchanged: "Frequency unchanged",
@@ -133,7 +133,7 @@ const COPY = defineCopy({
     capAria: "最大回数",
     capAfter: "回まで",
     title: "条件フィルター",
-    intro: "初期値は入れていません。これだけに当てはまる条件を自分で決めてみてください。",
+    intro: "初期値は入れていません。自分に当てはまる条件だけを選んでください。",
   },
   es: {
     unchanged: "Frecuencia igual",

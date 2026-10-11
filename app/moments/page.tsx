@@ -85,7 +85,7 @@ const COPY = defineCopy({
     searchPlaceholder: "Buscar por título o nota",
     emptyBody: "Escribe algo que se repite, como los cerezos en flor, los viajes o el surf.",
     addFirst: "Añadir tu primer momento",
-    noMatch: (query) => `Ningún momento coincide con “${query}”.`,
+    noMatch: (query) => `Ningún momento coincide con «${query}».`,
     times: "veces",
     filtersOn: (n) => `${n} ${n === 1 ? "condición aplicada" : "condiciones aplicadas"}`,
   },

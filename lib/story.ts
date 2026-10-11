@@ -197,7 +197,8 @@ function pick(slot: Slot, keys: string[], tone: Tone, seed: string, vars: Record
     const bank = BANK[t]?.[l]?.[slot];
     if (!bank) continue;
     for (const key of keys) {
-      const list = bank[key];
+      // 갓 시작해 0%인데 "0%가 지났어요"라고 말하면 이상하다. 그럴 땐 비율을 말하지 않는 문장만 고른다.
+      const list = vars.pct === "0" ? bank[key]?.filter((tpl) => !tpl.includes("{pct}")) : bank[key];
       if (!list?.length) continue;
       return fill(list[hash(seed) % list.length], vars) ?? undefined;
     }
@@ -273,13 +274,17 @@ export function buildStory(i: {
   const count = countBand(i.remaining);
   const band = share ? pastBand(share.pct) : null;
   const group = groupOf(rel);
-  const then = rel === "parent" && share ? pick("then", [`${rel}.${freq}`, rel], i.tone, `${person.id}then${i.today}`, vars) : undefined;
+  // 매일 만나는 부모님(같이 사는 중)에게 "그때는 매일이었는데…"는 맞지 않는다.
+  const daily = toPerYear(person.frequency) >= 300;
+  const then = rel === "parent" && share && !daily ? pick("then", [`${rel}.${freq}`, rel], i.tone, `${person.id}then${i.today}`, vars) : undefined;
   /*
    * 문장을 따로 뽑아 붙이면 분위기가 따로 논다. 그때 줄이 있으면 지금 줄은 "이제는…"처럼
    * 앞 문장을 이어받는 문장(after)에서 고르고, 없으면 이름으로 시작하는 문장에서 고른다.
    */
-  const senior = typeof i.theirAge === "number" && i.theirAge >= SENIOR_AGE && i.remaining <= SENIOR_MAX_COUNT;
-  const nowKeys = [`${rel}.${count}`, count, "*"];
+  // 고령 문장은 높임말이라 부모님·조부모님께만 쓴다. 75세 친구·형제에게 "께서"가 붙으면 안 된다.
+  const senior = group === "elder" && typeof i.theirAge === "number" && i.theirAge >= SENIOR_AGE && i.remaining <= SENIOR_MAX_COUNT;
+  // 관계 묶음(elder·child·partner…)을 일반 문장보다 먼저 찾는다 — 그때 줄이 없는 조부모님도 높임 문장을 받게.
+  const nowKeys = [`${rel}.${count}`, `${group}.${count}`, group, count, "*"];
   // 딱 한 번 남았으면 단수 문장부터 찾는다(영어·스페인어만 둔다 — "1 more times"가 되지 않게).
   const one = vars.count === "1" ? ["one"] : [];
   const nowChain = [
@@ -288,7 +293,9 @@ export function buildStory(i: {
     ...(then ? [`after.${count}`, "after.*"] : []),
     ...nowKeys,
   ];
+  // 딱 한 번 남았을 때 축하 한 줄이 앞에 붙으면 결이 엇갈린다.
   const cheer =
+    vars.count !== "1" &&
     typeof i.theirAge === "number" && typeof i.averageLife === "number" && i.country && i.theirAge > i.averageLife
       ? pick("cheer", ["*"], i.tone, `${person.id}cheer${i.today}`, vars)
       : undefined;
@@ -314,7 +321,9 @@ export function buildStory(i: {
 /** 「만났어요」 직후 한 마디. 남은 횟수는 줄지 않으니 쌓인 쪽(올해 n번째)을 말한다. */
 export function metLine(i: { person: Person; tone: Tone; thisYear: number; me?: string }): string | null {
   const rel = relationKind(i.person.relation);
-  const vars = { name: i.person.name, n: String(i.thisYear), me: i.me?.trim() || tr(ME) };
+  // 한국어는 "올해 1번째"가 아니라 "올해 첫 번째"다.
+  const n = i.thisYear === 1 && getLang() === "ko" ? "첫 " : String(i.thisYear);
+  const vars = { name: i.person.name, n, me: i.me?.trim() || tr(ME) };
   return pick("met", [rel, groupOf(rel), "*"], i.tone, `${i.person.id}met${i.thisYear}`, vars) ?? null;
 }
 
@@ -327,9 +336,12 @@ export function momentStory(i: { moment: Moment; remaining: number; tone: Tone; 
   const freq = freqBand(i.moment.frequency);
   const vars = { title: i.moment.title, count: formatCount(i.remaining), me: i.me?.trim() || tr(ME) };
   const seed = `${i.moment.id}${i.today}`;
+  // 영어·스페인어는 문장 첫머리에 온 제목을 대문자로 시작한다("cherry blossoms: 41 more").
+  const capital = (line: string | undefined) =>
+    line && line.startsWith(i.moment.title) ? line.charAt(0).toLocaleUpperCase() + line.slice(1) : line;
   const story: Story = {
-    now: pick("moment", [...(vars.count === "1" ? ["one"] : []), freq, "*"], i.tone, `${seed}now`, vars),
-    today: pick("momentToday", [freq, "*"], i.tone, `${seed}today`, vars),
+    now: capital(pick("moment", [...(vars.count === "1" ? ["one"] : []), freq, "*"], i.tone, `${seed}now`, vars)),
+    today: capital(pick("momentToday", [freq, "*"], i.tone, `${seed}today`, vars)),
     assumed: false,
   };
   return story.now || story.today ? story : null;

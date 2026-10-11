@@ -128,7 +128,7 @@ const COPY = defineCopy({
     yearsLabel: "Años",
     yearsSuffix: "años",
     span: "Periodo",
-    byYear: "Año por año",
+    byYear: "Año a año",
     add: "Añadir",
     save: "Guardar",
     cancel: "Cancelar",
@@ -137,7 +137,7 @@ const COPY = defineCopy({
   },
   zh: {
     sinceMore: "从何时开始（选填）",
-    horizon: { life: "余生", untilAge: "到某个年龄", years: "未来n年" },
+    horizon: { life: "今后一直", untilAge: "到某个年龄", years: "未来n年" },
     thisThing: "这件事",
     unknown: "先填好我的信息，就能算出剩下的时间。",
     unit: "次",

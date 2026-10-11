@@ -100,6 +100,8 @@ export interface Person extends LifeSpan {
   ownPhoto?: string;
   /** 「만났어요」로 남긴 날짜들(YYYY-MM-DD, 오래된 순). lib/meetings.ts */
   meetings?: string[];
+  /** 「만났어요」 뒤에 남긴 한 줄 기억(날짜마다 하나, 오래된 순). 기기 밖으로 나가지 않는다. lib/meetings.ts */
+  memories?: { date: string; text: string }[];
   /** 상세의 「함께한 만남」을 어느 기간으로 셀지. 없으면 지금까지. */
   togetherScope?: "year";
   frequency: Frequency;

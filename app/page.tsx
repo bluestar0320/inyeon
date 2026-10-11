@@ -124,7 +124,7 @@ const COPY = defineCopy({
     fullMoons: "Lunas llenas",
     editProfile: "Editar mis datos",
     backupNudge:
-      "Tus registros solo están en este dispositivo y hay cambios desde tu última copia — exporta una copia →",
+      "Tus registros solo están en este dispositivo y hay cambios sin respaldar: exporta una copia →",
     people: "Personas",
     seeAll: "Ver todo",
     emptyPeopleBody:
@@ -147,15 +147,15 @@ const COPY = defineCopy({
     loading: "加载中…",
     lifeSub: (age, lifeExpectancy) => `${age} · 预期寿命 ${lifeExpectancy}岁`,
     progress: (past, left) => `已走过 ${past} · 还有 ${left}`,
-    summers: "还有的夏天",
-    weekends: "还有的周末",
-    fullMoons: "还有的满月",
+    summers: "剩下的夏天",
+    weekends: "剩下的周末",
+    fullMoons: "剩下的满月",
     editProfile: "修改我的信息",
     backupNudge: "记录只保存在这台设备上。上次备份后有了新的变化 — 导出一份 →",
     people: "亲友",
     seeAll: "查看全部",
     emptyPeopleBody:
-      "父母、朋友、孩子 — 只要是和你相连的人都可以。只需年龄和见面频率，就能看到还能见几次。",
+      "父母、朋友、孩子 — 只要是你在乎的人都可以。只需年龄和见面频率，就能看到还能见几次。",
     addPerson: "添加亲友",
     times: "次",
     timesValue: (n) => `${n}次`,

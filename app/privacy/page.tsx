@@ -62,7 +62,7 @@ const POLICY: Record<DocLang, { title: string; sections: DocSection[] }> = {
     title: "Privacy Policy",
     sections: [
       { title: "What we handle", body: "Your birth date (or age), sex, country and lifestyle; the name, relationship, age and meeting frequency of people you add; the names and frequency of moments; and any start dates and conditions you enter." },
-      { title: "Why", body: "Only to count the time and meetings you have left. Never for advertising, analytics or personalised recommendations." },
+      { title: "Why", body: "Only to count the time and meetings you have left. Never for advertising, analytics or personalized recommendations." },
       { title: "Where and how long", body: "All records are kept only in this device’s browser storage (or app storage for the installed app). There is no server and no account, so no one — including us — can see them. They are kept until you delete them." },
       { title: "Sharing with third parties", body: "We never give or sell your records to anyone. They never leave your device in the first place." },
       {
