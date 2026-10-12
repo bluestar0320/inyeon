@@ -82,6 +82,16 @@ function readColor(styles: CSSStyleDeclaration, name: string, fallback: string):
   return `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
 }
 
+/** 편지지 카드의 잉크. 종이는 밝으니 다크 모드에서도 이 색으로 쓴다. */
+export const PAPER_THEME: CardTheme = {
+  background: "#f7f1e6",
+  surface: "#fffdf8",
+  text: "#2a221c",
+  muted: "#5f5044",
+  accent: "#a85230",
+  border: "#b9a68f",
+};
+
 /** 지금 화면 테마를 그대로 카드에 쓴다. 보고 있던 것과 다른 색이 나오면 당황스럽다. */
 export function currentTheme(): CardTheme {
   if (typeof window === "undefined") {
@@ -230,6 +240,7 @@ export function drawCard(
   theme: CardTheme,
   wordmark: string,
   image?: CanvasImageSource & { width: number; height: number },
+  paper?: CanvasImageSource & { width: number; height: number },
 ): void {
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
@@ -239,15 +250,41 @@ export function drawCard(
   const cx = CARD_WIDTH / 2;
   const margin = 72;
 
-  ctx.fillStyle = theme.background;
-  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  if (paper) {
+    /*
+     * 오래된 편지지 한 장. 앱 배경과 같은 종이 사진을 꽉 채우고, 가장자리를 누렇게
+     * 태운 뒤 안쪽에 편지지 테두리 두 줄을 긋는다. 흰 상자는 두지 않는다.
+     */
+    const scale = Math.max(CARD_WIDTH / paper.width, CARD_HEIGHT / paper.height);
+    const w = paper.width * scale;
+    const h = paper.height * scale;
+    ctx.drawImage(paper, (CARD_WIDTH - w) / 2, (CARD_HEIGHT - h) / 2, w, h);
+    // 세월에 누렇게 바랜 색(곱하기), 그다음 가장자리를 더 짙게.
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = "rgba(226, 200, 156, 0.55)";
+    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+    const age = ctx.createRadialGradient(cx, CARD_HEIGHT / 2, CARD_WIDTH * 0.32, cx, CARD_HEIGHT / 2, CARD_HEIGHT * 0.72);
+    age.addColorStop(0, "rgba(150, 105, 55, 0)");
+    age.addColorStop(1, "rgba(150, 105, 55, 0.55)");
+    ctx.fillStyle = age;
+    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.strokeStyle = "rgba(120, 90, 60, 0.45)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(margin - 24, margin - 24, CARD_WIDTH - (margin - 24) * 2, CARD_HEIGHT - (margin - 24) * 2);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(margin - 14, margin - 14, CARD_WIDTH - (margin - 14) * 2, CARD_HEIGHT - (margin - 14) * 2);
+  } else {
+    ctx.fillStyle = theme.background;
+    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
 
-  ctx.fillStyle = theme.surface;
-  ctx.strokeStyle = theme.border;
-  ctx.lineWidth = 2;
-  roundedRect(ctx, margin, margin, CARD_WIDTH - margin * 2, CARD_HEIGHT - margin * 2, 56);
-  ctx.fill();
-  ctx.stroke();
+    ctx.fillStyle = theme.surface;
+    ctx.strokeStyle = theme.border;
+    ctx.lineWidth = 2;
+    roundedRect(ctx, margin, margin, CARD_WIDTH - margin * 2, CARD_HEIGHT - margin * 2, 56);
+    ctx.fill();
+    ctx.stroke();
+  }
 
   ctx.textAlign = "center";
   const inner = CARD_WIDTH - margin * 2 - 96;

@@ -5,10 +5,12 @@ import { useRef, useState } from "react";
 import { count } from "@/lib/analytics";
 import { defineCopy, tr } from "@/lib/i18n";
 import { isNativeApp, saveFileNatively, shareFileNatively } from "@/lib/nativeShare";
+import { paperSrc } from "@/lib/paper";
 import {
   currentTheme,
   drawCard,
   loadImage,
+  PAPER_THEME,
   SERIF_STACK,
   safeFileName,
   toBlob,
@@ -80,7 +82,9 @@ export default function ShareButton({
       // 글꼴을 못 받아도 카드는 그린다(오프라인 등).
     }
     const image = spec.photo ? await loadImage(spec.photo) : null;
-    drawCard(canvas, spec, currentTheme(), t.wordmark, image ?? undefined);
+    // 지금 화면에 깔린 종이와 같은 장. 못 불러오면 예전처럼 화면 색 카드로 그린다.
+    const paper = await loadImage(paperSrc(Number(document.documentElement.dataset.paper) || 1));
+    drawCard(canvas, spec, paper ? PAPER_THEME : currentTheme(), t.wordmark, image ?? undefined, paper ?? undefined);
     const blob = await toBlob(canvas);
     if (!blob) throw new Error("이미지를 만들지 못했습니다.");
     return new File([blob], safeFileName(fileNameParts), { type: "image/png" });

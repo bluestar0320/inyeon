@@ -9,6 +9,9 @@ import { STORAGE_KEY, clearState } from "./helpers";
 
 const now = new Date().toISOString();
 
+// 서비스 워커가 종이를 캐시에서 내주면 아래 page.route가 못 막는다.
+test.use({ serviceWorkers: "block" });
+
 function state(lang: string, name: string, count: number, unit: string, theme = "light", relation?: string) {
   return {
     version: 1,
@@ -21,6 +24,8 @@ function state(lang: string, name: string, count: number, unit: string, theme = 
 }
 
 async function card(page: Page, s: unknown) {
+  // 편지지 무늬는 여백 띠 검사에 걸리므로 종이를 막아 단색 카드로 잰다. 글자 자리는 같다.
+  await page.route("**/paper/*.webp", (r) => r.abort());
   await clearState(page);
   await page.evaluate(({ key, value }) => localStorage.setItem(key, JSON.stringify(value)), { key: STORAGE_KEY, value: s });
   await page.goto("/people/detail/?id=p1");

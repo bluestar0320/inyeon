@@ -136,3 +136,12 @@ test("불러오기로 들어온 이상한 사진 값은 버린다", async ({ pag
   await page.goto("/people/detail/?id=x");
   await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", /\/photos\//);
 });
+
+test("저장한 카드는 화면과 같은 편지지 위에 그린다", async ({ page }) => {
+  await addMother(page);
+  const paper = page.waitForRequest((r) => /\/paper\/paper-\d+\.webp/.test(r.url()) && r.resourceType() !== "stylesheet");
+  const download = page.waitForEvent("download");
+  await page.getByTestId("save-card").first().click();
+  await download;
+  await paper;
+});
