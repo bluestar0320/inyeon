@@ -5,10 +5,12 @@ import { useRef, useState } from "react";
 import { count } from "@/lib/analytics";
 import { defineCopy, tr } from "@/lib/i18n";
 import { isNativeApp, saveFileNatively, shareFileNatively } from "@/lib/nativeShare";
-import { paperSrc } from "@/lib/paper";
+import type { MemoryLetter } from "@/lib/memoryLetter";
+import { letterPaperSrc } from "@/lib/paper";
 import {
   currentTheme,
   drawCard,
+  drawLetter,
   loadImage,
   PAPER_THEME,
   SERIF_STACK,
@@ -63,9 +65,12 @@ async function shareSheet(file: File): Promise<boolean> {
 export default function ShareButton({
   spec,
   fileNameParts,
+  letter,
 }: {
   spec: ShareSpec;
   fileNameParts: string[];
+  /** 있으면 숫자 카드 대신 이 기억 편지를 그린다. */
+  letter?: MemoryLetter;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -75,16 +80,20 @@ export default function ShareButton({
     const canvas = canvasRef.current ?? document.createElement("canvas");
     canvasRef.current = canvas;
     // 명조 글꼴은 글자 조각마다 따로 받는다. 카드에 쓸 글자의 조각을 먼저 받아 두지 않으면 기본 글꼴로 그려진다.
-    const text = [spec.title, spec.label, ...(spec.story ?? [])].filter(Boolean).join("");
+    const text = letter
+      ? JSON.stringify(letter)
+      : [spec.title, spec.label, ...(spec.story ?? [])].filter(Boolean).join("");
     try {
       await document.fonts?.load(`40px ${SERIF_STACK}`, text);
     } catch {
       // 글꼴을 못 받아도 카드는 그린다(오프라인 등).
     }
     const image = spec.photo ? await loadImage(spec.photo) : null;
-    // 지금 화면에 깔린 종이와 같은 장. 못 불러오면 예전처럼 화면 색 카드로 그린다.
-    const paper = await loadImage(paperSrc(Number(document.documentElement.dataset.paper) || 1));
-    drawCard(canvas, spec, paper ? PAPER_THEME : currentTheme(), t.wordmark, image ?? undefined, paper ?? undefined);
+    // 화면의 편지와 같은 얼룩진 편지지. 못 불러오면 예전처럼 화면 색 카드로 그린다.
+    const paper = await loadImage(letterPaperSrc());
+    const theme = paper ? PAPER_THEME : currentTheme();
+    if (letter) drawLetter(canvas, letter, theme, t.wordmark, paper ?? undefined);
+    else drawCard(canvas, spec, theme, t.wordmark, image ?? undefined, paper ?? undefined);
     const blob = await toBlob(canvas);
     if (!blob) throw new Error("이미지를 만들지 못했습니다.");
     return new File([blob], safeFileName(fileNameParts), { type: "image/png" });

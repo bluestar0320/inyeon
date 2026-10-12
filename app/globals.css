@@ -309,7 +309,7 @@
     inset: 0;
     z-index: -1;
     border-radius: inherit;
-    background: rgb(255 251 242) var(--paper, none) center / cover no-repeat;
+    background: rgb(244 234 214) var(--letter-paper, none) center / cover no-repeat;
   }
 
   .dark .letter {
@@ -326,6 +326,22 @@
   }
 
   /* 불빛에 살짝 바랜 종이. 하얗게 번쩍이지 않도록 조금 누른다. */
+  /* 줄 그은 편지지. 줄 간격과 글줄 높이를 2rem으로 맞춰 글자가 줄 위에 얹힌다. 문단 사이는 한 줄(2rem). */
+  .letter-ruled {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    line-height: 2rem;
+  }
+
+  .letter-ruled::before {
+    background-image:
+      repeating-linear-gradient(to bottom, transparent 0 calc(2rem - 1px), rgb(130 95 55 / 0.3) calc(2rem - 1px) 2rem),
+      var(--letter-paper, none);
+    background-size: auto, cover;
+    background-position: 0 0, center;
+    background-repeat: repeat, no-repeat;
+  }
+
   .dark .letter::before {
     filter: brightness(0.86) sepia(0.25);
   }

@@ -86,6 +86,16 @@ const COPY = defineCopy({
   },
 });
 
-export function birthdayLine(person: Pick<Person, "name" | "relation">, days: number): string {
-  return tr(COPY)(person.name, days, isElder(person));
+const LETTER = defineCopy({
+  ko: "기억 편지가 준비돼 있어요",
+  en: "a letter of your memories is ready",
+  ja: "思い出の手紙ができています",
+  es: "tu carta de recuerdos está lista",
+  zh: "回忆信已经备好了",
+});
+
+/** letter: 건넬 기억 편지가 있으면 한마디 덧붙인다(components/MemoryLetter). */
+export function birthdayLine(person: Pick<Person, "name" | "relation">, days: number, letter = false): string {
+  const line = tr(COPY)(person.name, days, isElder(person));
+  return letter ? `${line} · ${tr(LETTER)}` : line;
 }

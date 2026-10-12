@@ -167,7 +167,7 @@ const JOSA = {
 } as const;
 
 /** 받침이 있으면 true, 없으면 false, 알 수 없으면 null. */
-function hasFinal(word: string): boolean | null {
+export function hasFinal(word: string): boolean | null {
   const trimmed = word.trim();
   const last = trimmed.slice(-1);
   const code = last.charCodeAt(0) - 0xac00;

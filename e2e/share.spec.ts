@@ -137,11 +137,22 @@ test("불러오기로 들어온 이상한 사진 값은 버린다", async ({ pag
   await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", /\/photos\//);
 });
 
-test("저장한 카드는 화면과 같은 편지지 위에 그린다", async ({ page }) => {
+test("저장한 카드는 얼룩진 편지지 위에 그린다", async ({ page }) => {
   await addMother(page);
-  const paper = page.waitForRequest((r) => /\/paper\/paper-\d+\.webp/.test(r.url()) && r.resourceType() !== "stylesheet");
   const download = page.waitForEvent("download");
   await page.getByTestId("save-card").first().click();
-  await download;
-  await paper;
+  const bytes = Buffer.concat(await Array.fromAsync(await (await download).createReadStream()));
+  // 단색 카드(#f7f1e6)는 붉은빛과 푸른빛 차이가 작고, 바랜 종이 가장자리는 누렇다.
+  const yellow = await page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const [r, , b] = ctx.getImageData(10, 10, 1, 1).data;
+    return r - b;
+  }, bytes.toString("base64"));
+  expect(yellow).toBeGreaterThan(40);
 });

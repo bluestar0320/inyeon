@@ -14,10 +14,11 @@ export function pickPaper(previous: number | null, random: () => number = Math.r
   return n;
 }
 
-export function paperSrc(n: number): string {
-  return `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-${n}.webp`;
+export function paperUrl(n: number): string {
+  return `url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-${n}.webp")`;
 }
 
-export function paperUrl(n: number): string {
-  return `url("${paperSrc(n)}")`;
+/** 편지·공유 카드의 종이. 구김 없이 바랜 색과 얼룩만(scripts/stained-paper.mjs). */
+export function letterPaperSrc(): string {
+  return `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/letter.webp`;
 }

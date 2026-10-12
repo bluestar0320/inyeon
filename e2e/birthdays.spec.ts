@@ -49,3 +49,36 @@ test("웹에서는 설정에 생일 알림 칸이 없다", async ({ page }) => {
   await expect(page.getByText("언어", { exact: true })).toBeVisible();
   await expect(page.getByText("생일 알림 받기")).toHaveCount(0);
 });
+
+test("한 줄 기억이 두 개면 기억 편지가 되고, 생신이 가까우면 펼쳐져 있고 이미지로 저장된다", async ({ page }) => {
+  await setUpProfile(page, 35);
+  const ago = (n: number) => page.evaluate((n) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    const p = (v: number) => String(v).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }, n);
+  const [a, b] = [await ago(40), await ago(3)];
+  let days = 5;
+  let birthDate = await birthDateIn(page, days);
+  if (birthDate.endsWith("-02-29")) birthDate = await birthDateIn(page, ++days);
+  await seed(page, [{ id: "p1", name: "엄마", relation: "부모님", birthDate, meetings: [a, b],
+    memories: [{ date: a, text: "같이 시장 가서 떡볶이" }, { date: b, text: "송편 같이 빚음" }] }]);
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: /기억 편지가 준비돼 있어요/ })).toBeVisible();
+  await page.goto("/people/detail?id=p1");
+  const letter = page.getByTestId("memory-letter");
+  await expect(letter.getByText("엄마께")).toBeVisible();
+  await expect(letter.getByText("같이 시장 가서 떡볶이")).toBeVisible();
+  const download = page.waitForEvent("download");
+  await letter.getByTestId("save-card").click();
+  expect((await download).suggestedFilename()).toMatch(/^엄마-기억편지/);
+});
+
+test("기억이 한 줄뿐이면 편지를 띄우지 않는다", async ({ page }) => {
+  await setUpProfile(page, 35);
+  await seed(page, [{ id: "p1", name: "엄마", relation: "부모님", memories: [{ date: "2026-10-01", text: "한 줄" }] }]);
+  await page.goto("/people/detail?id=p1");
+  await expect(page.getByTestId("story")).toBeVisible();
+  await expect(page.getByTestId("memory-letter")).toHaveCount(0);
+});

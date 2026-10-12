@@ -11,6 +11,7 @@
 
 import { josa } from "./format.ts";
 import { defineCopy, tr } from "./i18n.ts";
+import { memoryParagraph, type MemoryLetter } from "./memoryLetter.ts";
 
 /** 인연 카드의 제목. 숫자보다 관계가 먼저 보이게 — "어머니와 나". 카드를 보내는 사람 쪽에서 본 말이다. */
 const PAIR = defineCopy({
@@ -20,7 +21,6 @@ const PAIR = defineCopy({
   es: (name) => `${name} y yo`,
   zh: (name) => `我和${name}`,
 });
-
 export function pairTitle(name: string): string {
   return tr(PAIR)(name.trim());
 }
@@ -233,6 +233,21 @@ function roundedRect(
   ctx.closePath();
 }
 
+type Img = CanvasImageSource & { width: number; height: number };
+
+/** 얼룩진 편지지(public/paper/letter.webp)를 꽉 채우고 안쪽에 테두리 두 줄. */
+function drawPaper(ctx: CanvasRenderingContext2D, paper: Img, margin: number): void {
+  const scale = Math.max(CARD_WIDTH / paper.width, CARD_HEIGHT / paper.height);
+  const w = paper.width * scale;
+  const h = paper.height * scale;
+  ctx.drawImage(paper, (CARD_WIDTH - w) / 2, (CARD_HEIGHT - h) / 2, w, h);
+  ctx.strokeStyle = "rgba(120, 90, 60, 0.45)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(margin - 24, margin - 24, CARD_WIDTH - (margin - 24) * 2, CARD_HEIGHT - (margin - 24) * 2);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(margin - 14, margin - 14, CARD_WIDTH - (margin - 14) * 2, CARD_HEIGHT - (margin - 14) * 2);
+}
+
 /** 카드를 그린다. 캔버스를 돌려주므로 호출하는 쪽에서 원하는 형식으로 뽑는다. */
 export function drawCard(
   canvas: HTMLCanvasElement,
@@ -251,29 +266,7 @@ export function drawCard(
   const margin = 72;
 
   if (paper) {
-    /*
-     * 오래된 편지지 한 장. 앱 배경과 같은 종이 사진을 꽉 채우고, 가장자리를 누렇게
-     * 태운 뒤 안쪽에 편지지 테두리 두 줄을 긋는다. 흰 상자는 두지 않는다.
-     */
-    const scale = Math.max(CARD_WIDTH / paper.width, CARD_HEIGHT / paper.height);
-    const w = paper.width * scale;
-    const h = paper.height * scale;
-    ctx.drawImage(paper, (CARD_WIDTH - w) / 2, (CARD_HEIGHT - h) / 2, w, h);
-    // 세월에 누렇게 바랜 색(곱하기), 그다음 가장자리를 더 짙게.
-    ctx.globalCompositeOperation = "multiply";
-    ctx.fillStyle = "rgba(226, 200, 156, 0.55)";
-    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-    const age = ctx.createRadialGradient(cx, CARD_HEIGHT / 2, CARD_WIDTH * 0.32, cx, CARD_HEIGHT / 2, CARD_HEIGHT * 0.72);
-    age.addColorStop(0, "rgba(150, 105, 55, 0)");
-    age.addColorStop(1, "rgba(150, 105, 55, 0.55)");
-    ctx.fillStyle = age;
-    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-    ctx.globalCompositeOperation = "source-over";
-    ctx.strokeStyle = "rgba(120, 90, 60, 0.45)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(margin - 24, margin - 24, CARD_WIDTH - (margin - 24) * 2, CARD_HEIGHT - (margin - 24) * 2);
-    ctx.lineWidth = 1;
-    ctx.strokeRect(margin - 14, margin - 14, CARD_WIDTH - (margin - 14) * 2, CARD_HEIGHT - (margin - 14) * 2);
+    drawPaper(ctx, paper, margin);
   } else {
     ctx.fillStyle = theme.background;
     ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
@@ -422,6 +415,89 @@ export function drawCard(
   ctx.font = `600 34px ${FONT_STACK}`;
   // 주소는 찍지 않는다 — 사진마다 주소가 붙으면 광고처럼 보인다(사용자 요청).
   ctx.fillText(wordmark, cx, y.rule + 70);
+}
+
+/**
+ * 기억 편지(lib/memoryLetter.ts)를 줄 그은 편지지 한 장에 그린다. 글자는 줄 위에 얹는다.
+ * 글자를 줄여 가며 맞추고, 가장 작은 글자로도 넘치면 오래된 기억부터 뺀다 — 최근 것이 남는다.
+ */
+export function drawLetter(
+  canvas: HTMLCanvasElement,
+  letter: MemoryLetter,
+  theme: CardTheme,
+  wordmark: string,
+  paper?: Img,
+): void {
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  if (paper) {
+    const scale = Math.max(CARD_WIDTH / paper.width, CARD_HEIGHT / paper.height);
+    ctx.drawImage(paper, 0, 0, paper.width * scale, paper.height * scale);
+  } else {
+    ctx.fillStyle = theme.surface;
+    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  }
+
+  const left = 120;
+  const width = CARD_WIDTH - left * 2;
+  const top = 150;
+  const bottom = CARD_HEIGHT - 170;
+
+  // 한 줄 = 글자 한 줄. 빈 줄(null)은 문단 사이. right는 끝맺음(날짜·이름).
+  type Row = { text: string; right?: boolean } | null;
+  const rowsFor = (size: number, memories: string[]): Row[] => {
+    ctx.font = `${size}px ${SERIF_STACK}`;
+    const para = (text: string): Row[] => wrapLines(ctx, text, width, 60).map((t) => ({ text: t }));
+    const sign: Row[] = [{ text: letter.date, right: true }];
+    if (letter.from) sign.push({ text: letter.from, right: true });
+    return [
+      { text: letter.greeting }, null,
+      ...para(letter.open), null,
+      ...para(memoryParagraph(memories)), null,
+      ...para(letter.close), null,
+      ...sign,
+    ];
+  };
+
+  let size = 34;
+  let memories = letter.memories;
+  let rows = rowsFor(size, memories);
+  const fits = (sz: number, n: number) => n * Math.round(sz * 1.9) <= bottom - top;
+  while (!fits(size, rows.length)) {
+    if (size > 24) size -= 2;
+    else if (memories.length > 1) memories = memories.slice(1);
+    else break;
+    rows = rowsFor(size, memories);
+  }
+  const lineHeight = Math.round(size * 1.9);
+
+  // 편지지 줄. 글자가 있든 없든 아래까지 긋는다.
+  ctx.strokeStyle = "rgba(130, 95, 55, 0.28)";
+  ctx.lineWidth = 1.5;
+  for (let y = top + lineHeight; y <= bottom + 1; y += lineHeight) {
+    ctx.beginPath();
+    ctx.moveTo(left - 20, y);
+    ctx.lineTo(CARD_WIDTH - left + 20, y);
+    ctx.stroke();
+  }
+
+  ctx.font = `${size}px ${SERIF_STACK}`;
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = theme.text;
+  rows.forEach((row, i) => {
+    if (!row) return;
+    const baseline = top + (i + 1) * lineHeight - Math.round(size * 0.35);
+    ctx.textAlign = row.right ? "right" : "left";
+    ctx.fillText(row.text, row.right ? left + width : left, baseline);
+  });
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = theme.muted;
+  ctx.font = `500 24px ${FONT_STACK}`;
+  ctx.fillText(wordmark, CARD_WIDTH / 2, CARD_HEIGHT - 95);
 }
 
 export function toBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {

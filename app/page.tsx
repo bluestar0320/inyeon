@@ -26,8 +26,10 @@ import {
   formatFrequency,
   formatPercent,
   formatYears,
+  todayISO,
 } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
+import { memoryLetter } from "@/lib/memoryLetter";
 import { imageFor } from "@/lib/photos";
 import { relationTag } from "@/lib/story";
 import { useAppState } from "@/lib/store";
@@ -257,7 +259,7 @@ export default function HomePage() {
           prefetch={false}
           className="block rounded-xl border border-ink-200/70 px-4 py-3 text-xs leading-relaxed text-ink-600 transition hover:border-ink-400"
         >
-          {birthdayLine(person, days)}
+          {birthdayLine(person, days, memoryLetter(person, todayISO()) !== null)}
         </Link>
       ))}
 
