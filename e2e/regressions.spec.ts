@@ -230,3 +230,11 @@ test("보안 규칙(CSP)이 걸려 있고, 화면 어디서도 그 규칙에 막
   await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute("content", /connect-src 'self'/);
   expect(blocked).toEqual([]);
 });
+
+test("백업에 이상한 id가 들어 있어도 주소를 깨뜨리지 않고 새 id로 연다", async ({ page }) => {
+  await seed(page, { people: [person(`a&id=b#"><img src=x>`, "엄마")] });
+  await page.goto("/people");
+  await page.getByRole("link", { name: /엄마/ }).first().click();
+  await page.waitForURL(/\/people\/detail\/?\?id=[A-Za-z0-9-]+$/);
+  await expect(page.getByTestId("story")).toBeVisible();
+});

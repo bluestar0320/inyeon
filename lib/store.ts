@@ -157,11 +157,16 @@ function ownPhotoOk(value: unknown): value is string {
   return typeof value === "string" && value.length <= OWN_PHOTO_MAX && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(value);
 }
 
+/** 우리가 만드는 id(UUID나 시각-난수) 모양. 주소(?id=)에 그대로 들어가므로 이 밖의 글자는 받지 않는다. */
+const ID_OK = /^[A-Za-z0-9_-]{1,64}$/;
+
 /** 인연과 순간이 함께 가진 부분을 고친다. 빈도가 없으면 셀 수가 없으니 뺀다. */
 function repairCommon(item: unknown): Loose | null {
   if (!isObject(item) || typeof item.id !== "string" || !frequencyOk(item.frequency)) return null;
   return {
     ...item,
+    // 손으로 고친 백업 등에서 이상한 id가 오면 새로 준다. 불러오기 직후 저장되니 한 번만 바뀐다.
+    id: ID_OK.test(item.id) ? item.id : newId(),
     frequency: fixFrequency(item.frequency),
     filters: repairFilters(item.filters),
     scenarios: repairScenarios(item.scenarios),
