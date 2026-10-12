@@ -41,6 +41,17 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      # cap add 는 Capacitor 기본 아이콘을 깐다. 웹에 설치할 때 쓰는 시계 아이콘으로 덮는다.
+      # 적응형 아이콘의 앞 그림은 가장자리가 잘려 나가므로, 여백이 넉넉한 maskable 판을 쓴다.
+      # 크기는 512 하나로 두고 안드로이드가 줄여 쓰게 한다.
+      - name: 앱 아이콘
+        run: |
+          for d in android/app/src/main/res/mipmap-*dpi; do
+            cp public/icon-512.png "$d/ic_launcher.png"
+            cp public/icon-512.png "$d/ic_launcher_round.png"
+            cp public/icon-maskable.png "$d/ic_launcher_foreground.png"
+          done
+
       # 정식(release) 키로 서명한다. 키는 저장소에 두지 않고 Actions 비밀값으로만 받는다.
       #
       # 예전에는 저장소에 둔 공개 디버그 키를 썼다. 그 키는 누구나 내려받을 수 있어
