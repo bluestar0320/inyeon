@@ -39,8 +39,10 @@ test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다",
 
   await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
 
-  // 기본값은 "20년 뒤엔 지금의 절반". 월 1회를 20년 동안 그렇게 줄이면 173번.
-  await expect.poll(() => headline(page)).toBe("173번");
+  // 기본값은 "20년 뒤엔 지금의 절반". 월 1회를 20년 동안 그렇게 줄이면 173.1번.
+  // 이번 달 칸은 달이 끝날 때까지 남겨 두므로(lib/meetings.ts ledger) 이달 지난 만큼(0~1) 더해져
+  // 날짜에 따라 173이나 174가 된다.
+  await expect.poll(() => headline(page)).toMatch(/^17[34]번$/);
   await expect(page.getByText(/240번에서 .*% 줄었습니다/)).toBeVisible();
 });
 

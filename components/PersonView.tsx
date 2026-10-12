@@ -11,6 +11,7 @@ import MemoryLetter from "@/components/MemoryLetter";
 import OwnPhotoPicker from "@/components/OwnPhotoPicker";
 import Polaroid from "@/components/Polaroid";
 import ResultPanel from "@/components/ResultPanel";
+import Saying from "@/components/Saying";
 import StoryLines from "@/components/StoryLines";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
@@ -284,6 +285,7 @@ export default function PersonView({ person }: { person: Person }) {
         value={person.ownPhoto}
         onChange={(ownPhoto) => savePerson({ ...person, ownPhoto, updatedAt: new Date().toISOString() })}
       />
+      <Saying person={person} />
       <ResultPanel
         label={copy.meetingLabel}
         result={result}

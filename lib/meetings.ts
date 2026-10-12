@@ -159,3 +159,12 @@ export function ledger(meetings: string[], frequency: Frequency, start: string, 
     adjust: Math.max(0, Math.ceil(count * share(current, next) - 1e-9) - metNow) - count * left,
   };
 }
+
+export const SAYING_MAX_LENGTH = 60;
+
+/** 자주 하는 말. 감싼 따옴표는 화면이 붙이므로 벗기고, 비면 지운다. 저장소·백업 값도 이걸로 거른다. */
+export function cleanSaying(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const clean = value.replace(/\s+/g, " ").trim().replace(/^["'“”‘’「『«]+|["'“”‘’」』»]+$/g, "").trim();
+  return Array.from(clean).slice(0, SAYING_MAX_LENGTH).join("") || undefined;
+}

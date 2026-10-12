@@ -4,7 +4,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import { todayISO } from "./format";
 import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
-import { cleanMeetings, cleanMemories } from "./meetings";
+import { cleanMeetings, cleanMemories, cleanSaying } from "./meetings";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
 import { LANGS } from "./i18n";
@@ -202,6 +202,7 @@ function repairPerson(raw: unknown): Person | null {
     relation: text(item.relation),
     meetings: cleanMeetings(item.meetings),
     memories: cleanMemories(item.memories),
+    saying: cleanSaying(item.saying),
     togetherScope: item.togetherScope === "year" ? "year" : undefined,
     // 한 번에 보내는 시간은 0~24시간. 음수가 들어오면 상세에 "한 번에 -3시간"이 찍혔다.
     hoursPerMeeting: finite(item.hoursPerMeeting) && item.hoursPerMeeting > 0

@@ -102,6 +102,8 @@ export interface Person extends LifeSpan {
   meetings?: string[];
   /** 「만났어요」 뒤에 남긴 한 줄 기억(날짜마다 하나, 오래된 순). 기기 밖으로 나가지 않는다. lib/meetings.ts */
   memories?: { date: string; text: string }[];
+  /** 그 사람이 자주 하는 말 한 줄("밥은 먹고 다니니?"). 사용자가 적은 그대로 — 앱이 지어내지 않는다. lib/meetings.ts */
+  saying?: string;
   /** 상세의 「함께한 만남」을 어느 기간으로 셀지. 없으면 지금까지. */
   togetherScope?: "year";
   frequency: Frequency;

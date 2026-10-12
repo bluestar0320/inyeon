@@ -43,3 +43,13 @@ test("친구에게는 「에게」와 「~가/~이가」, 이름이 없으면 �
   }
   setLang("ko");
 });
+
+test("자주 하는 말은 맺음 앞에 따옴표로 한 줄, 없으면 null", () => {
+  setLang("ko");
+  const two = [{ date: "2026-09-01", text: "a" }, { date: "2026-10-01", text: "b" }];
+  assert.equal(memoryLetter(mom(two), "2026-10-12").saying, null);
+  assert.equal(memoryLetter({ ...mom(two), saying: "밥은 먹고 다니니?" }, "2026-10-12").saying, "“밥은 먹고 다니니?” 늘 하시는 그 말, 저도 잊지 않고 있어요.");
+  setLang("en");
+  assert.equal(memoryLetter({ ...mom(two), saying: "Eat something" }, "2026-10-12").saying, "You always say, “Eat something.” I keep it with me.");
+  setLang("ko");
+});

@@ -38,6 +38,7 @@ export default function MemoryLetter({ person }: { person: Person }) {
           <p>{letter.greeting}</p>
           <p>{letter.open}</p>
           <p>{memoryParagraph(letter.memories)}</p>
+          {letter.saying && <p>{letter.saying}</p>}
           <p>{letter.close}</p>
           <p className="text-right text-ink-600">
             {letter.date}

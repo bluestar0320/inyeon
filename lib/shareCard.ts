@@ -456,6 +456,7 @@ export function drawLetter(
       { text: letter.greeting }, null,
       ...para(letter.open), null,
       ...para(memoryParagraph(memories)), null,
+      ...(letter.saying ? [...para(letter.saying), null] : []),
       ...para(letter.close), null,
       ...sign,
     ];

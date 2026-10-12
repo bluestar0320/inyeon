@@ -18,6 +18,8 @@ export interface MemoryLetter {
   open: string;
   /** 기억 문단을 이루는 문장들(이음말 포함). 이어 붙여 한 문단으로 쓴다. */
   memories: string[];
+  /** 자주 하는 말을 맺음 앞에 한 줄로 인용한다. 적어 둔 말이 없으면 null. */
+  saying: string | null;
   /** 맺음 문단. */
   close: string;
   date: string;
@@ -38,6 +40,8 @@ const COPY = defineCopy({
         : `${name}, 잘 지냈어요? 지난 1년 동안 우리가 만난 날을 세어 보니 ${times}이더라고요.`;
     },
     month: (m: number, lastYear: boolean) => `${lastYear ? "작년 " : ""}${m}월엔`,
+    saying: (s: string, elder: boolean) =>
+      elder ? `“${s}” 늘 하시는 그 말, 저도 잊지 않고 있어요.` : `“${s}” 늘 하는 그 말, 잘 기억하고 있어요.`,
     close: (elder: boolean): string =>
       elder
         ? "그날그날 적어 두길 잘했다 싶어요. 남은 날들도 이렇게 한 줄씩 채워 갈게요. 늘 건강하세요."
@@ -53,6 +57,7 @@ const COPY = defineCopy({
     greeting: (name) => `Dear ${name},`,
     open: (_name, n) => `How have you been? I counted the days we spent together this past year — ${n} of them.`,
     month: (m, lastYear) => `${lastYear ? "Last" : "In"} ${new Date(2000, m - 1, 1).toLocaleDateString("en-US", { month: "long" })},`,
+    saying: (s) => `You always say, “${endSentence(s, false)}” I keep it with me.`,
     close: () => "I’m glad I wrote them down. I’ll keep adding a line for the days ahead. Take care.",
     from: (me) => `With love, ${me}`,
   },
@@ -60,6 +65,7 @@ const COPY = defineCopy({
     greeting: (name) => `${name}へ`,
     open: (_name, n) => `お元気ですか。この一年、一緒に過ごした日を数えてみたら${n}回でした。`,
     month: (m, lastYear) => `${lastYear ? "去年の" : ""}${m}月は、`,
+    saying: (s) => `「${s}」――いつものその言葉、ちゃんと覚えています。`,
     close: () => "書きとめておいてよかったと思います。これからの日々も一行ずつ書いていきます。どうかお元気で。",
     from: (me) => `${me}より`,
   },
@@ -67,6 +73,7 @@ const COPY = defineCopy({
     greeting: (name) => `Para ${name}:`,
     open: (_name, n) => `¿Cómo estás? Conté los días que pasamos juntos este último año: fueron ${n}.`,
     month: (m, lastYear) => `${lastYear ? "El pasado" : "En"} ${new Date(2000, m - 1, 1).toLocaleDateString("es", { month: "long" })},`,
+    saying: (s) => `Siempre me dices: «${endSentence(s, false)}» Lo llevo conmigo.`,
     close: () => "Me alegra haberlos escrito. Seguiré sumando una línea por cada día que venga. Cuídate mucho.",
     from: (me) => `Con cariño, ${me}`,
   },
@@ -74,6 +81,7 @@ const COPY = defineCopy({
     greeting: (name) => `亲爱的${name}：`,
     open: (_name, n) => `最近好吗？我数了数这一年我们一起度过的日子，一共${n}次。`,
     month: (m, lastYear) => `${lastYear ? "去年" : ""}${m}月，`,
+    saying: (s) => `“${s}”——你常说的这句话，我一直记着。`,
     close: () => "幸好都记了下来。接下来的日子，我也会这样一句一句写下去。多保重。",
     from: (me) => me,
   },
@@ -94,7 +102,7 @@ function endSentence(text: string, cjk: boolean): string {
 }
 
 export function memoryLetter(
-  person: Pick<Person, "name" | "relation" | "meetings" | "memories">,
+  person: Pick<Person, "name" | "relation" | "meetings" | "memories" | "saying">,
   today: string,
   me?: string,
 ): MemoryLetter | null {
@@ -120,6 +128,7 @@ export function memoryLetter(
     greeting: t.greeting(person.name, elder),
     open: t.open(person.name, met, elder),
     memories: body,
+    saying: person.saying ? t.saying(person.saying, elder) : null,
     close: t.close(elder),
     date: new Date(`${today}T00:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }),
     from: name ? t.from(name, elder) : null,

@@ -82,3 +82,24 @@ test("기억이 한 줄뿐이면 편지를 띄우지 않는다", async ({ page }
   await expect(page.getByTestId("story")).toBeVisible();
   await expect(page.getByTestId("memory-letter")).toHaveCount(0);
 });
+
+test("자주 하시는 말을 적으면 사진 아래 따옴표로 남고, 기억 편지에도 한 줄 실린다", async ({ page }) => {
+  await setUpProfile(page, 35);
+  await seed(page, [{ id: "p1", name: "엄마", relation: "부모님",
+    memories: [{ date: "2026-09-01", text: "송편" }, { date: "2026-10-01", text: "시장" }] }]);
+  await page.goto("/people/detail?id=p1");
+  await page.getByRole("button", { name: "자주 하시는 말 적기" }).click();
+  await page.getByLabel("자주 하시는 말").fill(" “밥은 먹고 다니니?” ");
+  await page.getByRole("button", { name: "남기기" }).click();
+  await expect(page.getByTestId("saying")).toHaveText("“밥은 먹고 다니니?”");
+  await page.reload();
+  await expect(page.getByTestId("saying")).toHaveText("“밥은 먹고 다니니?”");
+  await page.getByTestId("memory-letter").locator("summary").click();
+  await expect(page.getByTestId("memory-letter").getByText("늘 하시는 그 말")).toBeVisible();
+  // 비우고 남기면 지워진다.
+  await page.getByRole("button", { name: "고치기" }).click();
+  await page.getByLabel("자주 하시는 말").fill("");
+  await page.getByRole("button", { name: "남기기" }).click();
+  await expect(page.getByTestId("saying")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "자주 하시는 말 적기" })).toBeVisible();
+});

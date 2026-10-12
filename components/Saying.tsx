@@ -1,0 +1,127 @@
+"use client";
+
+import { useState } from "react";
+
+import { isElder } from "@/lib/birthdays";
+import { defineCopy, tr } from "@/lib/i18n";
+import { SAYING_MAX_LENGTH, cleanSaying } from "@/lib/meetings";
+import { useActions } from "@/lib/store";
+import type { Person } from "@/lib/types";
+
+const COPY = defineCopy({
+  ko: {
+    add: (elder: boolean): string => (elder ? "자주 하시는 말 적기" : "자주 하는 말 적기"),
+    label: (elder: boolean): string => (elder ? "자주 하시는 말" : "자주 하는 말"),
+    placeholder: "예: 밥은 먹고 다니니?",
+    keep: "남기기",
+    cancel: "취소",
+    edit: "고치기",
+  },
+  en: {
+    add: () => "Add something they often say",
+    label: () => "Something they often say",
+    placeholder: "e.g. Have you eaten?",
+    keep: "Save",
+    cancel: "Cancel",
+    edit: "Edit",
+  },
+  ja: {
+    add: () => "よく言う言葉を書く",
+    label: () => "よく言う言葉",
+    placeholder: "例：ちゃんとご飯食べてる？",
+    keep: "残す",
+    cancel: "やめる",
+    edit: "直す",
+  },
+  es: {
+    add: () => "Anotar algo que suele decir",
+    label: () => "Algo que suele decir",
+    placeholder: "Ej.: ¿Ya comiste?",
+    keep: "Guardar",
+    cancel: "Cancelar",
+    edit: "Editar",
+  },
+  zh: {
+    add: () => "写下常说的话",
+    label: () => "常说的话",
+    placeholder: "例：吃饭了没？",
+    keep: "留下",
+    cancel: "取消",
+    edit: "修改",
+  },
+});
+
+/*
+ * 폴라로이드 아래, 그 사람이 자주 하는 말 한 줄. 사용자가 적은 그대로만 보여 준다.
+ * 칸을 늘 펼쳐 두지 않는다 — 비어 있으면 작은 링크 하나, 적으면 따옴표 속 손글씨.
+ */
+export default function Saying({ person }: { person: Person }) {
+  const t = tr(COPY);
+  const { savePerson } = useActions();
+  const elder = isElder(person);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const save = (saying: string | undefined) => savePerson({ ...person, saying, updatedAt: new Date().toISOString() });
+
+  if (editing) {
+    return (
+      <form
+        className="mx-auto max-w-sm space-y-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save(cleanSaying(draft));
+          setEditing(false);
+        }}
+      >
+        <label htmlFor={`saying-${person.id}`} className="block text-center text-xs text-ink-600">
+          {t.label(elder)}
+        </label>
+        <input
+          id={`saying-${person.id}`}
+          className="input text-center"
+          value={draft}
+          maxLength={SAYING_MAX_LENGTH + 4}
+          placeholder={t.placeholder}
+          autoComplete="off"
+          autoFocus
+          onChange={(e) => setDraft(e.target.value)}
+        />
+        <div className="flex justify-center gap-2">
+          <button type="button" className="btn-secondary" onClick={() => setEditing(false)}>
+            {t.cancel}
+          </button>
+          <button type="submit" className="btn-primary">
+            {t.keep}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  const open = () => {
+    setDraft(person.saying ?? "");
+    setEditing(true);
+  };
+  if (!person.saying) {
+    return (
+      <div className="flex justify-center text-xs text-ink-400">
+        <button type="button" className="underline" onClick={open}>
+          {t.add(elder)}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <figure className="px-4 text-center">
+      <blockquote data-testid="saying" className="font-album break-keep text-base text-ink-800">
+        “{person.saying}”
+      </blockquote>
+      <figcaption className="mt-1 text-xs text-ink-400">
+        {t.label(elder)} ·{" "}
+        <button type="button" className="underline" onClick={open}>
+          {t.edit}
+        </button>
+      </figcaption>
+    </figure>
+  );
+}
