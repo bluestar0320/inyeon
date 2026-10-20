@@ -12,7 +12,7 @@ import { useAppState } from "@/lib/store";
  */
 export default function BirthdayNotifier() {
   const { state, hydrated } = useAppState();
-  const enabled = state.settings.birthdayNotify === true;
+  const enabled = state.settings.birthdayNotify !== false;
   const key = JSON.stringify([
     enabled,
     getLang(),

@@ -217,7 +217,7 @@ export interface Settings {
   language?: Lang;
   /** 마지막으로 내보내기를 한 때(ISO). 백업을 권할지 정하는 데 쓴다(lib/backup.ts). */
   lastBackupAt?: string;
-  /** APK에서 생일 알림(7일 전·당일)을 받을지. 설정에서 켜야만 켜진다. */
+  /** APK 생일 알림(7일 전·당일)을 끈 사람만 false. 없으면 켜져 있다 — 생일은 꼭 챙긴다. */
   birthdayNotify?: boolean;
 }
 

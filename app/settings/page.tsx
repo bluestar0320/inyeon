@@ -679,7 +679,7 @@ export default function SettingsPage() {
       <div className="space-y-2">
         <h2 className="px-1 text-xs font-semibold tracking-[0.1em] text-ink-600">{t.groupApp}</h2>
         <div className="card divide-y divide-ink-200/70 py-1">
-      {/* 알림은 APK에서만 걸 수 있다. 웹에서는 칸을 보이지 않는다. 허락은 켤 때만 묻는다. */}
+      {/* 알림은 APK에서만 걸 수 있다. 웹에서는 칸을 보이지 않는다. 기본은 켜짐, 허락은 생일이 처음 걸릴 때 묻는다. */}
       {isNativeApp() && (
         <section className="space-y-3 py-4">
           <div>
@@ -691,7 +691,7 @@ export default function SettingsPage() {
               { on: true, label: t.notifyOn },
               { on: false, label: t.notifyOff },
             ].map((option) => {
-              const active = (state.settings.birthdayNotify === true) === option.on;
+              const active = (state.settings.birthdayNotify !== false) === option.on;
               return (
                 <button
                   key={String(option.on)}
@@ -704,7 +704,7 @@ export default function SettingsPage() {
                       return;
                     }
                     setNotifyBlocked(false);
-                    saveSettings({ birthdayNotify: option.on || undefined });
+                    saveSettings({ birthdayNotify: option.on ? undefined : false });
                   }}
                 >
                   {option.label}

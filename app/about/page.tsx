@@ -12,7 +12,7 @@ const ABOUT: Record<DocLang, { title: string; lead: string; more: string; sectio
     lead: "남은 시간과 남은 만남을 횟수로 세어 봅니다.",
     more: "읽을거리 보기 →",
     sections: [
-      { title: "무엇을 세나요", body: "소중한 사람을 앞으로 몇 번 더 만날 수 있는지, 벚꽃이나 여름 바다 같은 순간을 몇 번 더 누릴 수 있는지를 횟수로 셉니다. 알림을 보내지 않습니다. 숫자를 보고 무엇을 할지는 오롯이 당신의 몫입니다." },
+      { title: "무엇을 세나요", body: "소중한 사람을 앞으로 몇 번 더 만날 수 있는지, 벚꽃이나 여름 바다 같은 순간을 몇 번 더 누릴 수 있는지를 횟수로 셉니다. 휴대폰 앱에서 생일만 챙겨 알려 드리고, 그 밖의 알림은 보내지 않습니다. 숫자를 보고 무엇을 할지는 오롯이 당신의 몫입니다." },
       {
         title: "어떻게 세나요",
         body: [
@@ -29,7 +29,7 @@ const ABOUT: Record<DocLang, { title: string; lead: string; more: string; sectio
     lead: "Counting the time you have left with people, one meeting at a time.",
     more: "Browse the reads →",
     sections: [
-      { title: "What it counts", body: "How many more times you can see the people you love, and how many more times you can enjoy moments like cherry blossoms or the summer sea. It sends no reminders. What you do with the number is entirely yours." },
+      { title: "What it counts", body: "How many more times you can see the people you love, and how many more times you can enjoy moments like cherry blossoms or the summer sea. In the phone app it reminds you of birthdays, and nothing else. What you do with the number is entirely yours." },
       {
         title: "How it counts",
         body: [
@@ -46,7 +46,7 @@ const ABOUT: Record<DocLang, { title: string; lead: string; more: string; sectio
     lead: "残りの時間と、これから会える回数を数えます。",
     more: "読みものを見る →",
     sections: [
-      { title: "何を数えるの？", body: "大切な人にあと何回会えるか、桜や夏の海のようなひとときをあと何回楽しめるかを回数で数えます。通知は送りません。数字を見て何をするかは、すべてあなた次第です。" },
+      { title: "何を数えるの？", body: "大切な人にあと何回会えるか、桜や夏の海のようなひとときをあと何回楽しめるかを回数で数えます。スマホアプリでは誕生日だけお知らせし、それ以外の通知は送りません。数字を見て何をするかは、すべてあなた次第です。" },
       {
         title: "どう数えるの？",
         body: [

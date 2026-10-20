@@ -9,7 +9,7 @@ const TERMS: Record<DocLang, { title: string; sections: DocSection[] }> = {
   ko: {
     title: "이용약관",
     sections: [
-      { title: "서비스의 성격", body: "「몇 번 더」는 나이, 예상 수명, 만나는 빈도를 바탕으로 앞으로 남은 만남과 순간을 횟수로 계산하는 도구입니다. 알림이나 연락 기능은 없습니다." },
+      { title: "서비스의 성격", body: "「몇 번 더」는 나이, 예상 수명, 만나는 빈도를 바탕으로 앞으로 남은 만남과 순간을 횟수로 계산하는 도구입니다. 휴대폰 앱에서는 생년월일을 넣은 인연의 생일을 알려 드리고(설정에서 끌 수 있습니다), 그 밖의 알림이나 누군가에게 연락하는 기능은 없습니다." },
       { title: "결과에 대한 안내", body: "예상 수명은 국제연합(UN) 세계인구전망 생명표의 통계값이고, 횟수는 입력한 빈도로 계산한 추정치입니다. 한 사람의 실제 수명이나 미래를 알려 주지 않으며, 의료·재무·법률 판단의 근거로 쓰면 안 됩니다." },
       { title: "이용자의 책임", body: "다른 사람에 관해 적는 정보는 본인만 보는 개인 메모로 써 주세요. 결과 이미지를 공유할 때 다른 사람의 이름이 들어가지 않았는지 확인해 주세요." },
       { title: "기록의 보관", body: "기록은 이 기기 안에만 저장됩니다. 기기를 바꾸거나 브라우저 데이터를 지우면 기록이 사라질 수 있으니, 필요하면 설정의 「내보내기」로 백업해 두세요." },
@@ -22,7 +22,7 @@ const TERMS: Record<DocLang, { title: string; sections: DocSection[] }> = {
   en: {
     title: "Terms of Use",
     sections: [
-      { title: "What this service is", body: "“How Many More” counts the meetings and moments you have left, based on age, life expectancy and how often you meet. It sends no notifications and contacts no one." },
+      { title: "What this service is", body: "“How Many More” counts the meetings and moments you have left, based on age, life expectancy and how often you meet. In the phone app it reminds you of birthdays you've entered (you can turn this off in Settings); otherwise it sends no notifications and contacts no one." },
       { title: "About the results", body: "Life expectancy comes from the United Nations World Population Prospects life tables, and counts are estimates from the frequency you enter. They do not predict anyone’s actual lifespan or future and must not be used for medical, financial or legal decisions." },
       { title: "Your responsibilities", body: "Use what you write about other people only as a private note for yourself. Before sharing a result image, check whether it shows someone else’s name." },
       { title: "Keeping your records", body: "Your records are stored only on this device. Changing devices or clearing browser data can erase them, so back them up with Export in Settings if needed." },
@@ -35,7 +35,7 @@ const TERMS: Record<DocLang, { title: string; sections: DocSection[] }> = {
   ja: {
     title: "利用規約",
     sections: [
-      { title: "サービスの性格", body: "「あと何回」は、年齢・平均余命・会う頻度をもとに、これから残る出会いやひとときを回数で計算する道具です。通知や連絡の機能はありません。" },
+      { title: "サービスの性格", body: "「あと何回」は、年齢・平均余命・会う頻度をもとに、これから残る出会いやひとときを回数で計算する道具です。スマホアプリでは、生年月日を入れた人の誕生日をお知らせします（設定でオフにできます）。それ以外の通知や、誰かに連絡する機能はありません。" },
       { title: "結果について", body: "平均余命は国際連合(UN)世界人口推計の生命表による統計値で、回数は入力した頻度から計算した推定値です。一人ひとりの実際の寿命や未来を示すものではなく、医療・金融・法律の判断の根拠には使わないでください。" },
       { title: "利用者の責任", body: "ほかの人について書く情報は、自分だけが見る個人的なメモとして使ってください。結果の画像を共有するときは、ほかの人の名前が入っていないか確認してください。" },
       { title: "記録の保管", body: "記録はこの端末の中だけに保存されます。端末を替えたりブラウザのデータを消したりすると記録が消えることがあるので、必要なら設定の「エクスポート」でバックアップしてください。" },

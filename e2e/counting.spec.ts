@@ -14,7 +14,8 @@ test("컨셉의 예시가 화면에 그대로 나온다: 어머니 60세·수명
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
 
-  await expect.poll(() => headline(page)).toBe("240번");
+  // 이번 달 칸은 달이 끝날 때까지 한 칸으로 남으므로(lib/meetings.ts ledger) 달이 절반 넘게 지나면 241번.
+  await expect.poll(() => headline(page)).toMatch(/^24[01]번$/);
   // 기본 말투(찡하게)의 문장이다.
   await expect(page.getByText("어머니의 시간에 맞춰 셌어요")).toBeVisible();
 });
@@ -35,7 +36,7 @@ test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다",
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
-  await expect.poll(() => headline(page)).toBe("240번");
+  await expect.poll(() => headline(page)).toMatch(/^24[01]번$/);
 
   await page.getByRole("button", { name: "+ 해마다 달라짐" }).click();
 
@@ -115,7 +116,7 @@ test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ pag
   await page.waitForURL(AFTER_ADD_PERSON);
   await page.goto("/people");
 
-  await expect(page.locator("a.card").first()).toContainText("240");
+  await expect(page.locator("a.card").first()).toContainText(/24[01]/);
 
   await page.goto("/settings");
   await page.getByRole("button", { name: /찡하게/ }).click();
@@ -123,7 +124,7 @@ test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ pag
   await page.locator("a.card").first().click();
 
   await expect(page.getByText("남은 만남", { exact: true })).toBeVisible();
-  await expect.poll(() => headline(page)).toBe("240번");
+  await expect.poll(() => headline(page)).toMatch(/^24[01]번$/);
 });
 
 test("생활 습관을 고르면 남은 시간이 줄고, 해제하면 그대로 돌아온다", async ({ page }) => {

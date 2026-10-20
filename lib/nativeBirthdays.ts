@@ -17,7 +17,7 @@ const NOTIFY_HOUR = 9;
 const BEFORE_DAYS = [7, 0];
 const DAY = 86_400_000;
 
-/** 설정에서 켤 때만 부른다. 허락하면 true. */
+/** 설정에서 켤 때 부른다. 허락하면 true. */
 export async function askBirthdayPermission(): Promise<boolean> {
   if (!isNativeApp()) return false;
   try {
@@ -38,9 +38,6 @@ export async function syncBirthdayNotifications(people: Person[], enabled: boole
       await LocalNotifications.cancel({ notifications: pending.notifications.map(({ id }) => ({ id })) });
     }
     if (!enabled) return;
-    // 설정에서 이미 허락받았다. 나중에 시스템에서 꺼 버렸으면 여기서 다시 조르지 않는다.
-    if ((await LocalNotifications.checkPermissions()).display !== "granted") return;
-
     const notifications = [];
     for (const person of people) {
       const next = nextBirthday(person.birthDate, now);
@@ -65,7 +62,11 @@ export async function syncBirthdayNotifications(people: Person[], enabled: boole
         }
       }
     }
-    if (notifications.length > 0) await LocalNotifications.schedule({ notifications });
+    if (notifications.length === 0) return;
+    // 알림은 기본으로 켜져 있다. 걸 생일이 생겼을 때 한 번 묻고, 거절했으면(denied) 다시 조르지 않는다.
+    let { display } = await LocalNotifications.checkPermissions();
+    if (display.startsWith("prompt")) ({ display } = await LocalNotifications.requestPermissions());
+    if (display === "granted") await LocalNotifications.schedule({ notifications });
   } catch {
     // 플러그인이 없거나 기기가 안 받아 주면 그냥 둔다. 앱은 그대로 동작해야 한다.
   }
