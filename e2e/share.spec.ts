@@ -117,13 +117,53 @@ test("내 사진을 넣으면 폴라로이드와 카드에 들어가고, 이 기
   await page.getByTestId("own-photo").setInputFiles("public/photos/railway.webp");
   const polaroid = page.locator(".polaroid img").first();
   await expect(polaroid).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
-  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).people[0].ownPhoto, STORAGE_KEY);
-  expect(saved).toMatch(/^data:image\/jpeg;base64,/);
+  // 사진은 기록(localStorage)이 아니라 IndexedDB에 들어가고, 새로고침해도 남는다.
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).people[0].ownPhoto ?? null, STORAGE_KEY)).toBeNull();
+  await page.reload();
+  await expect(polaroid).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
   const download = page.waitForEvent("download");
   await page.getByTestId("save-card").first().click();
   expect((await download).suggestedFilename()).toMatch(/^어머니-\d+번\.png$/);
   await page.getByRole("button", { name: "원래 사진으로" }).click();
   await expect(polaroid).toHaveAttribute("src", /\/photos\/mother(-\d)?\.webp$/);
+  // IndexedDB에서도 지워져서, 새로고침해도 되살아나지 않는다.
+  await page.waitForTimeout(300);
+  await page.reload();
+  await expect(polaroid).toHaveAttribute("src", /\/photos\/mother(-\d)?\.webp$/);
+});
+
+test("기록 안에 들어 있던 옛 사진은 IndexedDB로 옮기고, 내보내기에는 사진이 같이 들어간다", async ({ page }) => {
+  const photo = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==";
+  await page.evaluate(({ key, photo }) => {
+    const v = JSON.parse(localStorage.getItem(key)!);
+    v.people = [{ id: "x", name: "엄마", ageYears: 60, lifeExpectancy: 85, frequency: { count: 1, unit: "month" }, filters: [],
+      ownPhoto: photo, createdAt: "", updatedAt: "" }];
+    localStorage.setItem(key, JSON.stringify(v));
+  }, { key: STORAGE_KEY, photo });
+  await page.goto("/people/detail/?id=x");
+  await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", photo);
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).people[0].ownPhoto ?? null, STORAGE_KEY)).toBeNull();
+  await page.reload();
+  await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", photo);
+
+  await page.goto("/settings");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: /내보내기/ }).first().click();
+  const file = await (await download).path();
+  const exported = JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(file!, "utf8")));
+  expect(exported.people[0].ownPhoto).toBe(photo);
+});
+
+test("IndexedDB를 못 쓰는 환경에서는 사진을 예전처럼 기록 안에 둔다", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(window, "indexedDB", { get: () => undefined }));
+  await page.reload();
+  await addMother(page);
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/\/people\/detail/);
+  await page.getByTestId("own-photo").setInputFiles("public/photos/railway.webp");
+  await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
+  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).people[0].ownPhoto, STORAGE_KEY);
+  expect(saved).toMatch(/^data:image\/jpeg;base64,/);
 });
 
 test("불러오기로 들어온 이상한 사진 값은 버린다", async ({ page }) => {
@@ -155,4 +195,22 @@ test("저장한 카드는 얼룩진 편지지 위에 그린다", async ({ page }
     return r - b;
   }, bytes.toString("base64"));
   expect(yellow).toBeGreaterThan(40);
+});
+
+test("다른 창에서 고치면 이 화면도 따라 바뀌고, 그렇다고 한 줄 알린다", async ({ page, context }) => {
+  await setUpProfile(page, 35);
+  await page.goto("/people");
+  const other = await context.newPage();
+  await other.goto("/people/new");
+  await other.getByRole("button", { name: "어머니", exact: true }).click();
+  await other.getByLabel("나이", { exact: true }).fill("60");
+  await other.getByRole("button", { name: "추가하기" }).click();
+  await other.waitForURL(/\/people\/detail/);
+
+  await expect(page.getByText("다른 창에서 고친 내용이 있어서")).toBeVisible();
+  await expect(page.locator("a.card").first()).toContainText("어머니");
+  await page.getByRole("button", { name: "알겠어요" }).click();
+  await expect(page.getByText("다른 창에서 고친 내용이 있어서")).toHaveCount(0);
+  // 자기가 저장한 창에는 뜨지 않는다.
+  await expect(other.getByText("다른 창에서 고친 내용이 있어서")).toHaveCount(0);
 });

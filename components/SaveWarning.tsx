@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { defineCopy, tr } from "@/lib/i18n";
-import { useSaveFailed } from "@/lib/store";
+import { dismissChangedElsewhere, useChangedElsewhere, useSaveFailed } from "@/lib/store";
 
 const COPY = defineCopy({
   ko: {
@@ -28,10 +28,35 @@ const COPY = defineCopy({
   },
 });
 
+const ELSEWHERE = defineCopy({
+  ko: { text: "다른 창에서 고친 내용이 있어서, 이 화면도 그대로 맞췄어요.", close: "알겠어요" },
+  en: { text: "Something was changed in another window, so this screen now shows that version.", close: "Got it" },
+  ja: { text: "別のウィンドウで変更があったので、この画面もそれに合わせました。", close: "わかりました" },
+  es: { text: "Se hicieron cambios en otra ventana, así que esta pantalla ya muestra esa versión.", close: "Entendido" },
+  zh: { text: "另一个窗口里有改动，这个页面也已跟着更新。", close: "知道了" },
+});
+
+/** 다른 창이 저장해서 화면이 바뀌었을 때. 닫을 때까지 남는다. */
+function ChangedElsewhere() {
+  const changed = useChangedElsewhere();
+  if (!changed) return null;
+  const t = tr(ELSEWHERE);
+  return (
+    <div role="status" className="mx-auto max-w-3xl px-4 pt-3">
+      <p className="flex items-start justify-between gap-3 rounded-xl border border-ink-200 bg-surface px-4 py-3 text-xs leading-relaxed text-ink-600">
+        <span>{t.text}</span>
+        <button type="button" className="shrink-0 font-semibold underline" onClick={dismissChangedElsewhere}>
+          {t.close}
+        </button>
+      </p>
+    </div>
+  );
+}
+
 /** 저장이 실패하는 동안만 뜬다. 조용히 넘기면 사용자는 저장된 줄 안다(lib/store.ts). */
 export default function SaveWarning() {
   const failed = useSaveFailed();
-  if (!failed) return null;
+  if (!failed) return <ChangedElsewhere />;
   const t = tr(COPY);
   return (
     <div role="alert" className="mx-auto max-w-3xl px-4 pt-3">

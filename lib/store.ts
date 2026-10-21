@@ -5,6 +5,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { todayISO } from "./format";
 import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
 import { cleanMeetings, cleanMemories, cleanSaying } from "./meetings";
+import { loadPhotos, writePhotos } from "./photoStore";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
 import { LANGS } from "./i18n";
@@ -41,6 +42,7 @@ const EMPTY_STATE: AppState = {
 };
 
 let state: AppState = EMPTY_STATE;
+let booting = false;
 let booted = false;
 const listeners = new Set<() => void>();
 
@@ -281,21 +283,90 @@ function normalise(raw: unknown): AppState {
  * 서버 HTML과 클라이언트 첫 렌더를 일치시키기 위한 것이다.
  */
 function boot(): void {
-  if (booted) return;
-  booted = true;
+  if (booting) return;
+  booting = true;
+  let found = false;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       state = normalise(JSON.parse(raw));
-      // 채워 넣은 ageAsOf를 바로 저장해 둔다. 안 그러면 다음에 열 때 또 오늘로
-      // 채워져서 나이가 영영 제자리를 맴돈다.
-      persist();
+      found = true;
     }
   } catch {
     // 저장된 값이 깨졌거나 저장소를 못 쓰는 환경이면 빈 상태로 시작한다.
     state = EMPTY_STATE;
   }
-  emit();
+  // 사진까지 붙인 뒤에 화면을 연다. 먼저 열면 기본 사진이 한 번 보였다가 바뀐다.
+  void loadPhotos()
+    .then(
+      (photos) => {
+        state = withPhotos(state, photos);
+        stored = new Map(photos);
+      },
+      () => undefined,
+    )
+    .finally(() => {
+      booted = true;
+      // 채워 넣은 ageAsOf를 바로 저장해 둔다. 안 그러면 다음에 열 때 또 오늘로
+      // 채워져서 나이가 영영 제자리를 맴돈다. 기록 안에 있던 옛 사진도 이때 IndexedDB로 옮겨진다.
+      if (found) persist();
+      emit();
+    });
+}
+
+/*
+ * 사진은 IndexedDB에 따로 둔다(lib/photoStore.ts). stored는 IndexedDB에 들어 있는 사진(id → data URL)이고,
+ * null이면 아직 못 읽었거나 IndexedDB를 못 쓰는 환경이다 — 그동안은 예전처럼 기록 안에 넣어 저장한다.
+ */
+let stored: Map<string, string> | null = null;
+let syncing: Promise<void> = Promise.resolve();
+
+type WithPhoto = { id: string; ownPhoto?: string };
+
+function photosOf(current: AppState): Map<string, string> {
+  const photos = new Map<string, string>();
+  for (const item of [...current.people, ...current.moments] as WithPhoto[]) {
+    if (item.ownPhoto) photos.set(item.id, item.ownPhoto);
+  }
+  return photos;
+}
+
+/** 기록 안에 사진이 없는 항목에만 붙인다(기록 안의 사진은 IndexedDB가 실패했을 때 남긴 더 새 것이다). */
+function withPhotos(current: AppState, photos: Map<string, string>): AppState {
+  const fill = <T extends WithPhoto>(item: T): T => {
+    const photo = photos.get(item.id);
+    return item.ownPhoto || !ownPhotoOk(photo) ? item : { ...item, ownPhoto: photo };
+  };
+  return { ...current, people: current.people.map(fill), moments: current.moments.map(fill) };
+}
+
+function withoutPhotos(current: AppState): AppState {
+  const strip = <T extends WithPhoto>(item: T): T => (item.ownPhoto ? { ...item, ownPhoto: undefined } : item);
+  return { ...current, people: current.people.map(strip), moments: current.moments.map(strip) };
+}
+
+/*
+ * 바뀐 사진만 쓰고 없어진 사진은 지운다. 실패하면 IndexedDB를 포기하고 사진을 기록 안에 다시 넣는다.
+ * 지우는 건 이 탭이 알고 있던(stored) 사진뿐이라, 다른 탭이 막 넣은 사진을 지우지 않는다.
+ * ponytail: 두 탭에서 같은 사진을 거의 동시에 바꾸면 늦게 쓴 쪽이 이긴다. 기록(localStorage)도 마찬가지다.
+ */
+function syncPhotos(): void {
+  syncing = syncing.then(async () => {
+    const known = stored;
+    if (!known) return;
+    const photos = photosOf(state);
+    const put = new Map([...photos].filter(([id, photo]) => known.get(id) !== photo));
+    const remove = [...known.keys()].filter((id) => !photos.has(id));
+    try {
+      await writePhotos(put, remove);
+      for (const [id, photo] of put) known.set(id, photo);
+      for (const id of remove) known.delete(id);
+    } catch {
+      stored = null;
+      persist();
+      emit();
+    }
+  });
 }
 
 /*
@@ -307,11 +378,12 @@ let saveFailed = false;
 
 function persist(): boolean {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored ? withoutPhotos(state) : state));
     saveFailed = false;
   } catch {
     saveFailed = true;
   }
+  if (stored) syncPhotos();
   return !saveFailed;
 }
 
@@ -329,11 +401,43 @@ export function useSaveFailed(): boolean {
  */
 function onStorage(event: StorageEvent): void {
   if (event.key !== STORAGE_KEY || !booted) return;
+  let next: AppState;
   try {
-    state = event.newValue ? normalise(JSON.parse(event.newValue)) : EMPTY_STATE;
+    next = event.newValue ? normalise(JSON.parse(event.newValue)) : EMPTY_STATE;
   } catch {
     return;
   }
+  // 저쪽이 저장한 기록에는 사진이 빠져 있다. IndexedDB에서 다시 붙인다.
+  void loadPhotos().then(
+    (photos) => {
+      state = withPhotos(next, photos);
+      if (stored) stored = new Map(photos);
+    },
+    () => {
+      state = next;
+    },
+  ).finally(() => {
+    changedElsewhere = true;
+    emit();
+  });
+}
+
+/*
+ * 다른 창(탭·설치한 앱)이 저장해서 이 화면이 바뀌었는지. 두 창에서 거의 동시에 고치면 늦게 저장한
+ * 쪽이 남으므로, 화면이 말없이 바뀌지 않게 알린다(SaveWarning). 닫으면 다음 변경까지 숨는다.
+ */
+let changedElsewhere = false;
+
+export function useChangedElsewhere(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => changedElsewhere,
+    () => false,
+  );
+}
+
+export function dismissChangedElsewhere(): void {
+  changedElsewhere = false;
   emit();
 }
 

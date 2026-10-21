@@ -1,6 +1,7 @@
 "use client";
 
 import { defineCopy, tr } from "@/lib/i18n";
+import { loadPhotos } from "@/lib/photoStore";
 import { STORAGE_KEY } from "@/lib/storageKey";
 
 const COPY = defineCopy({
@@ -59,9 +60,20 @@ const COPY = defineCopy({
 export default function Error({ reset }: { error: Error; reset: () => void }) {
   const t = tr(COPY);
 
-  function save(): void {
+  async function save(): Promise<void> {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY) ?? "{}";
+      let raw = window.localStorage.getItem(STORAGE_KEY) ?? "{}";
+      // 직접 올린 사진은 IndexedDB에 따로 있다(lib/photoStore.ts). 붙일 수 있으면 붙여서 내려받는다.
+      try {
+        const photos = await loadPhotos();
+        const value = JSON.parse(raw);
+        for (const item of [...value.people, ...value.moments]) {
+          if (item && typeof item.id === "string" && !item.ownPhoto && photos.has(item.id)) item.ownPhoto = photos.get(item.id);
+        }
+        raw = JSON.stringify(value);
+      } catch {
+        // 사진을 못 붙여도 기록은 그대로 내려받는다.
+      }
       const url = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
       const link = document.createElement("a");
       link.href = url;
@@ -88,7 +100,7 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
         <button type="button" className="btn-primary" onClick={reset}>
           {t.retry}
         </button>
-        <button type="button" className="btn-secondary" onClick={save}>
+        <button type="button" className="btn-secondary" onClick={() => void save()}>
           {t.download}
         </button>
         <button
