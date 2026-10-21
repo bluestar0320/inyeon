@@ -1,15 +1,16 @@
 "use client";
 
 import { birthdayLine, nextBirthday } from "./birthdays";
+import { defineCopy, tr } from "./i18n";
 import { isNativeApp } from "./nativeShare";
 import type { Person } from "./types";
 
 /*
- * APK에서만 생일 알림(7일 전·당일 오전 9시)을 기기에 맡겨 둔다. 서버는 없다 — 시간이
+ * APK에서만 생일 알림(7일 전·당일 오전 9시)과 한 달에 한 번 백업 알림을 기기에 맡겨 둔다. 서버는 없다 — 시간이
  * 되면 안드로이드가 직접 띄운다. 웹 번들에는 영향을 주지 않는다(nativeStatusBar와 같은
  * 방식: 네이티브일 때만 이 모듈과 플러그인을 늦게 부른다).
  *
- * 이 앱이 거는 알림은 생일뿐이라, 다시 걸 때는 걸려 있던 것을 모두 지우고 처음부터 건다.
+ * 이 앱이 거는 알림은 이 둘뿐이라, 다시 걸 때는 걸려 있던 것을 모두 지우고 처음부터 건다.
  * id를 맞춰 둘 필요가 없다.
  */
 
@@ -29,7 +30,21 @@ export async function askBirthdayPermission(): Promise<boolean> {
   }
 }
 
-export async function syncBirthdayNotifications(people: Person[], enabled: boolean, now: Date = new Date()): Promise<void> {
+const BACKUP_COPY = defineCopy({
+  ko: "지난 백업 뒤로 바뀐 기록이 있어요. 휴대폰에 한 부 저장해 두세요.",
+  en: "Some records have changed since your last backup. Save a copy to your phone.",
+  ja: "前回のバックアップから記録が変わっています。端末に一部保存しておきましょう。",
+  es: "Hay registros nuevos desde tu última copia. Guarda una en tu teléfono.",
+  zh: "上次备份后记录有了变化，在手机里存一份吧。",
+});
+
+/** 생일 알림에 더해, 백업할 때가 되면(lib/backup.ts backupReminderAt) 한 달에 한 번 한 줄. */
+export async function syncBirthdayNotifications(
+  people: Person[],
+  enabled: boolean,
+  backupAt: Date | null,
+  now: Date = new Date(),
+): Promise<void> {
   if (!isNativeApp()) return;
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
@@ -61,6 +76,16 @@ export async function syncBirthdayNotifications(people: Person[], enabled: boole
           });
         }
       }
+    }
+    if (backupAt) {
+      notifications.push({
+        id: notifications.length + 1,
+        title: tr(BACKUP_COPY),
+        body: "",
+        schedule: { at: backupAt, allowWhileIdle: true },
+        isExactNotification: false,
+        extra: { backup: true },
+      });
     }
     if (notifications.length === 0) return;
     // 알림은 기본으로 켜져 있다. 걸 생일이 생겼을 때 한 번 묻고, 거절했으면(denied) 다시 조르지 않는다.

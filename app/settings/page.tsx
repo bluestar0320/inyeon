@@ -9,7 +9,7 @@ import { todayISO } from "@/lib/format";
 import { LANGS, defineCopy, locale, tr } from "@/lib/i18n";
 import { LIFE_TABLE_YEAR } from "@/lib/lifeTable";
 import { askBirthdayPermission } from "@/lib/nativeBirthdays";
-import { isNativeApp, shareFileNatively } from "@/lib/nativeShare";
+import { isNativeApp, saveFileNatively } from "@/lib/nativeShare";
 import { exportState, looksLikeBackup, useActions, useAppState } from "@/lib/store";
 import { offerUndo } from "@/lib/undo";
 import { TONE_ORDER, copyFor } from "@/lib/tone";
@@ -43,9 +43,9 @@ const COPY = defineCopy({
     textTitle: "글씨 크기",
     textHint: "화면 전체가 같이 커집니다.",
     textSizes: { normal: "보통", large: "크게", xlarge: "아주 크게" },
-    notifyTitle: "생일 알림 받기",
+    notifyTitle: "알림 받기",
     notifyHint:
-      "생년월일을 넣은 인연의 생일 일주일 전과 당일 아침 9시에 알려 드려요. 부모님은 생신으로 챙겨 드리고, 알림은 이 휴대폰 안에서만 울립니다.",
+      "생년월일을 넣은 인연의 생일 일주일 전과 당일 아침 9시에 알려 드려요. 부모님은 생신으로 챙겨 드려요. 지난 백업 뒤로 바뀐 기록이 있으면 한 달에 한 번 백업할 때라고도 알려 드리고, 알림은 이 휴대폰 안에서만 울립니다.",
     notifyOn: "켜기",
     notifyOff: "끄기",
     notifyDenied: "알림이 막혀 있어요. 휴대폰 설정에서 이 앱의 알림을 허용하면 켤 수 있어요.",
@@ -66,6 +66,7 @@ const COPY = defineCopy({
     notBackup: "이 앱에서 내보낸 파일이 아닙니다. 지금 기록은 그대로 두었습니다.",
     imported: "불러왔습니다.",
     filePrefix: "몇번더",
+    savedToPhone: "휴대폰의 문서/몇번더 폴더에 저장했어요. 앱을 지워도 남아 있고, 불러오기로 되살릴 수 있어요.",
     tooLarge: "파일이 너무 커서 이 기기에 저장하지 못했습니다. 지금 기록은 그대로 두었습니다.",
     overwritten: (n: number) => `${n}개를 덮어썼습니다.`,
     privacyLink: "개인정보 안내",
@@ -114,9 +115,9 @@ const COPY = defineCopy({
     textTitle: "Text size",
     textHint: "Everything on screen grows with it.",
     textSizes: { normal: "Normal", large: "Large", xlarge: "Extra large" },
-    notifyTitle: "Birthday reminders",
+    notifyTitle: "Reminders",
     notifyHint:
-      "A week before and on the day, at 9 a.m., for people whose birth date you added. Reminders stay on this phone.",
+      "A week before and on the day, at 9 a.m., for people whose birth date you added — and once a month, a nudge to back up if your records have changed. Reminders stay on this phone.",
     notifyOn: "On",
     notifyOff: "Off",
     notifyDenied: "Notifications are blocked. Allow them for this app in your phone settings, then try again.",
@@ -137,6 +138,7 @@ const COPY = defineCopy({
     notBackup: "This file wasn't exported from this app. Your current records are untouched.",
     imported: "Imported.",
     filePrefix: "how-many-more",
+    savedToPhone: "Saved to Documents/몇번더 on your phone. It stays even if you uninstall the app, and you can bring it back with Import.",
     tooLarge: "The file is too large to save on this device. Your current records are unchanged.",
     overwritten: (n: number) => `Replaced ${n} ${n === 1 ? "item" : "items"}.`,
     privacyLink: "Privacy",
@@ -186,9 +188,9 @@ const COPY = defineCopy({
     textTitle: "文字の大きさ",
     textHint: "画面全体が一緒に大きくなります。",
     textSizes: { normal: "ふつう", large: "大きく", xlarge: "もっと大きく" },
-    notifyTitle: "誕生日のお知らせ",
+    notifyTitle: "お知らせ",
     notifyHint:
-      "生年月日を入れた人の誕生日の一週間前と当日の朝9時にお知らせします。お知らせはこの端末の中だけで届きます。",
+      "生年月日を入れた人の誕生日の一週間前と当日の朝9時にお知らせします。前回のバックアップから記録が変わっていれば、月に一度バックアップのお知らせも届きます。お知らせはこの端末の中だけで届きます。",
     notifyOn: "オン",
     notifyOff: "オフ",
     notifyDenied: "通知がオフになっています。端末の設定でこのアプリの通知を許可すると使えます。",
@@ -209,6 +211,7 @@ const COPY = defineCopy({
     notBackup: "このアプリからエクスポートしたファイルではありません。今の記録はそのままです。",
     imported: "インポートしました。",
     filePrefix: "あと何回",
+    savedToPhone: "端末の「ドキュメント/몇번더」フォルダに保存しました。アプリを消しても残り、読み込みで元に戻せます。",
     tooLarge: "ファイルが大きすぎて、この端末に保存できませんでした。今の記録はそのままです。",
     overwritten: (n: number) => `${n}件を上書きしました。`,
     privacyLink: "個人情報について",
@@ -257,9 +260,9 @@ const COPY = defineCopy({
     textTitle: "Tamaño del texto",
     textHint: "Toda la pantalla crece a la vez.",
     textSizes: { normal: "Normal", large: "Grande", xlarge: "Muy grande" },
-    notifyTitle: "Avisos de cumpleaños",
+    notifyTitle: "Avisos",
     notifyHint:
-      "Una semana antes y el mismo día, a las 9 de la mañana, para quienes tengan fecha de nacimiento. Los avisos se quedan en este teléfono.",
+      "Una semana antes y el mismo día, a las 9 de la mañana, para quienes tengan fecha de nacimiento; y una vez al mes, un recordatorio para hacer copia si tus registros cambiaron. Los avisos se quedan en este teléfono.",
     notifyOn: "Activar",
     notifyOff: "Desactivar",
     notifyDenied: "Las notificaciones están bloqueadas. Permítelas para esta app en los ajustes del teléfono y vuelve a intentarlo.",
@@ -280,6 +283,7 @@ const COPY = defineCopy({
     notBackup: "Este archivo no se exportó desde esta app. Tus registros actuales siguen igual.",
     imported: "Importado.",
     filePrefix: "cuantas-veces-mas",
+    savedToPhone: "Guardado en Documentos/몇번더 de tu teléfono. Se queda aunque borres la app, y puedes recuperarlo con Importar.",
     tooLarge: "El archivo es demasiado grande para guardarlo en este dispositivo. Tus registros no han cambiado.",
     overwritten: (n: number) => `Se reemplazaron ${n} ${n === 1 ? "elemento" : "elementos"}.`,
     privacyLink: "Privacidad",
@@ -329,9 +333,9 @@ const COPY = defineCopy({
     textTitle: "字体大小",
     textHint: "整个画面会一起变大。",
     textSizes: { normal: "标准", large: "大", xlarge: "特大" },
-    notifyTitle: "生日提醒",
+    notifyTitle: "提醒",
     notifyHint:
-      "为填了出生日期的亲友，在生日前一周和当天早上9点提醒你。提醒只在这台手机上发出。",
+      "为填了出生日期的亲友，在生日前一周和当天早上9点提醒你；上次备份后记录有变化时，每月提醒你备份一次。提醒只在这台手机上发出。",
     notifyOn: "开启",
     notifyOff: "关闭",
     notifyDenied: "通知被关闭了。在手机设置里允许本应用的通知后再试一次。",
@@ -351,6 +355,7 @@ const COPY = defineCopy({
     notBackup: "这不是从本应用导出的文件。现有记录保持不变。",
     imported: "已导入。",
     filePrefix: "还有几次",
+    savedToPhone: "已保存到手机的“文档/몇번더”文件夹。即使删除应用也会保留，可以用“导入”恢复。",
     tooLarge: "文件太大，无法保存到此设备。当前记录保持不变。",
     overwritten: (n: number) => `已覆盖 ${n} 条记录。`,
     privacyLink: "隐私说明",
@@ -426,8 +431,10 @@ export default function SettingsPage() {
     const fileName = `${t.filePrefix}-${todayISO()}.json`;
     if (isNativeApp()) {
       try {
-        await shareFileNatively(blob, fileName);
+        // 공유 시트를 거치지 않고 휴대폰 문서/몇번더 폴더에 바로 쓴다. 앱을 지워도 남는 곳이다.
+        await saveFileNatively(blob, fileName);
         saveSettings({ lastBackupAt: at });
+        setMessage(t.savedToPhone);
       } catch {
         setMessage(t.exportFailed);
       }

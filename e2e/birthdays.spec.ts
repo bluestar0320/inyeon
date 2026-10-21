@@ -47,7 +47,7 @@ test("웹에서는 설정에 생일 알림 칸이 없다", async ({ page }) => {
   await setUpProfile(page, 35);
   await page.goto("/settings");
   await expect(page.getByText("언어", { exact: true })).toBeVisible();
-  await expect(page.getByText("생일 알림 받기")).toHaveCount(0);
+  await expect(page.getByText("알림 받기", { exact: true })).toHaveCount(0);
 });
 
 test("한 줄 기억이 두 개면 기억 편지가 되고, 생신이 가까우면 펼쳐져 있고 이미지로 저장된다", async ({ page }) => {

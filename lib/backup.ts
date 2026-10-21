@@ -15,17 +15,44 @@ import type { AppState } from "./types";
  */
 export const BACKUP_GRACE_DAYS = 7;
 
-export function backupDue(state: AppState, now: Date = new Date()): boolean {
+/** 앱(APK)은 한 달에 한 번 알림으로도 권한다. */
+export const BACKUP_REMIND_DAYS = 30;
+const REMIND_HOUR = 9;
+
+/**
+ * 백업 뒤로 바뀐 것이 있으면 기다리기 시작한 때(백업한 적이 있으면 그때, 없으면 처음 만든 때).
+ * 없으면 null — 이미 안전하다.
+ */
+function waitingSince(state: AppState): string | null {
   const items = [...state.people, ...state.moments];
   const changes = items.map((item) => item.updatedAt);
   if (state.marriage) changes.push(state.marriage.updatedAt);
-  if (changes.length === 0) return false;
+  if (changes.length === 0) return null;
 
   const last = state.settings.lastBackupAt;
-  if (last && changes.every((at) => at <= last)) return false;
+  if (last && changes.every((at) => at <= last)) return null;
+  return last ?? items.map((item) => item.createdAt).concat(changes).sort()[0];
+}
 
-  // 기다리기 시작한 때: 백업한 적이 있으면 그때부터, 없으면 처음 만든 때부터.
-  const since = last ?? items.map((item) => item.createdAt).concat(changes).sort()[0];
+export function backupDue(state: AppState, now: Date = new Date()): boolean {
+  const since = waitingSince(state);
+  if (since === null) return false;
   const days = (now.getTime() - new Date(since).getTime()) / 86_400_000;
   return days >= BACKUP_GRACE_DAYS;
+}
+
+/**
+ * 다음 백업 알림 시각. 기다리기 시작한 날로부터 30일, 60일, … 가운데 아직 오지 않은 첫 날 아침 9시.
+ * 앱을 자주 열어도 날마다 울리지 않고 한 달에 한 번이다. 백업하면 처음부터 다시 센다.
+ */
+export function backupReminderAt(state: AppState, now: Date = new Date()): Date | null {
+  const since = waitingSince(state);
+  if (since === null) return null;
+  const start = new Date(since);
+  // 날짜가 깨진 기록(불러오기·옛 버전)이면 Invalid Date라 아래 줄이 끝나지 않는다.
+  if (Number.isNaN(start.getTime())) return null;
+  for (let k = 1; ; k++) {
+    const at = new Date(start.getFullYear(), start.getMonth(), start.getDate() + BACKUP_REMIND_DAYS * k, REMIND_HOUR);
+    if (at > now) return at;
+  }
 }
