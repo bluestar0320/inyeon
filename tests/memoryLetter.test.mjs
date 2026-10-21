@@ -49,6 +49,9 @@ test("자주 하는 말은 맺음 앞에 따옴표로 한 줄, 없으면 null", 
   const two = [{ date: "2026-09-01", text: "a" }, { date: "2026-10-01", text: "b" }];
   assert.equal(memoryLetter(mom(two), "2026-10-12").saying, null);
   assert.equal(memoryLetter({ ...mom(two), saying: "밥은 먹고 다니니?" }, "2026-10-12").saying, "“밥은 먹고 다니니?” 늘 하시는 그 말, 저도 잊지 않고 있어요.");
+  // 여러 줄이면 그날 고른 한 줄만 싣는다.
+  const many = memoryLetter({ ...mom(two), saying: "밥은 먹었니?\n차 조심해라" }, "2026-10-12").saying;
+  assert.ok(/^“(밥은 먹었니\?|차 조심해라)” 늘 하시는/.test(many), many);
   setLang("en");
   assert.equal(memoryLetter({ ...mom(two), saying: "Eat something" }, "2026-10-12").saying, "You always say, “Eat something.” I keep it with me.");
   setLang("ko");

@@ -1,6 +1,7 @@
 import { isElder } from "./birthdays.ts";
 import { hasFinal, josa } from "./format.ts";
 import { defineCopy, locale, tr } from "./i18n.ts";
+import { pickSaying } from "./meetings.ts";
 import type { Person } from "./types";
 
 /*
@@ -124,11 +125,12 @@ export function memoryLetter(
   });
 
   const name = me?.trim();
+  const saying = pickSaying(person.saying, today);
   return {
     greeting: t.greeting(person.name, elder),
     open: t.open(person.name, met, elder),
     memories: body,
-    saying: person.saying ? t.saying(person.saying, elder) : null,
+    saying: saying ? t.saying(saying, elder) : null,
     close: t.close(elder),
     date: new Date(`${today}T00:00:00`).toLocaleDateString(locale(), { year: "numeric", month: "long" }),
     from: name ? t.from(name, elder) : null,

@@ -161,10 +161,23 @@ export function ledger(meetings: string[], frequency: Frequency, start: string, 
 }
 
 export const SAYING_MAX_LENGTH = 60;
+export const SAYING_MAX_LINES = 10;
 
-/** 자주 하는 말. 감싼 따옴표는 화면이 붙이므로 벗기고, 비면 지운다. 저장소·백업 값도 이걸로 거른다. */
+/**
+ * 자주 하는 말. 한 줄에 하나, 여러 줄이면 날마다 돌아가며 보인다(pickSaying).
+ * 줄마다 감싼 따옴표는 화면이 붙이므로 벗기고, 빈 줄·같은 말은 버린다. 저장소·백업 값도 이걸로 거른다.
+ */
 export function cleanSaying(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
-  const clean = value.replace(/\s+/g, " ").trim().replace(/^["'“”‘’「『«]+|["'“”‘’」』»]+$/g, "").trim();
-  return Array.from(clean).slice(0, SAYING_MAX_LENGTH).join("") || undefined;
+  const lines = value.split(/\r?\n/).map((line) =>
+    Array.from(line.replace(/\s+/g, " ").trim().replace(/^["'“”‘’「『«]+|["'“”‘’」』»]+$/g, "").trim())
+      .slice(0, SAYING_MAX_LENGTH).join(""));
+  return [...new Set(lines.filter(Boolean))].slice(0, SAYING_MAX_LINES).join("\n") || undefined;
+}
+
+/** 오늘 보일 한 줄. 날마다 다음 줄로 넘어간다. */
+export function pickSaying(saying: string | undefined, today: string): string | undefined {
+  const lines = saying?.split("\n").filter(Boolean) ?? [];
+  if (lines.length === 0) return undefined;
+  return lines[Math.floor(Date.parse(`${today}T00:00:00Z`) / 86_400_000) % lines.length];
 }

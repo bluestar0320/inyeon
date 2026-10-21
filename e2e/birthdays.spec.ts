@@ -96,6 +96,11 @@ test("자주 하시는 말을 적으면 사진 아래 따옴표로 남고, 기�
   await expect(page.getByTestId("saying")).toHaveText("“밥은 먹고 다니니?”");
   await page.getByTestId("memory-letter").locator("summary").click();
   await expect(page.getByTestId("memory-letter").getByText("늘 하시는 그 말")).toBeVisible();
+  // 여러 줄이면 그중 한 줄만 보인다(날마다 바뀐다).
+  await page.getByRole("button", { name: "고치기" }).click();
+  await page.getByLabel("자주 하시는 말").fill("밥은 먹고 다니니?\n차 조심해라");
+  await page.getByRole("button", { name: "남기기" }).click();
+  await expect(page.getByTestId("saying")).toHaveText(/^“(밥은 먹고 다니니\?|차 조심해라)”$/);
   // 비우고 남기면 지워진다.
   await page.getByRole("button", { name: "고치기" }).click();
   await page.getByLabel("자주 하시는 말").fill("");
