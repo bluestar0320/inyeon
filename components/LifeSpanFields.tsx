@@ -211,6 +211,15 @@ export default function LifeSpanFields<T extends LifeSpan>({
           </p>
       </div>
 
+      {/* 생활 습관은 접지 않는다. 접어 두었더니 칸이 사라진 줄 알았다(사용자 2026-10-24). */}
+      {showHealth && (
+        <HealthFields
+          value={value.health}
+          age={age}
+          onChange={(health) => patch({ health })}
+        />
+      )}
+
       {/*
         첫 숫자까지 빨리 가게, 나이 하나만 보이고 나머지는 접어 둔다. 접힌 줄에는 지금 값이
         요약돼 있어 무엇이 들어가 있는지 열지 않아도 안다. 생년월일을 넣었거나 수명을 직접
@@ -274,14 +283,6 @@ export default function LifeSpanFields<T extends LifeSpan>({
             </div>
           </div>
         </div>
-
-        {showHealth && (
-          <HealthFields
-            value={value.health}
-            age={age}
-            onChange={(health) => patch({ health })}
-          />
-        )}
 
         <div>
           <label className="label" htmlFor={`${ids}-expectancy`}>
