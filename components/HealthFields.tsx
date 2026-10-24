@@ -14,18 +14,18 @@ const COPY = defineCopy({
     explainAge: (age: number) => `만 ${age}세`,
     explainAfter: "로 조회합니다. 나이를 바꾸는 게 아니라 “위험이 그 나이대와 비슷하다”고 보는 것입니다.",
     footer:
-      "이 값은 출발점입니다. 맞지 않는다고 느끼면 위의 예상 수명을 직접 고치세요 — 그쪽이 항상 우선합니다. 입력한 내용은 기기 안에만 있고 어디로도 보내지 않습니다.",
+      "이 값은 출발점입니다. 맞지 않는다고 느끼면 아래 예상 수명을 직접 고치세요 — 그쪽이 항상 우선합니다. 입력한 내용은 기기 안에만 있고 어디로도 보내지 않습니다.",
   },
   en: {
     summary: "Factor in lifestyle",
     none: "None selected",
     lookup: (offset) => `Looked up at ${offset} yrs`,
     years: (offset) => `${offset} yrs`,
-    explainBefore: (age) => `You're ${age}, but the life table is read at `,
+    explainBefore: (age) => `Actual age is ${age}, but the life table is read at `,
     explainAge: (age) => `age ${age}`,
-    explainAfter: ". Your age doesn't change — it just treats your risk as similar to that age group.",
+    explainAfter: ". The age itself doesn't change — it just treats the risk as similar to that age group.",
     footer:
-      "This is a starting point. If it doesn't feel right, edit the life expectancy above — that always wins. What you enter stays on this device and is never sent anywhere.",
+      "This is a starting point. If it doesn't feel right, edit the life expectancy below — that always wins. What you enter stays on this device and is never sent anywhere.",
   },
   ja: {
     summary: "生活習慣を反映する",
@@ -36,18 +36,18 @@ const COPY = defineCopy({
     explainAge: (age) => `${age}歳`,
     explainAfter: "で参照します。年齢を変えるのではなく、「リスクがその年代と近い」とみなすものです。",
     footer:
-      "この値は出発点です。合わないと感じたら、上の予想寿命を直接直してください — そちらが常に優先されます。入力した内容はこの端末の中だけにあり、どこにも送りません。",
+      "この値は出発点です。合わないと感じたら、下の予想寿命を直接直してください — そちらが常に優先されます。入力した内容はこの端末の中だけにあり、どこにも送りません。",
   },
   es: {
     summary: "Tener en cuenta los hábitos",
     none: "Sin seleccionar",
     lookup: (offset) => `Consultado a ${offset} años`,
     years: (offset) => `${offset} años`,
-    explainBefore: (age) => `Tienes ${age} años, pero la tabla de vida se consulta a `,
+    explainBefore: (age) => `La edad real es ${age} años, pero la tabla de vida se consulta a `,
     explainAge: (age) => `los ${age} años`,
-    explainAfter: ". No cambia tu edad: solo considera que tu riesgo se parece al de ese grupo de edad.",
+    explainAfter: ". No cambia la edad: solo considera que el riesgo se parece al de ese grupo de edad.",
     footer:
-      "Este valor es un punto de partida. Si no te encaja, corrige la esperanza de vida de arriba: esa siempre manda. Lo que introduces se queda en este dispositivo y no se envía a ningún sitio.",
+      "Este valor es un punto de partida. Si no te encaja, corrige la esperanza de vida de abajo: esa siempre manda. Lo que introduces se queda en este dispositivo y no se envía a ningún sitio.",
   },
   zh: {
     summary: "考虑生活习惯",
@@ -58,7 +58,7 @@ const COPY = defineCopy({
     explainAge: (age) => `${age}岁`,
     explainAfter: "查询。这不是改变年龄，而是认为“风险与那个年龄段相近”。",
     footer:
-      "这个值只是起点。如果觉得不合适，请直接修改上面的预期寿命——那里始终优先。输入的内容只保存在本设备上，不会发送到任何地方。",
+      "这个值只是起点。如果觉得不合适，请直接修改下面的预期寿命——那里始终优先。输入的内容只保存在本设备上，不会发送到任何地方。",
   },
 });
 

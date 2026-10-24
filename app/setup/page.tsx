@@ -158,7 +158,7 @@ export default function SetupPage() {
             onChange={(e) => setDraft({ ...draft, nickname: e.target.value || undefined })}
           />
         </div>
-        <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.ageLabel} showHealth />
+        <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.ageLabel} />
       </div>
 
       {/* 나이를 넣기 전에는 비워 둔 상자를 띄우지 않는다. 넣는 순간 숫자가 나타난다. */}

@@ -153,6 +153,19 @@ test("생활 습관을 고르면 남은 시간이 줄고, 해제하면 그대로
   await expect.poll(() => expectancy.inputValue()).toBe(before);
 });
 
+test("부모님도 담배를 피우시면 남은 만남이 줄어든다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people/new");
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByLabel("나이", { exact: true }).fill("60");
+  await expect.poll(() => headline(page)).toMatch(/번$/);
+  const before = parseInt(await headline(page), 10);
+
+  await page.getByText("생활 습관 반영하기").click();
+  await page.getByRole("button", { name: "피움", exact: true }).click();
+  await expect.poll(async () => parseInt(await headline(page), 10)).toBeLessThan(before);
+});
+
 test("예상 수명을 직접 고쳤으면 생활 습관이 그 값을 덮어쓰지 않는다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/setup");

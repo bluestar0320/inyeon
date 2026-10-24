@@ -146,17 +146,10 @@ export default function LifeSpanFields<T extends LifeSpan>({
   value,
   onChange,
   ageLabel,
-  showHealth = false,
 }: {
   value: T;
   onChange: (next: T) => void;
   ageLabel?: string;
-  /*
-   * 생활 습관 칸을 띄울지. 지금은 내 프로필에서만 켠다 — 남의 흡연 여부를 물어
-   * 채우게 하는 건 번거롭고 주제넘다. 여기 두는 이유는 습관을 바꾸면 예상 수명을
-   * 다시 계산해야 하는데, 그 재계산이 이 컴포넌트의 patch()에 있기 때문이다.
-   */
-  showHealth?: boolean;
 }) {
   const t = tr(COPY);
   const ids = useId();
@@ -212,13 +205,8 @@ export default function LifeSpanFields<T extends LifeSpan>({
       </div>
 
       {/* 생활 습관은 접지 않는다. 접어 두었더니 칸이 사라진 줄 알았다(사용자 2026-10-24). */}
-      {showHealth && (
-        <HealthFields
-          value={value.health}
-          age={age}
-          onChange={(health) => patch({ health })}
-        />
-      )}
+      {/* 인연에도 둔다. 부모님 담배·술이 남은 시간을 바꾼다(사용자 2026-10-25). */}
+      <HealthFields value={value.health} age={age} onChange={(health) => patch({ health })} />
 
       {/*
         첫 숫자까지 빨리 가게, 나이 하나만 보이고 나머지는 접어 둔다. 접힌 줄에는 지금 값이
@@ -322,7 +310,7 @@ export default function LifeSpanFields<T extends LifeSpan>({
               ? t.manual
               : age === null
                 ? t.needAge
-                : showHealth && healthAgeOffset(value.health) !== 0
+                : healthAgeOffset(value.health) !== 0
                   ? t.fromTableWithHealth
                   : t.fromTable}
             {remaining !== null && t.remaining(formatYears(remaining))}
