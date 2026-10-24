@@ -55,13 +55,12 @@ test("순간 프리셋은 6장 중 하나 — 사람마다(id마다) 다르고, 
   assert.equal(photoFor({ id: "m7", emoji: "🌸" }), photoFor({ id: "m7", emoji: "🌸" }));
 });
 
-test("부모님·조부모님도 6장 중 하나, 다른 인연 프리셋은 한 장 그대로", () => {
-  const seen = new Set();
-  for (let i = 0; i < 60; i++) seen.add(photoFor({ id: `p${i}`, emoji: "🌷" }));
-  assert.equal(seen.size, 6);
-  const friends = new Set();
-  for (let i = 0; i < 30; i++) friends.add(photoFor({ id: `p${i}`, emoji: "🍻" }));
-  assert.deepEqual([...friends], ["friend"]);
+test("인연 프리셋도 모두 6장 중 하나 — 친구가 여럿이어도 같은 사진만 뜨지 않는다", () => {
+  for (const emoji of ["🌷", "🌳", "🫖", "🧩", "🕊️", "🧸", "🍻"]) {
+    const seen = new Set();
+    for (let i = 0; i < 60; i++) seen.add(photoFor({ id: `p${i}`, emoji }));
+    assert.equal(seen.size, 6, emoji);
+  }
 });
 
 test("변형 사진 파일이 전부 있다", () => {
