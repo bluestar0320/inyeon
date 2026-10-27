@@ -133,6 +133,17 @@ test("새 문서 페이지들도 밝게·어둡게 접근성 위반이 없다", 
   }
 });
 
+test.describe("영어 기기의 첫 화면", () => {
+  test.use({ locale: "en-US" });
+  test("구운 한국어 HTML은 가려 두고, 앱이 끝내 안 떠도 2초 뒤엔 보인다", async ({ page }) => {
+    await page.route("**/_next/static/**/*.js", (route) => route.abort());
+    await page.goto("/terms");
+    await expect(page.locator("html")).toHaveAttribute("data-lang-wait", "");
+    await expect(page.locator("main")).toBeHidden();
+    await expect(page.locator("main")).toBeVisible({ timeout: 4000 });
+  });
+});
+
 for (const [locale, terms, read, notice] of [
   ["en-US", "Terms of Use", "After 65, who do we see most often?", false],
   ["ja-JP", "利用規約", "65歳を過ぎたら、いちばんよく会うのは誰？", false],

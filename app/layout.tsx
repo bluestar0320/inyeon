@@ -17,6 +17,7 @@ import { STORAGE_KEY } from "@/lib/storageKey";
 import { PAPER_COUNT } from "@/lib/paper";
 import { THEME_COLOR } from "@/lib/themeColor";
 import { GOATCOUNTER_CODE } from "@/lib/analytics";
+import { LANGS } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "몇 번 더",
@@ -74,6 +75,18 @@ const THEME_SCRIPT = `
       ((theme === "system" || !theme) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (dark) document.documentElement.classList.add("dark");
+    // 고른 언어(없으면 기기 언어, lib/i18n.ts detectLang과 같은 규칙)가 한국어가 아니면
+    // LangRoot가 넘어갈 때까지 가려 둔다. 앱이 끝내 안 뜨더라도 2초 뒤에는 보인다.
+    var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+    var lang = settings.language;
+    for (var i = 0; !lang && i < langs.length; i++) {
+      var base = String(langs[i]).toLowerCase().split("-")[0];
+      if (${JSON.stringify(LANGS.map((l) => l.value))}.indexOf(base) >= 0) lang = base;
+    }
+    if ((lang || "en") !== "ko") {
+      document.documentElement.dataset.langWait = "";
+      setTimeout(function () { delete document.documentElement.dataset.langWait; }, 2000);
+    }
     // 화면이 그려지기 전에 상태바 색까지 맞춘다. 나중에 고치면 흰 띠가 한 번 번쩍인다.
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", dark ? ${JSON.stringify(THEME_COLOR.dark)} : ${JSON.stringify(THEME_COLOR.light)});

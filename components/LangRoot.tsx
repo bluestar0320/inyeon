@@ -28,7 +28,9 @@ export default function LangRoot({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
-  }, [lang]);
+    // 머리 스크립트가 가려 둔 화면을 고른 언어로 그린 뒤에 연다.
+    if (hydrated) delete document.documentElement.dataset.langWait;
+  }, [lang, hydrated]);
 
   return <Fragment key={lang}>{children}</Fragment>;
 }
