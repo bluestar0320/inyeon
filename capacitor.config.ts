@@ -10,7 +10,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
  */
 const config: CapacitorConfig = {
   appId: "app.inyeon.counter",
-  appName: "몇 번 더",
+  // 홈 화면 아이콘 아래 이름. 웹 매니페스트의 short_name과 맞춘다(사용자 결정).
+  appName: "몇번더",
   webDir: "out",
   android: {
     // 파일을 APK 안에서 읽으므로 http가 아닌 https 스킴으로 띄운다.
