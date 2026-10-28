@@ -3,6 +3,7 @@
 import { defineCopy, tr } from "@/lib/i18n";
 import { loadPhotos } from "@/lib/photoStore";
 import { STORAGE_KEY } from "@/lib/storageKey";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const COPY = defineCopy({
   ko: {
@@ -12,6 +13,10 @@ const COPY = defineCopy({
     retry: "다시 시도",
     download: "기록 내려받기",
     reset: "기록 지우고 시작",
+    report: "그래도 안 되면 메일로 알려 주세요.",
+    reportLink: "문의 메일 보내기",
+    reportSubject: "[몇 번 더] 화면 오류",
+    reportBody: "어떤 화면에서 무엇을 하다가 생겼는지 적어 주시면 고치는 데 큰 도움이 됩니다.",
   },
   en: {
     fileName: "how-many-more-records.json",
@@ -20,6 +25,10 @@ const COPY = defineCopy({
     retry: "Try again",
     download: "Download records",
     reset: "Clear records and start over",
+    report: "If it keeps happening, please let us know.",
+    reportLink: "Send an email",
+    reportSubject: "[How Many More] Screen error",
+    reportBody: "It helps a lot if you tell us which screen you were on and what you were doing.",
   },
   ja: {
     fileName: "あと何回-記録.json",
@@ -28,6 +37,10 @@ const COPY = defineCopy({
     retry: "もう一度試す",
     download: "記録をダウンロード",
     reset: "記録を消してはじめる",
+    report: "それでも直らないときは、メールで教えてください。",
+    reportLink: "問い合わせメールを送る",
+    reportSubject: "[あと何回] 画面のエラー",
+    reportBody: "どの画面で何をしていたときに起きたか書いていただけると、直すときにとても助かります。",
   },
   es: {
     fileName: "cuantas-veces-mas-registros.json",
@@ -36,6 +49,10 @@ const COPY = defineCopy({
     retry: "Reintentar",
     download: "Descargar registros",
     reset: "Borrar registros y empezar de nuevo",
+    report: "Si sigue pasando, avísanos por correo.",
+    reportLink: "Enviar un correo",
+    reportSubject: "[Cuántas veces más] Error de pantalla",
+    reportBody: "Nos ayuda mucho saber en qué pantalla estabas y qué estabas haciendo.",
   },
   zh: {
     fileName: "还有几次-记录.json",
@@ -44,6 +61,10 @@ const COPY = defineCopy({
     retry: "重试",
     download: "下载记录",
     reset: "清除记录并重新开始",
+    report: "如果还是不行，请发邮件告诉我们。",
+    reportLink: "发送邮件",
+    reportSubject: "[还有几次] 页面错误",
+    reportBody: "如果能写下当时在哪个页面、做了什么，对修复会很有帮助。",
   },
 });
 
@@ -57,8 +78,13 @@ const COPY = defineCopy({
  * 내보내기를 먼저 두는 이유: 깨진 기록이어도 대개는 대부분이 멀쩡하고, 지워 버리면
  * 손으로 되살릴 기회조차 사라진다.
  */
-export default function Error({ reset }: { error: Error; reset: () => void }) {
+export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   const t = tr(COPY);
+  // 출시 뒤 오류를 알 길은 이것뿐이다. 오류 이름·메시지와 화면 주소만 싣고 기록은 싣지 않는다.
+  // 보낼지는 사람이 메일 창에서 정한다.
+  const reportHref =
+    `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t.reportSubject)}` +
+    `&body=${encodeURIComponent([t.reportBody, "", "", "---", `${error.name}: ${error.message}`.slice(0, 300), ...(typeof window === "undefined" ? [] : [location.pathname, navigator.userAgent])].join("\n"))}`;
 
   async function save(): Promise<void> {
     try {
@@ -118,6 +144,13 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
           {t.reset}
         </button>
       </div>
+
+      <p className="text-sm text-ink-600">
+        {t.report}{" "}
+        <a className="underline" href={reportHref}>
+          {t.reportLink}
+        </a>
+      </p>
     </div>
   );
 }

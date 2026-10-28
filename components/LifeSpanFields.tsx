@@ -35,7 +35,7 @@ const COPY = defineCopy({
     manual: "직접 조정한 값입니다. 나이·국가·성별을 바꿔도 유지됩니다.",
     needAge: "나이를 채우면 그 나이에 맞는 통계값이 적용됩니다. 언제든 직접 바꿀 수 있어요.",
     fromTableWithHealth:
-      "생명표에서 이 나이·국가·성별에 맞는 값을 가져오고, 위에서 고른 생활 습관을 반영했습니다. 언제든 직접 바꿀 수 있어요.",
+      "생명표에서 이 나이·국가·성별에 맞는 값을 가져오고, 위에서 고른 생활 습관을 반영했습니다. 통계로 어림한 값이지 건강 진단은 아니에요. 언제든 직접 바꿀 수 있어요.",
     fromTable: "생명표에서 이 나이·국가·성별에 맞는 값을 가져옵니다. 언제든 직접 바꿀 수 있어요.",
     remaining: (years: string) => ` · 남은 기간 약 ${years}`,
     belowAge: "예상 수명이 지금 나이보다 적어 남은 시간이 0으로 계산됩니다.",
@@ -59,7 +59,7 @@ const COPY = defineCopy({
     manual: "Set by you. It stays even if you change age, country or sex.",
     needAge: "Add an age to use the average for that age. You can change it anytime.",
     fromTableWithHealth:
-      "Taken from life tables for this age, country and sex, adjusted for the habits above. You can change it anytime.",
+      "Taken from life tables for this age, country and sex, adjusted for the habits above. It's a statistical estimate, not a health assessment. You can change it anytime.",
     fromTable: "Taken from life tables for this age, country and sex. You can change it anytime.",
     remaining: (years) => ` · about ${years} ahead`,
     belowAge: "Life expectancy is at or below the current age, so the time left counts as 0.",
@@ -83,7 +83,7 @@ const COPY = defineCopy({
     manual: "手動で調整した値です。年齢・国・性別を変えても保たれます。",
     needAge: "年齢を入れると、その年齢に合った統計値が使われます。いつでも自分で変えられます。",
     fromTableWithHealth:
-      "生命表からこの年齢・国・性別に合った値を取り、上で選んだ生活習慣を反映しました。いつでも自分で変えられます。",
+      "生命表からこの年齢・国・性別に合った値を取り、上で選んだ生活習慣を反映しました。統計からの目安で、健康診断ではありません。いつでも自分で変えられます。",
     fromTable: "生命表からこの年齢・国・性別に合った値を取ります。いつでも自分で変えられます。",
     remaining: (years) => ` · 残り約${years}`,
     belowAge: "予想寿命が今の年齢以下なので、残り時間は0として計算されます。",
@@ -107,7 +107,7 @@ const COPY = defineCopy({
     manual: "Ajustado por ti. Se mantiene aunque cambies la edad, el país o el sexo.",
     needAge: "Añade la edad para usar la media correspondiente. Puedes cambiarla cuando quieras.",
     fromTableWithHealth:
-      "Tomado de las tablas de vida para esta edad, país y sexo, con los hábitos de arriba. Puedes cambiarlo cuando quieras.",
+      "Tomado de las tablas de vida para esta edad, país y sexo, con los hábitos de arriba. Es una estimación estadística, no una evaluación médica. Puedes cambiarlo cuando quieras.",
     fromTable: "Tomado de las tablas de vida para esta edad, país y sexo. Puedes cambiarlo cuando quieras.",
     remaining: (years) => ` · unos ${years} por delante`,
     belowAge: "La esperanza de vida no supera la edad actual, así que el tiempo restante cuenta como 0.",
@@ -130,7 +130,7 @@ const COPY = defineCopy({
     reset: (age) => `恢复为统计值（${age}岁）`,
     manual: "这是你手动调整的值。更改年龄、国家或性别也会保留。",
     needAge: "填写年龄后，会使用与该年龄相符的统计值。随时可以自己修改。",
-    fromTableWithHealth: "取自生命表中与该年龄、国家、性别相符的值，并反映了上面选择的生活习惯。随时可以自己修改。",
+    fromTableWithHealth: "取自生命表中与该年龄、国家、性别相符的值，并反映了上面选择的生活习惯。这只是统计估算，不是健康诊断。随时可以自己修改。",
     fromTable: "取自生命表中与该年龄、国家、性别相符的值。随时可以自己修改。",
     remaining: (years) => ` · 大约还有${years}`,
     belowAge: "预期寿命不高于现在的年龄，剩余时间按0计算。",
