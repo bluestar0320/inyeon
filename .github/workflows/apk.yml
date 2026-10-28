@@ -50,6 +50,12 @@ jobs:
             cp public/icon-512.png "$d/ic_launcher.png"
             cp public/icon-512.png "$d/ic_launcher_round.png"
             cp public/icon-maskable.png "$d/ic_launcher_foreground.png"
+            cp public/icon-monochrome.png "$d/ic_launcher_monochrome.png"
+          done
+          # 안드로이드 13+에서 「테마 아이콘」을 켠 사람에게는 흰 그림만 두고 폰이 색을 입힌다(어두운 모드도 따라간다).
+          for f in android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml; do
+            sed -i 's|</adaptive-icon>|    <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>\n</adaptive-icon>|' "$f"
+            grep -q ic_launcher_monochrome "$f"
           done
 
       # 정식(release) 키로 서명한다. 키는 저장소에 두지 않고 Actions 비밀값으로만 받는다.
