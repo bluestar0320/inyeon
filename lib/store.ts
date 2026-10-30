@@ -5,6 +5,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { todayISO } from "./format";
 import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
 import { cleanMeetings, cleanMemories, cleanSaying } from "./meetings";
+import { mirrorRead, mirrorWrite } from "./nativeMirror";
 import { loadPhotos, writePhotos } from "./photoStore";
 import { newId } from "./presets";
 import { STORAGE_KEY } from "./storageKey";
@@ -296,8 +297,21 @@ function boot(): void {
     // 저장된 값이 깨졌거나 저장소를 못 쓰는 환경이면 빈 상태로 시작한다.
     state = EMPTY_STATE;
   }
+  // 설치한 앱에서 localStorage가 비어 있으면(iOS가 저장 공간 때문에 지웠을 수 있다) 앱 파일의 사본에서 되살린다.
+  const restore = found
+    ? Promise.resolve()
+    : mirrorRead().then((copy) => {
+        if (!copy) return;
+        try {
+          state = normalise(JSON.parse(copy));
+          found = true;
+        } catch {
+          // 사본도 깨졌으면 빈 상태 그대로.
+        }
+      });
   // 사진까지 붙인 뒤에 화면을 연다. 먼저 열면 기본 사진이 한 번 보였다가 바뀐다.
-  void loadPhotos()
+  void restore
+    .then(loadPhotos)
     .then(
       (photos) => {
         state = withPhotos(state, photos);
@@ -384,6 +398,8 @@ function persist(): boolean {
     saveFailed = true;
   }
   if (stored) syncPhotos();
+  // 다 읽기 전에 쓰면 빈 상태가 좋은 사본을 덮는다.
+  if (booted) mirrorWrite(() => JSON.stringify(state));
   return !saveFailed;
 }
 

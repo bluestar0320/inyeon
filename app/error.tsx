@@ -4,6 +4,7 @@ import { defineCopy, tr } from "@/lib/i18n";
 import { loadPhotos } from "@/lib/photoStore";
 import { STORAGE_KEY } from "@/lib/storageKey";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { mirrorClear } from "@/lib/nativeMirror";
 import { isNativeApp, saveFileNatively } from "@/lib/nativeShare";
 import { useState } from "react";
 
@@ -147,12 +148,14 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <button
           type="button"
           className="btn-danger ml-auto"
-          onClick={() => {
+          onClick={async () => {
             try {
               window.localStorage.removeItem(STORAGE_KEY);
             } catch {
               // 못 지워도 새로고침은 시도한다.
             }
+            // 앱 파일의 사본도 지운다. 안 그러면 다시 켤 때 깨진 기록이 되살아난다(lib/nativeMirror.ts).
+            await mirrorClear();
             window.location.href = "./";
           }}
         >

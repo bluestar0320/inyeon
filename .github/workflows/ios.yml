@@ -1,0 +1,83 @@
+name: iOS 시뮬레이터 확인
+
+# 맥이 없으니 GitHub의 맥에서 iOS 앱을 빌드하고 시뮬레이터로 띄워 본다.
+# 서명하지 않는 시뮬레이터용 빌드라 애플 계정이 없어도 된다. 결과는 스크린샷과
+# 시뮬레이터용 앱(.app, Appetize 같은 곳에 올려 브라우저로 만져 볼 수 있다).
+# 스토어용 서명 빌드는 애플 계정이 생긴 뒤에 따로 붙인다.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    name: iOS 시뮬레이터
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: 웹 빌드
+        run: npm run build
+        env:
+          BASE_PATH: ""
+
+      # ios/ 폴더도 android/처럼 설정에서 만든다. 저장소에 두지 않는다.
+      - name: iOS 프로젝트 생성
+        run: |
+          xcodebuild -version
+          npx cap add ios
+          npx cap sync ios
+
+      # 앱스토어 아이콘은 1024 한 장(투명 없이). 모서리는 iOS가 깎는다.
+      - name: 앱 아이콘과 Info.plist
+        run: |
+          d=ios/App/App/Assets.xcassets/AppIcon.appiconset
+          f=$(ls "$d"/*.png | head -1)
+          node -e "require('sharp')('public/icon-maskable.png').resize(1024,1024).flatten({background:'#24252d'}).png().toFile(process.argv[1])" "$f"
+          P=ios/App/App/Info.plist
+          # 암호화는 HTTPS뿐이라 수출 규정 문서가 필요 없다.
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$P"
+          # 내보낸 백업 파일을 「파일」 앱에서 볼 수 있게.
+          /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" "$P"
+          /usr/libexec/PlistBuddy -c "Add :LSSupportsOpeningDocumentsInPlace bool true" "$P"
+
+      - name: 시뮬레이터용 빌드
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO | tail -20
+          test -d build/Build/Products/Debug-iphonesimulator/App.app
+
+      # 가장 최신 iPhone 시뮬레이터에 깔고 띄워 화면을 찍는다.
+      - name: 시뮬레이터에서 실행
+        run: |
+          UDID=$(xcrun simctl list devices available -j | node -e "
+            let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+              const all=Object.entries(JSON.parse(s).devices).filter(([r])=>r.includes('iOS')).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}));
+              const phones=all.at(-1)[1].filter(d=>/^iPhone \d+( Pro)?$/.test(d.name));
+              console.log((phones.at(-1)||all.at(-1)[1][0]).udid)})")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/App.app
+          xcrun simctl launch "$UDID" app.inyeon.counter
+          sleep 15
+          mkdir -p shots
+          xcrun simctl io "$UDID" screenshot shots/1-launch.png
+          xcrun simctl ui "$UDID" appearance dark
+          sleep 3
+          xcrun simctl io "$UDID" screenshot shots/2-dark.png
+          (cd build/Build/Products/Debug-iphonesimulator && zip -qr "$GITHUB_WORKSPACE/shots/App-simulator.zip" App.app)
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: inyeon-ios-simulator
+          path: shots/
+          retention-days: 30
