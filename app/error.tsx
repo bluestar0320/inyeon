@@ -4,6 +4,8 @@ import { defineCopy, tr } from "@/lib/i18n";
 import { loadPhotos } from "@/lib/photoStore";
 import { STORAGE_KEY } from "@/lib/storageKey";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { isNativeApp, saveFileNatively } from "@/lib/nativeShare";
+import { useState } from "react";
 
 const COPY = defineCopy({
   ko: {
@@ -12,6 +14,7 @@ const COPY = defineCopy({
     body: "저장된 기록에 문제가 있을 수 있습니다. 다시 시도해 보고, 그래도 안 되면 기록을 파일로 받아 둔 뒤 지우고 새로 시작하세요. 기록은 이 기기 안에만 있으므로 지우면 되돌릴 수 없습니다.",
     retry: "다시 시도",
     download: "기록 내려받기",
+    saved: "휴대폰의 문서/몇번더 폴더에 저장했어요.",
     reset: "기록 지우고 시작",
     report: "그래도 안 되면 메일로 알려 주세요.",
     reportLink: "문의 메일 보내기",
@@ -24,6 +27,7 @@ const COPY = defineCopy({
     body: "Your saved records may have a problem. Try again, and if that doesn't help, download your records as a file, then clear them and start fresh. Records live only on this device, so clearing them can't be undone.",
     retry: "Try again",
     download: "Download records",
+    saved: "Saved to Documents/몇번더 on your phone.",
     reset: "Clear records and start over",
     report: "If it keeps happening, please let us know.",
     reportLink: "Send an email",
@@ -36,6 +40,7 @@ const COPY = defineCopy({
     body: "保存された記録に問題があるかもしれません。もう一度試して、それでもだめなら記録をファイルに保存してから消して、最初からはじめてください。記録はこの端末の中にだけあるので、消すと元に戻せません。",
     retry: "もう一度試す",
     download: "記録をダウンロード",
+    saved: "端末の「ドキュメント/몇번더」フォルダに保存しました。",
     reset: "記録を消してはじめる",
     report: "それでも直らないときは、メールで教えてください。",
     reportLink: "問い合わせメールを送る",
@@ -48,6 +53,7 @@ const COPY = defineCopy({
     body: "Puede que haya un problema con tus registros guardados. Vuelve a intentarlo y, si no funciona, descarga tus registros en un archivo, bórralos y empieza de nuevo. Los registros solo están en este dispositivo, así que borrarlos no se puede deshacer.",
     retry: "Reintentar",
     download: "Descargar registros",
+    saved: "Guardado en Documentos/몇번더 de tu teléfono.",
     reset: "Borrar registros y empezar de nuevo",
     report: "Si sigue pasando, avísanos por correo.",
     reportLink: "Enviar un correo",
@@ -60,6 +66,7 @@ const COPY = defineCopy({
     body: "保存的记录可能出了问题。请再试一次；如果还是不行，先把记录下载成文件，再清除并重新开始。记录只保存在这台设备上，清除后无法恢复。",
     retry: "重试",
     download: "下载记录",
+    saved: "已保存到手机的“文档/몇번더”文件夹。",
     reset: "清除记录并重新开始",
     report: "如果还是不行，请发邮件告诉我们。",
     reportLink: "发送邮件",
@@ -80,6 +87,7 @@ const COPY = defineCopy({
  */
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   const t = tr(COPY);
+  const [saved, setSaved] = useState(false);
   // 출시 뒤 오류를 알 길은 이것뿐이다. 오류 이름·메시지와 화면 주소만 싣고 기록은 싣지 않는다.
   // 보낼지는 사람이 메일 창에서 정한다.
   const reportHref =
@@ -100,7 +108,14 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
       } catch {
         // 사진을 못 붙여도 기록은 그대로 내려받는다.
       }
-      const url = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+      const blob = new Blob([raw], { type: "application/json" });
+      // APK의 WebView는 <a download>를 듣지 않는다. 설정의 내보내기와 같은 곳(문서/몇번더)에 쓴다.
+      if (isNativeApp()) {
+        await saveFileNatively(blob, t.fileName);
+        setSaved(true);
+        return;
+      }
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = t.fileName;
@@ -144,6 +159,8 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
           {t.reset}
         </button>
       </div>
+
+      {saved && <p className="text-sm text-ink-600" role="status">{t.saved}</p>}
 
       <p className="text-sm text-ink-600">
         {t.report}{" "}

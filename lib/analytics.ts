@@ -44,6 +44,8 @@ export function count(hit: { path?: string; event?: string }): void {
   // 브라우저에 "추적하지 마세요"를 켠 사람은 세지 않는다.
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
   if (nav.globalPrivacyControl || navigator.doNotTrack === "1") return;
+  // 웹과 앱이 한 대시보드에 섞이면 둘 다 읽을 수 없다. 앱에서 온 것은 이름 앞에 app-을 붙인다.
+  if (window.Capacitor?.isNativePlatform?.()) hit = hit.event ? { event: `app-${hit.event}` } : { path: `/app${hit.path ?? "/"}` };
   const url = countUrl(GOATCOUNTER_CODE, {
     ...hit,
     referrer: hit.event ? undefined : document.referrer,

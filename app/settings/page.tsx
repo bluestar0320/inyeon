@@ -722,13 +722,16 @@ export default function SettingsPage() {
           {notifyBlocked && <p className="text-xs leading-relaxed text-ink-600">{t.notifyDenied}</p>}
         </section>
       )}
-      <section className="space-y-3 py-4">
-        <div>
-          <p className="text-sm font-semibold text-ink-800">{t.installTitle}</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.installHint}</p>
-        </div>
-        <InstallButton />
-      </section>
+      {/* 설치한 앱 안에서 「홈 화면에 설치」는 뜻이 없다. */}
+      {!isNativeApp() && (
+        <section className="space-y-3 py-4">
+          <div>
+            <p className="text-sm font-semibold text-ink-800">{t.installTitle}</p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.installHint}</p>
+          </div>
+          <InstallButton />
+        </section>
+      )}
       <section className="space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.feedbackTitle}</p>

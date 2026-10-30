@@ -223,6 +223,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
     consent.commit();
     // 첫 인연을 세운 순간만 센다(누구인지는 보내지 않는다).
     if (isNew && state.people.length === 0) count({ event: "first-person" });
+    // 세 번째 사람을 적는 순간 — 무료 두 명을 넘어서려는 수요가 있는지 본다.
+    if (isNew && state.people.length === 2) count({ event: "third-person" });
     savedHere.current = true;
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
     leaveTo(router, isNew ? afterAdd : `/people/detail?id=${draft.id}`);

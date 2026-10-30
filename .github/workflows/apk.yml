@@ -62,7 +62,7 @@ jobs:
       # allowBackup="true"라 구글 백업과 새 폰으로 옮기기에 앱 데이터가 실려 나간다.
       # Android 12+는 allowBackup=false여도 기기 간 전송은 막지 않으므로 규칙 파일로 전부 뺀다.
       # 폰을 바꿀 때는 설정의 내보내기·불러오기로 옮긴다.
-      - name: 자동 백업 끄기
+      - name: 자동 백업 끄기, 쓰지 않는 권한 빼기
         run: |
           M=android/app/src/main/AndroidManifest.xml
           sed -i 's|android:allowBackup="true"|android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules"|' "$M"
@@ -71,6 +71,11 @@ jobs:
           rules='<exclude domain="root"/><exclude domain="file"/><exclude domain="database"/><exclude domain="sharedpref"/><exclude domain="external"/>'
           echo "<data-extraction-rules><cloud-backup>$rules</cloud-backup><device-transfer>$rules</device-transfer></data-extraction-rules>" \
             > android/app/src/main/res/xml/data_extraction_rules.xml
+          # 알림 플러그인이 정확한 알람 권한을 선언하지만 우리는 쓰지 않는다(isExactNotification: false).
+          # 선언만 있어도 Play가 용도 신고를 요구하니 합친 매니페스트에서 뺀다.
+          grep -q 'xmlns:tools' "$M" || sed -i '0,/<manifest /s|<manifest |<manifest xmlns:tools="http://schemas.android.com/tools" |' "$M"
+          sed -i 's|</manifest>|    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove"/>\n</manifest>|' "$M"
+          grep -q 'SCHEDULE_EXACT_ALARM" tools:node="remove"' "$M"
 
       # 정식(release) 키로 서명한다. 키는 저장소에 두지 않고 Actions 비밀값으로만 받는다.
       #

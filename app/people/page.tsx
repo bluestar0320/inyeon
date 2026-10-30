@@ -245,7 +245,7 @@ export default function PeoplePage() {
           <h1 className="text-xl font-semibold tracking-tight text-ink-900">{t.title}</h1>
           <p className="mt-1 text-sm text-ink-400">{t.sortHint[sort]}</p>
         </div>
-        <Link href="/people/new" className="btn-primary" prefetch={false}>
+        <Link href="/people/new" className="btn-primary shrink-0" prefetch={false}>
           {t.add}
         </Link>
       </div>

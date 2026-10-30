@@ -81,6 +81,14 @@
 
 @layer base {
   /*
+   * 한국어는 기본값이면 낱말 한가운데서 줄이 바뀐다(「얼/굴」, 「289번이에/요.」).
+   * 어절 단위로 바꾸고, 한 어절이 줄보다 길 때만 쪼갠다.
+   */
+  html:lang(ko) body {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  /*
    * 글씨 크기(설정). html의 font-size만 키우면 rem만 커지고, 곳곳에 박힌
    * text-[11px] 같은 px 값은 그대로 남는다. zoom은 px까지 통째로 키우고, 화면 폭도
    * 그만큼 좁게 잡아 다시 줄을 바꾸므로 옆으로 밀려나지 않는다(브라우저 확대와 같다).
