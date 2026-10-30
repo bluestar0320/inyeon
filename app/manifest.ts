@@ -7,7 +7,7 @@ const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "몇 번 더",
+    name: "몇번더",
     short_name: "몇번더",
     description:
       "남은 시간과 남은 만남을 횟수로 계산합니다. 리마인딩이 아니라 플래닝을 위한 계산기.",

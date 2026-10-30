@@ -20,7 +20,7 @@ import { GOATCOUNTER_CODE } from "@/lib/analytics";
 import { LANGS } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "몇 번 더",
+  title: "몇번더",
   description:
     "남은 시간과 남은 만남을 횟수로 계산합니다. 알림이 아니라 계획을 돕는 계산기.",
   // iOS는 manifest의 display를 무시하므로 따로 알려 줘야 전체 화면으로 열린다.
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(`https://${SITE_URL}/`),
   openGraph: {
     type: "website",
-    siteName: "몇 번 더",
+    siteName: "몇번더",
     title: "어머니와 남은 저녁 식사, 몇 번일까요?",
     description: "만나는 횟수로 세어 보는 남은 시간. 계산도 기록도 이 기기 안에만 남습니다.",
     images: [{ url: "og.jpg", width: 1200, height: 630, alt: "저녁상이 차려진 부엌 식탁" }],

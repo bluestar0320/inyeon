@@ -15,7 +15,7 @@ const COPY = defineCopy({
     reset: "기록 지우고 시작",
     report: "그래도 안 되면 메일로 알려 주세요.",
     reportLink: "문의 메일 보내기",
-    reportSubject: "[몇 번 더] 화면 오류",
+    reportSubject: "[몇번더] 화면 오류",
     reportBody: "어떤 화면에서 무엇을 하다가 생겼는지 적어 주시면 고치는 데 큰 도움이 됩니다.",
   },
   en: {

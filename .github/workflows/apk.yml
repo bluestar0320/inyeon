@@ -58,6 +58,20 @@ jobs:
             grep -q ic_launcher_monochrome "$f"
           done
 
+      # 기록과 사진이 「이 폰 밖으로 나가지 않는다」는 약속을 지킨다. Capacitor 템플릿은
+      # allowBackup="true"라 구글 백업과 새 폰으로 옮기기에 앱 데이터가 실려 나간다.
+      # Android 12+는 allowBackup=false여도 기기 간 전송은 막지 않으므로 규칙 파일로 전부 뺀다.
+      # 폰을 바꿀 때는 설정의 내보내기·불러오기로 옮긴다.
+      - name: 자동 백업 끄기
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's|android:allowBackup="true"|android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules"|' "$M"
+          grep -q 'android:allowBackup="false"' "$M"
+          mkdir -p android/app/src/main/res/xml
+          rules='<exclude domain="root"/><exclude domain="file"/><exclude domain="database"/><exclude domain="sharedpref"/><exclude domain="external"/>'
+          echo "<data-extraction-rules><cloud-backup>$rules</cloud-backup><device-transfer>$rules</device-transfer></data-extraction-rules>" \
+            > android/app/src/main/res/xml/data_extraction_rules.xml
+
       # 정식(release) 키로 서명한다. 키는 저장소에 두지 않고 Actions 비밀값으로만 받는다.
       #
       # 예전에는 저장소에 둔 공개 디버그 키를 썼다. 그 키는 누구나 내려받을 수 있어

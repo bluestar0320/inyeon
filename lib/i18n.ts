@@ -12,7 +12,7 @@
  * 지금 언어로 말할 수 있다.
  *
  * 용어(모든 언어에서 같은 말을 쓴다):
- *   앱 이름   몇 번 더 / How Many More / あと何回 / Cuántas veces más / 还有几次
+ *   앱 이름   몇번더 / How Many More / あと何回 / Cuántas veces más / 还有几次
  *   인연      인연 / People / 大切な人 / Personas / 亲友
  *   순간      순간 / Moments / ひととき / Momentos / 时光
  *   N번       N번 / N times / N回 / N veces / N次

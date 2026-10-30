@@ -8,7 +8,7 @@ import { LIFE_TABLE_YEAR } from "@/lib/lifeTable";
 
 const ABOUT: Record<DocLang, { title: string; lead: string; more: string; sections: DocSection[] }> = {
   ko: {
-    title: "몇 번 더",
+    title: "몇번더",
     lead: "남은 시간과 남은 만남을 횟수로 세어 봅니다.",
     more: "읽을거리 보기 →",
     sections: [

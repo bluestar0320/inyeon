@@ -73,7 +73,7 @@ const COPY = defineCopy({
     feedbackTitle: "의견 보내기",
     feedbackHint:
       "쓰다가 막힌 곳, 이상한 숫자, 있었으면 하는 것 — 뭐든 좋습니다. 메일 앱이 열리고, 보내기 전에 지우거나 고칠 수 있습니다.",
-    feedbackSubject: "[몇 번 더] 의견",
+    feedbackSubject: "[몇번더] 의견",
     feedbackQuestions: [
       "1. 숫자를 보고 무슨 생각이 들었나요?",
       "2. 누군가에게 보여주고 싶었나요? 누구에게?",

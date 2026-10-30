@@ -47,7 +47,7 @@ test("아래쪽 링크로 서비스 소개·읽을거리·약관을 연다", asy
   await page.getByRole("link", { name: /65세가 넘으면/ }).click();
   await expect(page.getByText("59.7%", { exact: false })).toBeVisible();
   await expect(page.getByText("노인실태조사", { exact: false }).first()).toBeVisible();
-  for (const [link, heading] of [["서비스 소개", "몇 번 더"], ["이용약관", "이용약관"], ["개인정보처리방침", "개인정보처리방침"]]) {
+  for (const [link, heading] of [["서비스 소개", "몇번더"], ["이용약관", "이용약관"], ["개인정보처리방침", "개인정보처리방침"]]) {
     await page.getByRole("contentinfo").getByRole("link", { name: link }).click();
     await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
   }
