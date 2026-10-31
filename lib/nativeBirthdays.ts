@@ -89,8 +89,10 @@ export async function syncBirthdayNotifications(
     }
     if (notifications.length === 0) return;
     // 알림은 기본으로 켜져 있다. 걸 생일이 생겼을 때 한 번 묻고, 거절했으면(denied) 다시 조르지 않는다.
+    // 백업 알림만 있을 때는 묻지 않는다. 첫 인연을 저장하자마자 팝업이 뜨고, 거기서 거절하면 생일 알림까지 영영 꺼진다.
+    const hasBirthday = notifications.some((n) => n.extra?.personId);
     let { display } = await LocalNotifications.checkPermissions();
-    if (display.startsWith("prompt")) ({ display } = await LocalNotifications.requestPermissions());
+    if (display.startsWith("prompt") && hasBirthday) ({ display } = await LocalNotifications.requestPermissions());
     if (display === "granted") await LocalNotifications.schedule({ notifications });
   } catch {
     // 플러그인이 없거나 기기가 안 받아 주면 그냥 둔다. 앱은 그대로 동작해야 한다.

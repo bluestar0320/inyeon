@@ -42,6 +42,8 @@ jobs:
           d=ios/App/App/Assets.xcassets/AppIcon.appiconset
           f=$(ls "$d"/*.png | head -1)
           node -e "require('sharp')('public/icon-maskable.png').resize(1024,1024).flatten({background:'#24252d'}).png().toFile(process.argv[1])" "$f"
+          # 켜는 순간의 화면도 Capacitor 로고 대신 시계로(scripts/native-splash.mjs).
+          node scripts/native-splash.mjs ios/App/App/Assets.xcassets/Splash.imageset/*.png
           P=ios/App/App/Info.plist
           # 암호화는 HTTPS뿐이라 수출 규정 문서가 필요 없다.
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$P"

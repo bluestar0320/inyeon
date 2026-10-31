@@ -27,14 +27,14 @@ import {
  * 한 덩어리가 된다. 반대로 사람이 타이핑해서 찾아오는 자리(제목, 매니페스트,
  * 스토어 등록명)는 물음표 없이 "몇번더"다 — 아무도 ?를 치지 않는다.
  */
-type Status = "idle" | "working" | "shared" | "saved" | "failed";
+type Status = "idle" | "working" | "shared" | "saved" | "savedFolder" | "failed";
 
 const COPY = defineCopy({
-  ko: { wordmark: "몇번더?", save: "이미지 저장", share: "공유하기", working: "만드는 중…", shared: "공유했어요", saved: "저장했어요", failed: "잘 안 됐어요" },
-  en: { wordmark: "How many more?", save: "Save image", share: "Share", working: "Creating…", shared: "Shared", saved: "Saved", failed: "Something went wrong" },
-  ja: { wordmark: "あと何回？", save: "画像を保存", share: "共有", working: "作成中…", shared: "共有しました", saved: "保存しました", failed: "うまくいきませんでした" },
-  es: { wordmark: "¿Cuántas veces más?", save: "Guardar imagen", share: "Compartir", working: "Creando…", shared: "Compartido", saved: "Guardado", failed: "Algo salió mal" },
-  zh: { wordmark: "还有几次？", save: "保存图片", share: "分享", working: "生成中…", shared: "已分享", saved: "已保存", failed: "未能完成" },
+  ko: { wordmark: "몇번더?", save: "이미지 저장", share: "공유하기", working: "만드는 중…", shared: "공유했어요", saved: "저장했어요", savedFolder: "문서/몇번더 폴더에 저장했어요", failed: "잘 안 됐어요" },
+  en: { wordmark: "How many more?", save: "Save image", share: "Share", working: "Creating…", shared: "Shared", saved: "Saved", savedFolder: "Saved to Documents/몇번더", failed: "Something went wrong" },
+  ja: { wordmark: "あと何回？", save: "画像を保存", share: "共有", working: "作成中…", shared: "共有しました", saved: "保存しました", savedFolder: "書類/몇번더 に保存しました", failed: "うまくいきませんでした" },
+  es: { wordmark: "¿Cuántas veces más?", save: "Guardar imagen", share: "Compartir", working: "Creando…", shared: "Compartido", saved: "Guardado", savedFolder: "Guardado en Documentos/몇번더", failed: "Algo salió mal" },
+  zh: { wordmark: "还有几次？", save: "保存图片", share: "分享", working: "生成中…", shared: "已分享", saved: "已保存", savedFolder: "已保存到 文档/몇번더", failed: "未能完成" },
 });
 
 /** iOS 사파리는 내려받은 그림을 사진첩이 아니라 파일 앱에 둔다. 사진첩에 넣으려면 공유 시트의 「이미지 저장」을 거쳐야 한다. */
@@ -106,8 +106,12 @@ export default function ShareButton({
       let done: Status = action === "save" ? "saved" : "shared";
       if (isNativeApp()) {
         // APK의 WebView에는 navigator.share도 <a download>도 없다.
-        if (action === "save") await saveFileNatively(file, file.name);
-        else await shareFileNatively(file, file.name);
+        // 아이폰은 공유 시트에 「이미지 저장」(사진 앱)이 있어 저장도 시트로 보낸다.
+        // 안드로이드는 시트에 갤러리 저장이 없어 문서 폴더에 쓰고, 어디인지 알려 준다.
+        if (action === "save" && !isIOS()) {
+          await saveFileNatively(file, file.name);
+          done = "savedFolder";
+        } else await shareFileNatively(file, file.name);
       } else if (action === "share" || isIOS()) {
         // 공유 시트가 없으면(PC 등) 내려받기로 대신한다.
         if (navigator.canShare?.({ files: [file] })) {

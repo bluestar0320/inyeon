@@ -161,3 +161,26 @@ for (const [locale, terms, read, notice] of [
     });
   });
 }
+
+test("인연을 추가한 뒤 뒤로 가면 빈 추가 화면이 다시 나오지 않는다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people");
+  await page.goto("/people/new");
+  await page.getByLabel("이름").fill("엄마");
+  await page.getByLabel("나이", { exact: true }).fill("60");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/\/people\/detail/);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/people\/new/);
+  // 「추가」 단추로 새로 들어오는 건 그대로 추가 화면이다.
+  await page.goto("/people/new");
+  await expect(page.getByLabel("이름")).toHaveValue("");
+});
+
+test("이름을 비워도 추가할 수 있고, 사람 화면에는 벚꽃·눈 조건 칩이 없다", async ({ page }) => {
+  await setUpProfile(page, 30);
+  await page.goto("/people/new");
+  await expect(page.getByRole("button", { name: "+ 벚꽃이 사라짐" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "+ 특정 기간만" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "추가하기" })).toBeEnabled();
+});

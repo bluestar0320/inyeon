@@ -69,6 +69,9 @@ export interface CardTheme {
 
 /** 사진 카드의 제목·이름·이야기. 앱 사진첩과 같은 명조(public/fonts). 그리기 전에 ShareButton이 받아 둔다. */
 export const SERIF_STACK = '"Nanum Myeongjo", AppleMyungjo, Batang, serif';
+// 나눔명조에는 일본어·중국어 한자가 다 들어 있지 않아(会·回·数…) 한 줄에 고딕이 섞인다. 두 언어는 기기 명조로.
+const CJK_SERIF = '"Hiragino Mincho ProN", "Yu Mincho", "Songti SC", serif';
+const serifStack = (): string => (/^(ja|zh)/.test(document.documentElement.lang) ? CJK_SERIF : SERIF_STACK);
 
 const FONT_STACK =
   'Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Hiragino Sans", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
@@ -329,7 +332,7 @@ export function drawCard(
     );
     if (spec.label) {
       ctx.fillStyle = "#3a2f27";
-      ctx.font = `40px ${SERIF_STACK}`;
+      ctx.font = `40px ${serifStack()}`;
       ctx.fillText(truncateToWidth(ctx, spec.label, side), 0, -height / 2 + pad + side + (height - pad - side) / 2);
     }
     ctx.restore();
@@ -339,7 +342,7 @@ export function drawCard(
   }
 
   ctx.fillStyle = theme.text;
-  ctx.font = serif ? `700 58px ${SERIF_STACK}` : `700 56px ${FONT_STACK}`;
+  ctx.font = serif ? `700 58px ${serifStack()}` : `700 56px ${FONT_STACK}`;
   ctx.fillText(truncateToWidth(ctx, spec.title, inner), cx, y.title);
 
   if (spec.subtitle) {
@@ -391,7 +394,7 @@ export function drawCard(
   ctx.textBaseline = "middle";
   if (story.length) {
     ctx.fillStyle = serif ? theme.text : theme.muted;
-    ctx.font = serif ? `30px ${SERIF_STACK}` : `28px ${FONT_STACK}`;
+    ctx.font = serif ? `30px ${serifStack()}` : `28px ${FONT_STACK}`;
     const out: string[] = [];
     for (const line of story) {
       if (out.length >= y.lines) break;
@@ -448,7 +451,7 @@ export function drawLetter(
   // 한 줄 = 글자 한 줄. 빈 줄(null)은 문단 사이. right는 끝맺음(날짜·이름).
   type Row = { text: string; right?: boolean } | null;
   const rowsFor = (size: number, memories: string[]): Row[] => {
-    ctx.font = `${size}px ${SERIF_STACK}`;
+    ctx.font = `${size}px ${serifStack()}`;
     const para = (text: string): Row[] => wrapLines(ctx, text, width, 60).map((t) => ({ text: t }));
     const sign: Row[] = [{ text: letter.date, right: true }];
     if (letter.from) sign.push({ text: letter.from, right: true });
@@ -484,7 +487,7 @@ export function drawLetter(
     ctx.stroke();
   }
 
-  ctx.font = `${size}px ${SERIF_STACK}`;
+  ctx.font = `${size}px ${serifStack()}`;
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = theme.text;
   rows.forEach((row, i) => {

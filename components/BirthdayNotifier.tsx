@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { backupReminderAt } from "@/lib/backup";
@@ -13,6 +14,7 @@ import { useAppState } from "@/lib/store";
  */
 export default function BirthdayNotifier() {
   const { state, hydrated } = useAppState();
+  const router = useRouter();
   const enabled = state.settings.birthdayNotify !== false;
   const backupAt = backupReminderAt(state)?.getTime() ?? null;
   const key = JSON.stringify([
@@ -30,20 +32,20 @@ export default function BirthdayNotifier() {
   }, [hydrated, key]);
 
   // 알림을 누르면 그 사람 화면으로, 백업 알림이면 내보내기 칸으로.
+  // location.href로 가면 안 된다: 앱 안 서버는 확장자 없는 주소에 늘 첫 화면 html을 내준다.
   useEffect(() => {
     if (window.Capacitor?.isNativePlatform?.() !== true) return undefined;
     let remove: (() => void) | undefined;
     void import("@capacitor/local-notifications").then(async ({ LocalNotifications }) => {
       const handle = await LocalNotifications.addListener("localNotificationActionPerformed", ({ notification }) => {
-        const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-        if (notification.extra?.backup === true) window.location.href = `${base}/settings#backup`;
+        if (notification.extra?.backup === true) router.push("/settings#backup");
         const id = notification.extra?.personId;
-        if (typeof id === "string") window.location.href = `${base}/people/detail?id=${encodeURIComponent(id)}`;
+        if (typeof id === "string") router.push(`/people/detail?id=${encodeURIComponent(id)}`);
       });
       remove = () => void handle.remove();
     }).catch(() => undefined);
     return () => remove?.();
-  }, []);
+  }, [router]);
 
   return null;
 }

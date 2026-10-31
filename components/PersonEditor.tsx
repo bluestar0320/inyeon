@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState, useRef } from "react";
+import { useEffect, useId, useMemo, useState, useRef } from "react";
 
 import MoreDetails from "@/components/MoreDetails";
 import NumberInput from "@/components/NumberInput";
@@ -25,7 +25,7 @@ import { pairTitle } from "@/lib/shareCard";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { confirmLeave, useUnsavedGuard, leaveTo, blockImeEnter } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, leaveAfterAdd, returnedAfterAdd, blockImeEnter } from "@/lib/unsaved";
 import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -163,6 +163,11 @@ const COPY = defineCopy({
 
 export default function PersonEditor({ initial }: { initial: Person }) {
   const router = useRouter();
+  // 저장을 마친 추가 화면에 뒤로 가기로 돌아왔으면 빈 칸을 다시 보여 주지 않는다(lib/unsaved.ts).
+  useEffect(() => {
+    const to = returnedAfterAdd();
+    if (to) router.replace(to);
+  }, [router]);
   const { state } = useAppState();
   const { savePerson, removePerson } = useActions();
   const ids = useId();
@@ -227,7 +232,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
     if (isNew && state.people.length === 2) count({ event: "third-person" });
     savedHere.current = true;
     savePerson({ ...draft, name: draft.name.trim() || nameForCopy, updatedAt: new Date().toISOString() });
-    leaveTo(router, isNew ? afterAdd : `/people/detail?id=${draft.id}`);
+    if (isNew) leaveAfterAdd(router, afterAdd);
+    else leaveTo(router, `/people/detail?id=${draft.id}`);
   }
 
   return (
@@ -400,7 +406,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="submit" className="btn-primary" disabled={!draft.name.trim() || consent.blocking}>
+        <button type="submit" className="btn-primary" disabled={consent.blocking}>
           {isNew ? t.add : t.save}
         </button>
         <button type="button" className="btn-secondary" onClick={leave}>

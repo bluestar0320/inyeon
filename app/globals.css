@@ -364,6 +364,12 @@
     font-family: "Nanum Myeongjo", "AppleMyungjo", "Batang", "Hiragino Mincho ProN", "Songti SC", Georgia, serif;
   }
 
+  /* 나눔명조에 없는 일본어·중국어 한자(会·回·数·你…)가 고딕으로 섞이지 않게, 두 언어는 기기 명조로만 쓴다. */
+  html:lang(ja) :is(.letter, .font-album),
+  html:lang(zh) :is(.letter, .font-album) {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Songti SC", serif;
+  }
+
   @keyframes number-in {
     from {
       opacity: 0;

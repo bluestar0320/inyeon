@@ -313,7 +313,7 @@ export default function PeoplePage() {
               <span className="flex min-w-0 items-center gap-3">
                 <Polaroid src={imageFor(person)} size="sm" />
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium text-ink-800">
+                  <span className="block text-sm font-medium text-ink-800 [overflow-wrap:break-word]">
                     {person.name}
                     {/* 기본값이 아닌 설정은 목록에서도 보여야 한다. 상세로 들어가야만
                         알 수 있으면 켜 둔 사실 자체를 잊는다. */}

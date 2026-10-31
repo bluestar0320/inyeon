@@ -58,6 +58,15 @@ jobs:
             grep -q ic_launcher_monochrome "$f"
           done
 
+      # 켜는 순간의 화면. Capacitor 기본(흰 바탕 + 파란 X 로고)을 아이콘 바탕색 + 시계로 바꾼다.
+      # 안드로이드 12+는 시스템이 아이콘을 띄우므로 그 바탕색만 맞춘다.
+      - name: 스플래시
+        run: |
+          node scripts/native-splash.mjs android/app/src/main/res/drawable*/splash.png
+          S=android/app/src/main/res/values/styles.xml
+          sed -i 's|<item name="android:background">@drawable/splash</item>|&\n        <item name="windowSplashScreenBackground">#24252d</item>|' "$S"
+          grep -q windowSplashScreenBackground "$S"
+
       # 기록과 사진이 「이 폰 밖으로 나가지 않는다」는 약속을 지킨다. Capacitor 템플릿은
       # allowBackup="true"라 구글 백업과 새 폰으로 옮기기에 앱 데이터가 실려 나간다.
       # Android 12+는 allowBackup=false여도 기기 간 전송은 막지 않으므로 규칙 파일로 전부 뺀다.
@@ -76,6 +85,12 @@ jobs:
           grep -q 'xmlns:tools' "$M" || sed -i '0,/<manifest /s|<manifest |<manifest xmlns:tools="http://schemas.android.com/tools" |' "$M"
           sed -i 's|</manifest>|    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove"/>\n</manifest>|' "$M"
           grep -q 'SCHEDULE_EXACT_ALARM" tools:node="remove"' "$M"
+          # 안드로이드 7~10은 문서 폴더(내보내기·이미지 저장)에 쓰려면 저장소 권한이 있어야 한다.
+          # 11+에는 필요 없으니 29까지만 선언한다. 10은 예전 저장소 방식을 켜야 문서 폴더에 써진다.
+          sed -i 's|</manifest>|    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>\n</manifest>|' "$M"
+          sed -i 's|android:allowBackup="false"|& android:requestLegacyExternalStorage="true"|' "$M"
+          grep -q 'WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"' "$M"
+          grep -q 'requestLegacyExternalStorage="true"' "$M"
 
       # 정식(release) 키로 서명한다. 키는 저장소에 두지 않고 Actions 비밀값으로만 받는다.
       #

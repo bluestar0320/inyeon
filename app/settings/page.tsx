@@ -55,6 +55,8 @@ const COPY = defineCopy({
     dataTitle: "내 데이터",
     dataHint:
       "모든 기록은 이 브라우저 안에만 있습니다. 서버로 보내지 않으므로 기기를 바꾸면 내보내기 파일로 옮겨야 합니다. 앱을 지우거나 브라우저 데이터를 비워도 사라지니, 가끔 내보내 두세요.",
+    dataHintApp:
+      "모든 기록은 이 휴대폰 안에만 있습니다. 서버로 보내지 않으므로 휴대폰을 바꾸면 내보내기 파일로 옮겨야 합니다. 앱을 지우면 기록도 함께 사라지니, 가끔 내보내 두세요.",
     lastBackup: (date: string) => `마지막 내보내기: ${date}`,
     neverBackedUp: "아직 내보낸 적이 없습니다.",
     people: "인연",
@@ -64,6 +66,7 @@ const COPY = defineCopy({
     exportFailed: "내보내지 못했습니다. 다시 시도해 주세요.",
     readFailed: "파일을 읽지 못했습니다. 내보내기로 만든 JSON인지 확인해 주세요.",
     notBackup: "이 앱에서 내보낸 파일이 아닙니다. 지금 기록은 그대로 두었습니다.",
+    newerBackup: "더 새 버전의 앱에서 내보낸 파일입니다. 앱을 업데이트한 뒤 불러와 주세요. 지금 기록은 그대로 두었습니다.",
     imported: "불러왔습니다.",
     filePrefix: "몇번더",
     savedToPhone: "휴대폰의 문서/몇번더 폴더에 저장했어요. 앱을 지워도 남아 있고, 불러오기로 되살릴 수 있어요.",
@@ -127,6 +130,8 @@ const COPY = defineCopy({
     dataTitle: "My data",
     dataHint:
       "Everything stays in this browser. Nothing is sent to a server, so when you switch devices, move it with an export file. Uninstalling the app or clearing browser data erases it too, so export now and then.",
+    dataHintApp:
+      "Everything stays on this phone. Nothing is sent to a server, so when you switch phones, move it with an export file. Uninstalling the app erases it too, so export now and then.",
     lastBackup: (date: string) => `Last export: ${date}`,
     neverBackedUp: "You haven't exported yet.",
     people: "People",
@@ -136,6 +141,7 @@ const COPY = defineCopy({
     exportFailed: "Couldn't export. Please try again.",
     readFailed: "Couldn't read the file. Make sure it's a JSON file made with Export.",
     notBackup: "This file wasn't exported from this app. Your current records are untouched.",
+    newerBackup: "This file comes from a newer version of the app. Update the app, then import it again. Your current records are untouched.",
     imported: "Imported.",
     filePrefix: "how-many-more",
     savedToPhone: "Saved to Documents/몇번더 on your phone. It stays even if you uninstall the app, and you can bring it back with Import.",
@@ -200,6 +206,8 @@ const COPY = defineCopy({
     dataTitle: "マイデータ",
     dataHint:
       "記録はすべてこのブラウザの中だけにあります。サーバーには送らないので、端末を替えるときはエクスポートしたファイルで移してください。アプリを削除したりブラウザのデータを消したりしても消えるので、ときどきエクスポートしておきましょう。",
+    dataHintApp:
+      "記録はすべてこのスマホの中だけにあります。サーバーには送らないので、機種変更のときはエクスポートしたファイルで移してください。アプリを削除すると記録も消えるので、ときどきエクスポートしておきましょう。",
     lastBackup: (date: string) => `最後のエクスポート: ${date}`,
     neverBackedUp: "まだエクスポートしていません。",
     people: "大切な人",
@@ -209,6 +217,7 @@ const COPY = defineCopy({
     exportFailed: "エクスポートできませんでした。もう一度お試しください。",
     readFailed: "ファイルを読み込めませんでした。エクスポートで作ったJSONか確認してください。",
     notBackup: "このアプリからエクスポートしたファイルではありません。今の記録はそのままです。",
+    newerBackup: "新しいバージョンのアプリで書き出したファイルです。アプリを更新してから読み込んでください。今の記録はそのままです。",
     imported: "インポートしました。",
     filePrefix: "あと何回",
     savedToPhone: "端末の「ドキュメント/몇번더」フォルダに保存しました。アプリを消しても残り、読み込みで元に戻せます。",
@@ -272,6 +281,8 @@ const COPY = defineCopy({
     dataTitle: "Mis datos",
     dataHint:
       "Todo se guarda solo en este navegador. No se envía a ningún servidor, así que al cambiar de dispositivo tendrás que pasarlo con un archivo exportado. Si desinstalas la app o borras los datos del navegador, también se pierde, así que exporta de vez en cuando.",
+    dataHintApp:
+      "Todo se guarda solo en este teléfono. No se envía a ningún servidor, así que al cambiar de teléfono tendrás que pasarlo con un archivo exportado. Si desinstalas la app, también se pierde, así que exporta de vez en cuando.",
     lastBackup: (date: string) => `Última exportación: ${date}`,
     neverBackedUp: "Aún no has exportado nada.",
     people: "Personas",
@@ -281,6 +292,7 @@ const COPY = defineCopy({
     exportFailed: "No se pudo exportar. Inténtalo de nuevo.",
     readFailed: "No se pudo leer el archivo. Comprueba que sea el JSON creado con Exportar.",
     notBackup: "Este archivo no se exportó desde esta app. Tus registros actuales siguen igual.",
+    newerBackup: "Este archivo viene de una versión más nueva de la app. Actualiza la app y vuelve a importarlo. Tus registros actuales siguen igual.",
     imported: "Importado.",
     filePrefix: "cuantas-veces-mas",
     savedToPhone: "Guardado en Documentos/몇번더 de tu teléfono. Se queda aunque borres la app, y puedes recuperarlo con Importar.",
@@ -344,6 +356,8 @@ const COPY = defineCopy({
     dataTitle: "我的数据",
     dataHint:
       "所有记录只保存在这个浏览器里，不会发送到服务器。换设备时需要用导出的文件迁移。卸载应用或清除浏览器数据也会让记录消失，请不时导出一份。",
+    dataHintApp:
+      "所有记录只保存在这部手机里，不会发送到服务器。换手机时需要用导出的文件迁移。卸载应用后记录也会消失，请不时导出一份。",
     lastBackup: (date: string) => `上次导出：${date}`,
     neverBackedUp: "还没有导出过。",
     people: "亲友",
@@ -353,6 +367,7 @@ const COPY = defineCopy({
     exportFailed: "导出失败，请再试一次。",
     readFailed: "无法读取文件。请确认它是用“导出”生成的 JSON。",
     notBackup: "这不是从本应用导出的文件。现有记录保持不变。",
+    newerBackup: "这个文件来自更新版本的应用。请先更新应用再导入。现有记录保持不变。",
     imported: "已导入。",
     filePrefix: "还有几次",
     savedToPhone: "已保存到手机的“文档/몇번더”文件夹。即使删除应用也会保留，可以用“导入”恢复。",
@@ -464,6 +479,11 @@ export default function SettingsPage() {
     }
     if (!looksLikeBackup(parsed)) {
       setMessage(t.notBackup);
+      return;
+    }
+    // 1.1.0 이후 판에서 내보낸 파일을 옛 앱이 읽으면 모르는 칸을 버린 채 덮어쓴다.
+    if (Number((parsed as { version?: unknown }).version) > 1) {
+      setMessage(t.newerBackup);
       return;
     }
     const before = JSON.parse(exportState());
@@ -611,7 +631,7 @@ export default function SettingsPage() {
       <section id="backup" className="scroll-mt-4 space-y-3 py-4">
         <div>
           <p className="text-sm font-semibold text-ink-800">{t.dataTitle}</p>
-          <p className="mt-1 text-xs text-ink-400">{t.dataHint}</p>
+          <p className="mt-1 text-xs text-ink-400">{isNativeApp() ? t.dataHintApp : t.dataHint}</p>
           <p className="mt-1 text-xs text-ink-600">
             {state.settings.lastBackupAt
               ? t.lastBackup(new Date(state.settings.lastBackupAt).toLocaleDateString(locale()))

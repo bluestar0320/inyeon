@@ -156,7 +156,8 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
             }
             // 앱 파일의 사본도 지운다. 안 그러면 다시 켤 때 깨진 기록이 되살아난다(lib/nativeMirror.ts).
             await mirrorClear();
-            window.location.href = "./";
+            // 첫 화면 주소로 새로 띄운다. 앱 안 서버는 다른 주소에도 첫 화면 html을 주므로 "./"는 어긋난다.
+            window.location.href = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/`;
           }}
         >
           {t.reset}

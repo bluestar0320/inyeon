@@ -483,7 +483,8 @@ export default function FilterEditor({
       )}
 
       <div className="flex flex-wrap gap-1.5">
-        {filterPresets().map((preset) => (
+        {/* 벚꽃·눈·바다(lib/presets.ts의 1~3번)는 순간을 위한 칩이다. 사람 화면에서는 뺀다. */}
+        {filterPresets().filter((_, i) => !(hint !== "moment" && hint !== "season" && i >= 1 && i <= 3)).map((preset) => (
           <button
             key={preset.label}
             type="button"

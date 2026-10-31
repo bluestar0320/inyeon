@@ -85,6 +85,30 @@ export function leaveTo(router: { push: (href: string) => void; replace: (href: 
   else router.push(href);
 }
 
+/*
+ * 새로 추가하고 저장한 뒤 뒤로 가기로 그 추가 화면에 돌아오면, 빈 칸이 다시 떠서
+ * 같은 사람을 두 번 넣기 쉬웠다(특히 안드로이드 뒤로 가기). 저장한 추가 화면 주소를
+ * 기억해 두고, 뒤로 가기(popstate)로 다시 들어오면 목적지로 바꿔 친다.
+ * 「추가」 단추로 새로 들어오는 건 popstate가 아니라서 걸리지 않는다.
+ */
+let addedFrom: { path: string; to: string } | null = null;
+let poppedAt = 0;
+if (typeof window !== "undefined") window.addEventListener("popstate", () => (poppedAt = Date.now()));
+
+/** 새 항목을 저장하고 떠날 때. leaveTo 대신 부른다. */
+export function leaveAfterAdd(router: { push: (href: string) => void; replace: (href: string) => void }, href: string): void {
+  addedFrom = { path: window.location.pathname, to: href };
+  leaveTo(router, href);
+}
+
+/** 추가 화면이 뜰 때: 저장을 마친 화면에 뒤로 가기로 돌아온 거면 갈 곳을, 아니면 null. */
+export function returnedAfterAdd(): string | null {
+  if (!addedFrom || addedFrom.path !== window.location.pathname || Date.now() - poppedAt > 1500) return null;
+  const to = addedFrom.to;
+  addedFrom = null;
+  return to;
+}
+
 /**
  * 편집기가 쓰는 훅. changed가 true인 동안 나가기를 확인하고, 탭을 닫거나
  * 새로고침할 때 브라우저 기본 경고를 띄우고, 뒤로 가기도 한 번 받아낸다.
