@@ -198,9 +198,9 @@ export default function MomentView({ moment }: { moment: Moment }) {
 
       <div className="card">
         {/* 제목과 히어로에 이미 나온 이름을 세 번째로 쓰지 않는다. */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs font-semibold tracking-[0.1em] text-ink-400">{t.info}</p>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             {/* 보던 것의 변주를 바로 만들 수 있어야 한다. 목록으로 나갔다가 처음부터
                 다시 고르게 하면 같은 일을 두 번 시키는 것이다. */}
             <Link href={`/moments/new?from=${moment.id}`} className="btn-secondary" prefetch={false}>

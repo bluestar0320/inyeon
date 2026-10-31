@@ -99,7 +99,7 @@ export default function HealthFields({
     <details className="rounded-xl border border-ink-200 px-4 py-3">
       <summary className="cursor-pointer text-sm font-medium text-ink-800 marker:text-ink-400">
         {t.summary}
-        <span className="ml-2 text-xs font-normal text-ink-400">
+        <span className="ml-2 inline-block text-xs font-normal text-ink-400">
           {offset === 0 ? t.none : t.lookup(`${offset > 0 ? "+" : ""}${offset}`)}
         </span>
       </summary>

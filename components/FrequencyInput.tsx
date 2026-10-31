@@ -89,7 +89,7 @@ export default function FrequencyInput({
       </label>
       <div className="flex items-center gap-2">
         <select
-          className="input w-32"
+          className="input w-32 min-w-0"
           value={value.unit}
           onChange={(e) => onChange({ ...value, unit: e.target.value as FrequencyUnit })}
           aria-label={t.unitAria}
@@ -102,7 +102,7 @@ export default function FrequencyInput({
         </select>
         <NumberInput
           id={`${ids}-count`}
-          className="input w-24"
+          className="input w-24 min-w-0"
           min={0}
           max={1000}
           step="0.5"
@@ -110,7 +110,7 @@ export default function FrequencyInput({
           onChange={(count) => onChange({ ...value, count })}
           aria-label={t.countAria}
         />
-        <span className="text-sm text-ink-400">{t.times}</span>
+        <span className="shrink-0 text-sm text-ink-400">{t.times}</span>
       </div>
     </div>
   );
