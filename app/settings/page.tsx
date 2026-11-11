@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 
 import InstallButton from "@/components/InstallButton";
+import { analyticsEnabled, countingOff, setCountingOff } from "@/lib/analytics";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { todayISO } from "@/lib/format";
 import { LANGS, defineCopy, locale, tr } from "@/lib/i18n";
@@ -49,6 +50,8 @@ const COPY = defineCopy({
     notifyOn: "켜기",
     notifyOff: "끄기",
     notifyDenied: "알림이 막혀 있어요. 휴대폰 설정에서 이 앱의 알림을 허용하면 켤 수 있어요.",
+    countTitle: "방문 수 세기",
+    countHint: "어느 화면이 열렸는지만 세어서 앱을 고치는 데 씁니다. 입력한 기록은 보내지 않아요. 꺼도 모든 기능을 그대로 쓸 수 있습니다.",
     installTitle: "홈 화면에 두기",
     installHint:
       "설치하면 앱 서랍에 자기 아이콘으로 들어가고, 받아 둔 화면으로 인터넷 없이도 열립니다. 기록은 그대로 이어집니다.",
@@ -124,6 +127,8 @@ const COPY = defineCopy({
     notifyOn: "On",
     notifyOff: "Off",
     notifyDenied: "Notifications are blocked. Allow them for this app in your phone settings, then try again.",
+    countTitle: "Visit counts",
+    countHint: "We count only which screens are opened, to make the app better. Nothing you enter is sent. Everything still works if you turn this off.",
     installTitle: "Add to home screen",
     installHint:
       "Once installed, it gets its own icon in your app drawer and opens even offline. Your records carry over as they are.",
@@ -200,6 +205,8 @@ const COPY = defineCopy({
     notifyOn: "オン",
     notifyOff: "オフ",
     notifyDenied: "通知がオフになっています。端末の設定でこのアプリの通知を許可すると使えます。",
+    countTitle: "訪問数の集計",
+    countHint: "どの画面が開かれたかだけを数えて、アプリの改善に使います。入力した記録は送りません。オフにしても、すべての機能をそのまま使えます。",
     installTitle: "ホーム画面に追加",
     installHint:
       "インストールするとアプリ一覧に専用のアイコンが入り、保存済みの画面でオフラインでも開けます。記録はそのまま引き継がれます。",
@@ -275,6 +282,8 @@ const COPY = defineCopy({
     notifyOn: "Activar",
     notifyOff: "Desactivar",
     notifyDenied: "Las notificaciones están bloqueadas. Permítelas para esta app en los ajustes del teléfono y vuelve a intentarlo.",
+    countTitle: "Recuento de visitas",
+    countHint: "Solo contamos qué pantallas se abren, para mejorar la app. No se envía nada de lo que escribes. Si lo desactivas, todo sigue funcionando igual.",
     installTitle: "Añadir a la pantalla de inicio",
     installHint:
       "Al instalarla tendrá su propio icono entre tus apps y se abrirá incluso sin conexión. Tus registros se mantienen tal cual.",
@@ -351,6 +360,8 @@ const COPY = defineCopy({
     notifyOn: "开启",
     notifyOff: "关闭",
     notifyDenied: "通知被关闭了。在手机设置里允许本应用的通知后再试一次。",
+    countTitle: "访问统计",
+    countHint: "只统计打开了哪些页面，用来改进应用。你输入的记录不会发送。关闭后，所有功能照常可用。",
     installTitle: "添加到主屏幕",
     installHint: "安装后会在应用列表里有自己的图标，没有网络也能打开已保存的页面。记录会原样保留。",
     dataTitle: "我的数据",
@@ -423,6 +434,8 @@ export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [notifyBlocked, setNotifyBlocked] = useState(false);
+  // 기록이 아니라 기기 설정이라 localStorage에서 바로 읽는다. 이 화면은 hydrated 뒤에만 그려진다.
+  const [counting, setCounting] = useState(() => typeof window !== "undefined" && !countingOff());
   const [confirmingClear, setConfirmingClear] = useState(false);
   const t = tr(COPY);
 
@@ -740,6 +753,34 @@ export default function SettingsPage() {
             })}
           </div>
           {notifyBlocked && <p className="text-xs leading-relaxed text-ink-600">{t.notifyDenied}</p>}
+        </section>
+      )}
+      {/* 앱에는 브라우저의 「추적 안 함」이 없다. 처리방침의 거부 방법이 실제로 되게 여기 둔다(lib/analytics.ts). */}
+      {analyticsEnabled() && (
+        <section className="space-y-3 py-4">
+          <div>
+            <p className="text-sm font-semibold text-ink-800">{t.countTitle}</p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-400">{t.countHint}</p>
+          </div>
+          <div className="flex gap-1.5" role="group" aria-label={t.countTitle}>
+            {[
+              { on: true, label: t.notifyOn },
+              { on: false, label: t.notifyOff },
+            ].map((option) => (
+              <button
+                key={String(option.on)}
+                type="button"
+                aria-pressed={counting === option.on}
+                className={`chip ${counting === option.on ? "chip-active" : ""}`}
+                onClick={() => {
+                  setCountingOff(!option.on);
+                  setCounting(option.on);
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </section>
       )}
       {/* 설치한 앱 안에서 「홈 화면에 설치」는 뜻이 없다. */}

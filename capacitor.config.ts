@@ -17,6 +17,12 @@ const config: CapacitorConfig = {
     // 파일을 APK 안에서 읽으므로 http가 아닌 https 스킴으로 띄운다.
     // localStorage가 스킴별로 나뉘므로 이 값을 바꾸면 기존 기록이 안 보인다.
     allowMixedContent: false,
+    // Next 16이 만드는 스크립트는 Chrome 111 이상을 바란다. 그보다 낡은 웹뷰에서는 빈 화면 대신
+    // 업데이트 안내(public/webview-old.html)를 띄운다.
+    minWebViewVersion: 111,
+  },
+  server: {
+    errorPath: "webview-old.html",
   },
   plugins: {
     /*

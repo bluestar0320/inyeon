@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  설치한 앱이 화면을 띄우지 못할 때 Capacitor가 대신 여는 쪽(capacitor.config.ts의 server.errorPath).
+  주로 안드로이드 웹뷰가 너무 오래됐을 때다(minWebViewVersion). 앱 스크립트가 못 돌 수도 있으니 이 파일은 스크립트 없이 쓴다.
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>몇번더</title>
+<style>
+  body { margin: 0; padding: 48px 24px; background: #f6efe3; color: #2b2520; font-family: system-ui, sans-serif; line-height: 1.6; }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  p { font-size: 15px; margin: 0 0 12px; }
+  hr { border: 0; border-top: 1px solid #d9cdb8; margin: 28px 0; }
+  @media (prefers-color-scheme: dark) { body { background: #1c1612; color: #efe6d8; } hr { border-top-color: #4a3f35; } }
+</style>
+</head>
+<body>
+  <h1>화면을 열지 못했어요</h1>
+  <p>휴대폰의 「Android System WebView」와 「Chrome」이 오래되어 이 앱을 띄울 수 없습니다.</p>
+  <p>Play 스토어에서 두 앱을 업데이트한 뒤 몇번더를 다시 열어 주세요. 적어 둔 기록은 그대로 남아 있습니다.</p>
+  <hr>
+  <h1 lang="en">This screen couldn't open</h1>
+  <p lang="en">Your phone's Android System WebView and Chrome are too old to run this app.</p>
+  <p lang="en">Update both in the Play Store, then open How Many More again. Your records are still there.</p>
+</body>
+</html>

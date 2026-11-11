@@ -14,6 +14,29 @@ export const GOATCOUNTER_CODE = "bluecode0910";
 
 export const analyticsEnabled = (code: string = GOATCOUNTER_CODE): boolean => code !== "";
 
+/*
+ * 설정의 「방문 수 세기」를 끈 기기. 앱(WebView)에는 브라우저의 「추적 안 함」이 없어서 따로 둔다.
+ * 기록과 다른 키에 둔다 — 전체 삭제나 백업 불러오기가 이 선택을 되돌리지 않게.
+ */
+const OFF_KEY = "inyeon.noCount";
+
+export function countingOff(): boolean {
+  try {
+    return window.localStorage.getItem(OFF_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function setCountingOff(off: boolean): void {
+  try {
+    if (off) window.localStorage.setItem(OFF_KEY, "1");
+    else window.localStorage.removeItem(OFF_KEY);
+  } catch {
+    // 저장이 막힌 환경이면 이번 화면에서만 반영된다.
+  }
+}
+
 export function countUrl(
   code: string,
   hit: { path?: string; event?: string; referrer?: string; self?: string },
@@ -43,7 +66,7 @@ export function count(hit: { path?: string; event?: string }): void {
   if (typeof window === "undefined" || !analyticsEnabled()) return;
   // 브라우저에 "추적하지 마세요"를 켠 사람은 세지 않는다.
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
-  if (nav.globalPrivacyControl || navigator.doNotTrack === "1") return;
+  if (nav.globalPrivacyControl || navigator.doNotTrack === "1" || countingOff()) return;
   // 웹과 앱이 한 대시보드에 섞이면 둘 다 읽을 수 없다. 앱에서 온 것은 이름 앞에 app-을 붙인다.
   if (window.Capacitor?.isNativePlatform?.()) hit = hit.event ? { event: `app-${hit.event}` } : { path: `/app${hit.path ?? "/"}` };
   const url = countUrl(GOATCOUNTER_CODE, {

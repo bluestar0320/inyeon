@@ -57,7 +57,7 @@ const COPY = defineCopy({
   en: {
     greeting: (name) => `Dear ${name},`,
     open: (_name, n) => `How have you been? I counted the days we spent together this past year — ${n} of them.`,
-    month: (m, lastYear) => `${lastYear ? "Last" : "In"} ${new Date(2000, m - 1, 1).toLocaleDateString("en-US", { month: "long" })},`,
+    month: (m, lastYear) => `${lastYear ? "Last" : "In"} ${new Date(2000, m - 1, 1).toLocaleDateString("en-US", { month: "long" })}:`,
     saying: (s) => `You always say, “${endSentence(s, false)}” I keep it with me.`,
     close: () => "I’m glad I wrote them down. I’ll keep adding a line for the days ahead. Take care.",
     from: (me) => `With love, ${me}`,
@@ -73,7 +73,7 @@ const COPY = defineCopy({
   es: {
     greeting: (name) => `Para ${name}:`,
     open: (_name, n) => `¿Cómo estás? Conté los días que pasamos juntos este último año: fueron ${n}.`,
-    month: (m, lastYear) => `${lastYear ? "El pasado" : "En"} ${new Date(2000, m - 1, 1).toLocaleDateString("es", { month: "long" })},`,
+    month: (m, lastYear) => `${lastYear ? "El pasado" : "En"} ${new Date(2000, m - 1, 1).toLocaleDateString("es", { month: "long" })}:`,
     saying: (s) => `Siempre me dices: «${endSentence(s, false)}» Lo llevo conmigo.`,
     close: () => "Me alegra haberlos escrito. Seguiré sumando una línea por cada día que venga. Cuídate mucho.",
     from: (me) => `Con cariño, ${me}`,
@@ -116,6 +116,8 @@ export function memoryLetter(
   const cjk = CJK.test(locale());
 
   // 같은 달에 여러 줄이면 이음말은 처음 한 번만.
+  // 영어·스페인어는 이음말 뒤를 쌍점으로 끊는다. 쉼표로 이으면 사용자가 대문자로 시작한 한 줄이
+  // "In April, She…"가 되는데, 첫 글자를 내리면 "Mom" 같은 이름까지 망가진다.
   let prev = "";
   const body = memories.map((m) => {
     const key = m.date.slice(0, 7);

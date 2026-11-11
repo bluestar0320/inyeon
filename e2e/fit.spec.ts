@@ -5,7 +5,7 @@ import { STORAGE_KEY, clearState } from "./helpers";
 /*
  * 갤럭시 화면 폭·글씨 크기마다 글자가 옆으로 밀려나거나 서로 겹치지 않는지 본다.
  *
- * 폭(dp): 344 폴드 커버, 360 S24·보급형 A, 384 A 일부, 412 울트라·플러스.
+ * 폭(dp): 344 폴드 커버, 360 S24·보급형 A, 384 A 일부, 412 울트라·플러스, 673 폴드 안쪽, 915 눕힌 폰.
  * 높이는 짧은 쪽(옛 보급형 360×640)도 하나 넣는다.
  * 글씨: 앱 설정 「아주 크게」(zoom 1.3)와, 폰 설정 글씨 크기 130%.
  * 안드로이드 웹뷰는 폰 글씨 크기만큼 글자만 키우고 상자는 그대로 둔다(textZoom).
@@ -18,6 +18,9 @@ const SIZES = [
   { w: 360, h: 780 },
   { w: 384, h: 854 },
   { w: 412, h: 915 },
+  // 폴드 펼친 안쪽 화면, 그리고 폰을 눕혔을 때(높이가 아주 낮다).
+  { w: 673, h: 841 },
+  { w: 915, h: 412 },
 ];
 const SCALES = ["normal", "xlarge", "font130"] as const;
 
@@ -115,7 +118,7 @@ async function systemFont(page: Page, k: number) {
 for (const lang of ["ko", "en"])
   for (const scale of SCALES)
     test(`${lang} ${scale}: 갤럭시 폭마다 글자가 넘치거나 겹치지 않는다`, async ({ page }) => {
-      test.setTimeout(240_000);
+      test.setTimeout(360_000);
       await clearState(page);
       await page.evaluate(({ key, v }) => localStorage.setItem(key, JSON.stringify(v)),
         { key: STORAGE_KEY, v: state(lang, scale === "xlarge" ? "xlarge" : undefined) });

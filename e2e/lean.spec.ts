@@ -22,7 +22,7 @@ test.describe("처음 저장하는 사람", () => {
     await page.getByLabel("내 나이").fill("30");
     const save = page.getByRole("button", { name: "저장하기" });
     await expect(save).toBeDisabled();
-    await page.getByLabel(/개인정보 수집·이용에 동의합니다/).check();
+    await page.getByLabel(/개인정보처리방침을 확인했습니다/).check();
     await expect(save).toBeEnabled();
     await page.getByRole("link", { name: "보기" }).click();
     await page.waitForURL(/\/privacy/);
@@ -32,10 +32,10 @@ test.describe("처음 저장하는 사람", () => {
   test("한 번 동의하면 인연을 추가할 때 다시 묻지 않는다", async ({ page }) => {
     await page.goto("/setup");
     await page.getByLabel("내 나이").fill("30");
-    await page.getByLabel(/개인정보 수집·이용에 동의합니다/).check();
+    await page.getByLabel(/개인정보처리방침을 확인했습니다/).check();
     await page.getByRole("button", { name: "저장하기" }).click();
     await page.waitForURL(/\/people\/new/);
-    await expect(page.getByLabel(/개인정보 수집·이용에 동의합니다/)).toHaveCount(0);
+    await expect(page.getByLabel(/개인정보처리방침을 확인했습니다/)).toHaveCount(0);
     await page.getByLabel("이름").fill("엄마");
     await page.getByLabel("나이", { exact: true }).fill("60");
     await expect(page.getByRole("button", { name: "추가하기" })).toBeEnabled();
@@ -183,4 +183,29 @@ test("이름을 비워도 추가할 수 있고, 사람 화면에는 벚꽃·눈 
   await expect(page.getByRole("button", { name: "+ 벚꽃이 사라짐" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "+ 특정 기간만" })).toBeVisible();
   await expect(page.getByRole("button", { name: "추가하기" })).toBeEnabled();
+});
+
+test("설정에서 방문 수 세기를 끄면 집계 요청이 나가지 않는다", async ({ page }) => {
+  // 실제 GoatCounter로 나가지 않게 받아서 끝낸다. 센 횟수만 본다.
+  let counted = 0;
+  await page.route("https://*.goatcounter.com/**", (route) => {
+    counted++;
+    return route.fulfill({ status: 204 });
+  });
+  await setUpProfile(page, 38);
+  await page.goto("/settings");
+  const group = page.getByRole("group", { name: "방문 수 세기" });
+  await group.getByRole("button", { name: "끄기" }).click();
+  await expect(group.getByRole("button", { name: "끄기" })).toHaveAttribute("aria-pressed", "true");
+  counted = 0;
+  for (const path of ["/", "/people", "/moments", "/settings"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+  }
+  expect(counted).toBe(0);
+  // 다시 켜면 센다 — 끄기가 아예 고장 나서 0인 게 아님을 확인.
+  await page.getByRole("group", { name: "방문 수 세기" }).getByRole("button", { name: "켜기" }).click();
+  await page.goto("/people");
+  await page.waitForLoadState("networkidle");
+  expect(counted).toBeGreaterThan(0);
 });

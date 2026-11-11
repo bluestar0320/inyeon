@@ -13,13 +13,15 @@ import { defineCopy, tr } from "@/lib/i18n";
  * 전체 삭제나 백업 불러오기가 동의를 건드리지 않게.
  */
 const CONSENT_KEY = "inyeon.consent";
+/* 어느 판의 처리방침을 보고 체크했는지. 방침을 크게 고치면 바꾼다(app/privacy/page.tsx의 시행일). */
+const POLICY_VERSION = "2026-11-12";
 
 const COPY = defineCopy({
-  ko: { label: "개인정보 수집·이용에 동의합니다", required: "(필수)", view: "보기" },
-  en: { label: "I agree to how my information is used", required: "(required)", view: "View" },
-  ja: { label: "個人情報の収集・利用に同意します", required: "(必須)", view: "見る" },
-  es: { label: "Acepto el uso de mis datos", required: "(obligatorio)", view: "Ver" },
-  zh: { label: "我同意收集和使用个人信息", required: "(必填)", view: "查看" },
+  ko: { label: "개인정보처리방침을 확인했습니다", required: "(필수)", view: "보기" },
+  en: { label: "I've read the Privacy Policy", required: "(required)", view: "View" },
+  ja: { label: "プライバシーポリシーを確認しました", required: "(必須)", view: "見る" },
+  es: { label: "He leído la política de privacidad", required: "(obligatorio)", view: "Ver" },
+  zh: { label: "我已阅读隐私政策", required: "(必填)", view: "查看" },
 });
 
 /** 동의가 필요한지(아직 한 번도 안 했는지)와 체크 상태. 저장할 때 commit()을 부른다. */
@@ -42,7 +44,7 @@ export function useConsent() {
     commit() {
       if (!needed) return;
       try {
-        window.localStorage.setItem(CONSENT_KEY, new Date().toISOString());
+        window.localStorage.setItem(CONSENT_KEY, `${POLICY_VERSION} ${new Date().toISOString()}`);
       } catch {
         // 저장이 막힌 환경이면 다음에 한 번 더 묻는다. 막히지는 않는다.
       }

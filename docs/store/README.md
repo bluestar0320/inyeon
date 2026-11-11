@@ -100,6 +100,11 @@ Life expectancy is a statistical estimate from the UN World Population Prospects
 | 5 | 4-moments | 해마다 돌아오는 순간(해외여행, 벚꽃) |
 | 6 | 6-number-dark | 어두운 화면의 숫자와 이야기(퍼센트 문장은 화면 밖) |
 
+### App Store 스크린샷 (iPhone 6.9형)
+
+`screens-ios/ko`, `screens-ios/en`, 1320×2868 JPEG 6장씩(2026-11-12). 순서와 화면은 위 Play 표와 같다. 6.9형 한 벌만 올리면 App Store가 작은 아이폰 크기로 줄여 쓴다.
+다시 찍으려면: 예시 기록을 localStorage에 넣고 440×956, 배율 3으로 찍는다(집계는 끈 상태로).
+
 ### 그래픽 이미지
 
 `feature-ko.jpg`, `feature-en.jpg`(1024×500). 크림색 바탕에 명조 두 줄과 앱 아이콘. AI로 만든 사진은 상업 이용 조건을 확인하기 전까지 쓰지 않는다.
@@ -115,7 +120,12 @@ Life expectancy is a statistical estimate from the UN World Population Prospects
 | 개인정보처리방침 URL | https://bluestar0320.github.io/inyeon/privacy/ |
 | 광고 포함 | 아니요 |
 | 앱 내 구매 | 없음 |
-| 대상 연령 | 18세 이상 (죽음·남은 시간을 다루는 앱이라 아동 대상 정책을 피한다) |
+| 콘텐츠 등급 | 전체이용가 (IARC 설문 결과. 사용자 결정 2026-11-12) |
+| Play 대상 연령층 | 16세 이상만 체크(16~17, 18+). 13세 미만을 넣으면 가족 정책이 붙고, 만 14세 미만 법정대리인 규정과도 겹친다. 다운로드 나이를 막는 설정은 아니다 |
+| App Store 연령 등급 | 설문대로(4+ 예상). 「어린이」 카테고리는 고르지 않는다 |
+| 배포 국가 | Play: 전체. App Store: 중국 본토만 끈다(ICP 번호 필요). 홍콩·대만은 그대로 |
+| EU 판매자(DSA) 신고 | 1.0.0은 무료라 「판매자 아님」. 1.1.0 결제를 시작하면 판매자로 바꾸고 주소·전화·이메일이 EU 스토어에 공개된다 → 그때 공개용 주소를 정하거나 EU를 뺀다 |
+| 판매자 표시 이름 | 블루큐 스튜디오 / Bluekkyu Studio. App Store 개인 계정은 실명이 판매자로 뜬다 |
 
 ---
 

@@ -162,6 +162,9 @@ jobs:
           echo "AAB: $AAB_SHA"
           test "$EXPECTED" = "$AAB_SHA"
           rm -f "$RUNNER_TEMP/release.p12"
+          # Play는 안드로이드 15+ 대상 앱의 네이티브 라이브러리(.so)에 16KB 페이지 정렬을 요구한다.
+          # 넣은 게 없으면 해당 없음. 생기면 여기서 보인다.
+          echo "네이티브 라이브러리:"; unzip -l "$APK" | grep -E ' lib/.*\.so$' || echo "없음"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -170,3 +173,49 @@ jobs:
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
+
+  # 안드로이드 판마다 실제로 깔고 켜 본다. 에뮬레이터 기본 이미지는 웹뷰가 오래된 채라
+  # 낮은 판에서는 「웹뷰를 업데이트해 주세요」 화면(public/webview-old.html)이 떠야 맞다.
+  # 실제 갤럭시는 Play가 웹뷰를 올려 주므로, 높은 판에서 앱 화면이 뜨는지가 본 확인이다.
+  devices:
+    name: 에뮬레이터 실행 (API ${{ matrix.api }})
+    needs: apk
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [24, 29, 33, 34, 35]
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: inyeon-apk
+          path: build
+
+      - name: KVM 켜기
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            mkdir -p shots
+            adb install -r "$(find build -name app-release.apk | head -1)"
+            adb shell am start -n app.inyeon.counter/.MainActivity
+            sleep 25
+            adb exec-out screencap -p > shots/api-${{ matrix.api }}.png
+            adb shell dumpsys package com.google.android.webview | grep -m1 versionName > shots/api-${{ matrix.api }}-webview.txt || true
+            cat shots/api-${{ matrix.api }}-webview.txt
+            adb shell pidof app.inyeon.counter
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: shots-api-${{ matrix.api }}
+          path: shots
+          retention-days: 14

@@ -50,6 +50,10 @@ jobs:
           # 내보낸 백업 파일을 「파일」 앱에서 볼 수 있게.
           /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" "$P"
           /usr/libexec/PlistBuddy -c "Add :LSSupportsOpeningDocumentsInPlace bool true" "$P"
+          # Next 16이 만드는 스크립트는 Safari 16.4 이상을 바란다. iOS 웹뷰는 iOS 판과 같이 가므로
+          # 그보다 낮은 iPhone에는 아예 설치되지 않게 한다(템플릿 기본은 15.0 — 빈 화면이 뜬다).
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 16.4;/g' ios/App/App.xcodeproj/project.pbxproj
+          ! grep -q 'IPHONEOS_DEPLOYMENT_TARGET = 15' ios/App/App.xcodeproj/project.pbxproj
 
       - name: 시뮬레이터용 빌드
         run: |
