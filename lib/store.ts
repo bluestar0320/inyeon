@@ -249,6 +249,10 @@ function repairSettings(raw: unknown): Settings {
     language: oneOf(value.language, LANGS.map((lang) => lang.value), undefined),
     lastBackupAt: text(value.lastBackupAt),
     birthdayNotify: value.birthdayNotify === false ? false : undefined,
+    // 불러온 파일의 값이다. id 꼴의 글자만, 개수도 묶어 둔다.
+    peopleOrder: Array.isArray(value.peopleOrder)
+      ? value.peopleOrder.filter((v): v is string => typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v)).slice(0, 1000)
+      : undefined,
   };
 }
 

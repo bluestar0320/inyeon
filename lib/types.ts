@@ -219,6 +219,8 @@ export interface Settings {
   lastBackupAt?: string;
   /** APK 생일 알림(7일 전·당일)을 끈 사람만 false. 없으면 켜져 있다 — 생일은 꼭 챙긴다. */
   birthdayNotify?: boolean;
+  /** 인연 목록의 「내 순서」(id 목록). 있으면 홈 사진 더미도 이 순서다(lib/order.ts). */
+  peopleOrder?: string[];
 }
 
 export interface AppState {

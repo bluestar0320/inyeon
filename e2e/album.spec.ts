@@ -66,8 +66,9 @@ test.describe("움직임 줄이기", () => {
   test("넘길 때 부드러운 스크롤 없이 바로 간다", async ({ page }) => {
     const stack = await threePeople(page);
     await stack.getByRole("button", { name: "다음" }).click();
+    // 맨 앞에 마지막 장을 하나 덧붙여 두므로 둘째 장은 2번 자리다.
     const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-    expect(at).toBe(1);
+    expect(at).toBe(2);
   });
 });
 
@@ -104,3 +105,28 @@ test("상세 화면에서 이름을 화면 낭독기가 두 번 읽지 않는다
   expect(bare, snapshot).toEqual([]);
 });
 
+
+test("손가락으로 마지막 장을 넘겨 밀면 첫 장으로 이어진다", async ({ page }) => {
+  const stack = await threePeople(page);
+  const track = stack.locator("div.snap-x");
+  // 0: 덧붙인 마지막 장 | 1~3: 진짜 장 | 4: 덧붙인 첫 장. 4번 자리까지 밀어 본다.
+  await track.evaluate((el) => el.scrollTo({ left: 4 * (el.firstElementChild as HTMLElement).offsetWidth }));
+  await expect(stack.getByText("1 / 3")).toBeVisible();
+  await page.waitForTimeout(400);
+  const at = await track.evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
+  expect(Math.round(at)).toBe(1);
+});
+
+test("인연 목록에서 내 순서를 정하면 홈 사진 더미도 그 순서로 시작한다", async ({ page }) => {
+  await threePeople(page);
+  await page.goto("/people");
+  await page.getByRole("button", { name: "내 순서" }).click();
+  // 넣은 순서(엄마·할머니·아빠)에서 아빠를 맨 위로.
+  await page.getByRole("button", { name: "아빠 위로" }).click();
+  await page.getByRole("button", { name: "아빠 위로" }).click();
+  await expect(page.locator("a.card").first()).toContainText("아빠");
+  await page.goto("/");
+  const stack = page.getByRole("region", { name: "인연" });
+  await expect(stack.getByText("1 / 3")).toBeVisible();
+  await expect(stack.getByRole("link").first()).toContainText("아빠");
+});

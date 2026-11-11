@@ -30,6 +30,7 @@ import {
 } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import { memoryLetter } from "@/lib/memoryLetter";
+import { inOrder } from "@/lib/order";
 import { imageFor } from "@/lib/photos";
 import { relationTag } from "@/lib/story";
 import { useAppState } from "@/lib/store";
@@ -181,13 +182,14 @@ export default function HomePage() {
   const copy = copyFor(state.settings.tone);
   const profile = state.profile;
 
-  const people = useMemo(
-    () =>
-      state.people
-        .map((person) => ({ person, result: computeRelationship(person, profile) }))
-        .sort((a, b) => a.result.total - b.result.total),
-    [state.people, profile],
-  );
+  // 인연 목록에서 「내 순서」를 정했으면 그 순서, 아니면 남은 만남이 적은 사람부터.
+  const order = state.settings.peopleOrder;
+  const people = useMemo(() => {
+    const rows = state.people.map((person) => ({ person, result: computeRelationship(person, profile) }));
+    return order?.length
+      ? inOrder(rows, order, ({ person }) => person.id)
+      : rows.sort((a, b) => a.result.total - b.result.total);
+  }, [state.people, profile, order]);
 
   const moments = useMemo(
     () =>

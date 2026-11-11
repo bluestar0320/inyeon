@@ -148,28 +148,45 @@ test("셋째 장을 보다가 화면을 돌려도 같은 장에 머문다", asyn
   await page.waitForTimeout(400);
   await expect(stack.getByText("3 / 3")).toBeVisible();
   const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-  expect(Math.abs(at - 2)).toBeLessThan(0.05);
+  // 셋째 장은 덧붙인 장 하나 뒤라 3번 자리다.
+  expect(Math.abs(at - 3)).toBeLessThan(0.05);
   await page.setViewportSize(size);
 });
 
-test("다음을 열 번 연타해도 끝에서 멈추고 번호가 맞다", async ({ page }) => {
+test("끝에서 다음을 누르면 첫 장으로, 첫 장에서 이전을 누르면 끝 장으로 이어진다", async ({ page }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 }), person("c", "셋", { ageYears: 60 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
   const next = stack.getByRole("button", { name: "다음" });
-  // 끝에 닿은 단추는 aria-disabled라 Playwright가 기다리기만 한다. 사람은 그래도 누른다.
-  for (let i = 0; i < 10; i++) await next.click({ force: true });
-  await expect(stack.getByText("3 / 3")).toBeVisible();
   const prev = stack.getByRole("button", { name: "이전" });
-  for (let i = 0; i < 10; i++) await prev.click({ force: true });
+  await prev.click();
+  await expect(stack.getByText("3 / 3")).toBeVisible();
+  await next.click();
   await expect(stack.getByText("1 / 3")).toBeVisible();
+  // 이어 붙인 자리에서 멈춘 채로 남지 않고 진짜 장으로 옮겨져 있어야 다음 넘기기도 이어진다.
+  await page.waitForTimeout(400);
+  const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
+  expect(Math.round(at)).toBe(1);
+  await next.click();
+  await expect(stack.getByText("2 / 3")).toBeVisible();
+});
+
+test("다음을 열 번 연타해도 번호가 깨지지 않는다", async ({ page }) => {
+  await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 }), person("c", "셋", { ageYears: 60 })] });
+  await page.goto("/");
+  const stack = page.getByRole("region", { name: "인연" });
+  const next = stack.getByRole("button", { name: "다음" });
+  for (let i = 0; i < 10; i++) await next.click();
+  await page.waitForTimeout(600);
+  await expect(stack.getByText(/^[123] \/ 3$/)).toBeVisible();
 });
 
 test("손가락으로 밀어도 번호가 따라온다", async ({ page }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
-  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: (el.firstElementChild as HTMLElement).offsetWidth }));
+  // 맨 앞에 덧붙인 장이 하나 있어 둘째 장은 2번 자리다.
+  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: 2 * (el.firstElementChild as HTMLElement).offsetWidth }));
   await expect(stack.getByText("2 / 2")).toBeVisible();
 });
 

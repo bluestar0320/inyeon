@@ -17,14 +17,15 @@ import {
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { imageFor } from "@/lib/photos";
+import { inOrder, moved } from "@/lib/order";
 import { relationTag } from "@/lib/story";
-import { matches, useAppState } from "@/lib/store";
+import { matches, useActions, useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
 import type { Person } from "@/lib/types";
 
-type Sort = "fewest" | "soonest" | "name" | "added";
+type Sort = "fewest" | "soonest" | "name" | "added" | "mine";
 
-const SORT_KEYS: Sort[] = ["fewest", "soonest", "name", "added"];
+const SORT_KEYS: Sort[] = ["fewest", "soonest", "name", "added", "mine"];
 
 const COPY = defineCopy({
   ko: {
@@ -33,12 +34,14 @@ const COPY = defineCopy({
       soonest: "자주 만나는 순",
       name: "이름순",
       added: "최근 추가순",
+      mine: "내 순서",
     } as Record<Sort, string>,
     sortHint: {
       fewest: "남은 만남이 적은 순서입니다.",
       soonest: "자주 만나는 순서입니다.",
       name: "이름순입니다.",
       added: "최근에 추가한 순서입니다.",
+      mine: "내가 정한 순서입니다. 홈 사진도 이 순서로 넘어갑니다.",
     } as Record<Sort, string>,
     untilMyAge: (age: number) => `내 ${age}세까지`,
     forYears: (years: number) => `${years}년간`,
@@ -57,6 +60,8 @@ const COPY = defineCopy({
     growth: "성장 캘린더",
     times: "번",
     timesLeft: "번 남음",
+    up: (name: string) => `${name} 위로`,
+    down: (name: string) => `${name} 아래로`,
     together: (years: string) => `함께 ${years}`,
     totalDays: (days: string) => ` · 모두 합쳐 ${days}`,
   },
@@ -66,12 +71,14 @@ const COPY = defineCopy({
       soonest: "Most often",
       name: "Name",
       added: "Recently added",
+      mine: "My order",
     },
     sortHint: {
       fewest: "Sorted by fewest meetings left.",
       soonest: "Sorted by how often you meet.",
       name: "Sorted by name.",
       added: "Sorted by most recently added.",
+      mine: "In your own order. Home photos follow it too.",
     },
     untilMyAge: (age) => `until I'm ${age}`,
     forYears: (years) => `for ${years} ${years === 1 ? "year" : "years"}`,
@@ -90,6 +97,8 @@ const COPY = defineCopy({
     growth: "Growth calendar",
     times: "times",
     timesLeft: "times left",
+    up: (name: string) => `Move ${name} up`,
+    down: (name: string) => `Move ${name} down`,
     together: (years) => `${years} together`,
     totalDays: (days) => ` · ${days} in all`,
   },
@@ -99,12 +108,14 @@ const COPY = defineCopy({
       soonest: "よく会う順",
       name: "名前順",
       added: "追加が新しい順",
+      mine: "自分の順",
     },
     sortHint: {
       fewest: "あと会える回数が少ない順です。",
       soonest: "よく会う順です。",
       name: "名前順です。",
       added: "最近追加した順です。",
+      mine: "自分で決めた順です。ホームの写真もこの順に並びます。",
     },
     untilMyAge: (age) => `自分が${age}歳まで`,
     forYears: (years) => `${years}年間`,
@@ -123,6 +134,8 @@ const COPY = defineCopy({
     growth: "成長カレンダー",
     times: "回",
     timesLeft: "回",
+    up: (name: string) => `${name}を上へ`,
+    down: (name: string) => `${name}を下へ`,
     together: (years) => `一緒に ${years}`,
     totalDays: (days) => ` · 合わせて ${days}`,
   },
@@ -132,12 +145,14 @@ const COPY = defineCopy({
       soonest: "Más frecuentes",
       name: "Nombre",
       added: "Añadidos recientes",
+      mine: "Mi orden",
     },
     sortHint: {
       fewest: "Ordenado por menos encuentros restantes.",
       soonest: "Ordenado por frecuencia de encuentros.",
       name: "Ordenado por nombre.",
       added: "Ordenado por los añadidos más recientes.",
+      mine: "En tu propio orden. Las fotos de inicio también lo siguen.",
     },
     untilMyAge: (age) => `hasta que yo tenga ${age}`,
     forYears: (years) => `durante ${years} ${years === 1 ? "año" : "años"}`,
@@ -156,6 +171,8 @@ const COPY = defineCopy({
     growth: "Calendario de crecimiento",
     times: "veces",
     timesLeft: "veces más",
+    up: (name: string) => `Subir a ${name}`,
+    down: (name: string) => `Bajar a ${name}`,
     together: (years) => `${years} juntos`,
     totalDays: (days) => ` · ${days} en total`,
   },
@@ -165,12 +182,14 @@ const COPY = defineCopy({
       soonest: "见面最频繁",
       name: "按名字",
       added: "最近添加",
+      mine: "我的顺序",
     },
     sortHint: {
       fewest: "按剩余相见次数从少到多排列。",
       soonest: "按见面频率排列。",
       name: "按名字排列。",
       added: "按最近添加排列。",
+      mine: "按你定的顺序排列。首页照片也按这个顺序。",
     },
     untilMyAge: (age) => `到我${age}岁为止`,
     forYears: (years) => `${years}年内`,
@@ -189,6 +208,8 @@ const COPY = defineCopy({
     growth: "成长日历",
     times: "次",
     timesLeft: "次",
+    up: (name: string) => `把${name}上移`,
+    down: (name: string) => `把${name}下移`,
     together: (years) => `一起 ${years}`,
     totalDays: (days) => ` · 共 ${days}`,
   },
@@ -206,6 +227,7 @@ export default function PeoplePage() {
   const t = tr(COPY);
   const sorts: SortOption<Sort>[] = SORT_KEYS.map((key) => ({ key, label: t.sort[key] }));
   const { state, hydrated } = useAppState();
+  const { saveSettings } = useActions();
   const copy = copyFor(state.settings.tone);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("fewest");
@@ -219,6 +241,13 @@ export default function PeoplePage() {
     const found = all.filter(({ person }) =>
       matches(query, [person.name, person.relation, person.note]),
     );
+    // 「내 순서」: 정한 순서, 정한 뒤에 넣은 사람은 넣은 순서대로 뒤에.
+    const byAdded = [...all].sort((a, b) => a.person.createdAt.localeCompare(b.person.createdAt));
+    const mine = inOrder(byAdded, state.settings.peopleOrder, ({ person }) => person.id).map(({ person }) => person.id);
+    if (sort === "mine") {
+      const at = new Map(mine.map((id, i) => [id, i]));
+      return { all, mine, sorted: [...found].sort((a, b) => at.get(a.person.id)! - at.get(b.person.id)!) };
+    }
     const sorted = [...found];
     sorted.sort((a, b) => {
       if (sort === "name") return a.person.name.localeCompare(b.person.name, locale());
@@ -231,8 +260,11 @@ export default function PeoplePage() {
       }
       return a.result.total - b.result.total;
     });
-    return { all, sorted };
-  }, [state.people, state.profile, query, sort]);
+    return { all, mine, sorted };
+  }, [state.people, state.profile, state.settings.peopleOrder, query, sort]);
+  // 찾는 중에는 옮기지 않는다. 걸러진 목록에서 한 칸이 전체 순서의 어디인지 알 수 없다.
+  const reordering = sort === "mine" && !query.trim();
+  const move = (id: string, step: -1 | 1) => saveSettings({ peopleOrder: moved(rows.mine, rows.mine.indexOf(id), step) });
 
   if (!hydrated) {
     return <p className="py-12 text-center text-sm text-ink-400">{t.loading}</p>;
@@ -305,49 +337,61 @@ export default function PeoplePage() {
         <CompareBars rows={rows.sorted} />
       ) : (
         <div className="space-y-2">
-          {rows.sorted.map(({ person, result }) => (
-            <Link
-              key={person.id}
-              href={`/people/detail?id=${person.id}`}
-              className="card flex items-center justify-between transition hover:border-ink-400" prefetch={false}>
-              <span className="flex min-w-0 items-center gap-3">
-                <Polaroid src={imageFor(person)} size="sm" />
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-ink-800 [overflow-wrap:break-word]">
-                    {person.name}
-                    {/* 기본값이 아닌 설정은 목록에서도 보여야 한다. 상세로 들어가야만
-                        알 수 있으면 켜 둔 사실 자체를 잊는다. */}
-                    {person.growth && (
-                      <span className="ml-1.5 align-middle text-[11px] font-normal text-accent-500">
-                        {t.growth}
-                      </span>
+          {rows.sorted.map(({ person, result }, i) => (
+            <div key={person.id}>
+              <Link
+                href={`/people/detail?id=${person.id}`}
+                className="card flex items-center justify-between transition hover:border-ink-400" prefetch={false}>
+                <span className="flex min-w-0 items-center gap-3">
+                  <Polaroid src={imageFor(person)} size="sm" />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-ink-800 [overflow-wrap:break-word]">
+                      {person.name}
+                      {/* 기본값이 아닌 설정은 목록에서도 보여야 한다. 상세로 들어가야만
+                          알 수 있으면 켜 둔 사실 자체를 잊는다. */}
+                      {person.growth && (
+                        <span className="ml-1.5 align-middle text-[11px] font-normal text-accent-500">
+                          {t.growth}
+                        </span>
+                      )}
+                    </span>
+                    {/*
+                      같은 이름이 여럿일 수 있다(어머니 둘, 아버지 여럿). 관계와 나이가 있어야
+                      목록에서 서로를 구분한다.
+                    */}
+                    <span className="block text-xs text-ink-400">
+                      {[relationTag(person.name, person.relation), formatAge(resolveAge(person))]
+                        .filter((part) => part && part !== "-")
+                        .map((part) => `${part} · `)
+                        .join("")}
+                      {formatFrequency(person.frequency)}
+                      {result.intervalDays !== null && ` · ${formatInterval(result.intervalDays)}`}
+                      {horizonLabel(person.horizon) && ` · ${horizonLabel(person.horizon)}`}
+                    </span>
+                    {person.note && (
+                      <span className="mt-0.5 block truncate text-xs text-ink-400">{person.note}</span>
                     )}
                   </span>
-                  {/*
-                    같은 이름이 여럿일 수 있다(어머니 둘, 아버지 여럿). 관계와 나이가 있어야
-                    목록에서 서로를 구분한다.
-                  */}
-                  <span className="block text-xs text-ink-400">
-                    {[relationTag(person.name, person.relation), formatAge(resolveAge(person))]
-                      .filter((part) => part && part !== "-")
-                      .map((part) => `${part} · `)
-                      .join("")}
-                    {formatFrequency(person.frequency)}
-                    {result.intervalDays !== null && ` · ${formatInterval(result.intervalDays)}`}
-                    {horizonLabel(person.horizon) && ` · ${horizonLabel(person.horizon)}`}
+                </span>
+                <span className="shrink-0 pl-3 text-right">
+                  <span className="numeral block text-2xl text-ink-900">
+                    {formatCount(result.total)}
                   </span>
-                  {person.note && (
-                    <span className="mt-0.5 block truncate text-xs text-ink-400">{person.note}</span>
-                  )}
+                  <span className="block text-[11px] text-ink-400">{t.timesLeft}</span>
                 </span>
-              </span>
-              <span className="shrink-0 pl-3 text-right">
-                <span className="numeral block text-2xl text-ink-900">
-                  {formatCount(result.total)}
+              </Link>
+              {/* 카드 옆에 두면 좁은 폰·큰 글씨에서 카드가 눌려 이름이 한 글자씩 꺾인다. 카드 아래 한 줄로. */}
+              {reordering && (
+                <span className="flex justify-end gap-1 pt-1">
+                  <button type="button" className="btn-quiet min-h-11 min-w-11 aria-disabled:opacity-30" aria-label={t.up(person.name)} aria-disabled={i === 0} onClick={() => i > 0 && move(person.id, -1)}>
+                    ↑
+                  </button>
+                  <button type="button" className="btn-quiet min-h-11 min-w-11 aria-disabled:opacity-30" aria-label={t.down(person.name)} aria-disabled={i === rows.sorted.length - 1} onClick={() => i < rows.sorted.length - 1 && move(person.id, 1)}>
+                    ↓
+                  </button>
                 </span>
-                <span className="block text-[11px] text-ink-400">{t.timesLeft}</span>
-              </span>
-            </Link>
+              )}
+            </div>
           ))}
         </div>
       )}
