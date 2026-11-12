@@ -281,7 +281,7 @@ export default function PersonView({ person }: { person: Person }) {
     estimatedYears: estimate?.years ?? 0,
     lines: estimate && "lines" in estimate ? estimate.lines : undefined,
     academy: person.bondDetail?.academy,
-    ageHint: Boolean(state.settings.showPast && person.bonds?.length && !(estimate && "lines" in estimate)),
+    ageHint: Boolean(state.settings.showPast && person.bonds?.length && scope === "all" && myAge === null && !(estimate && "lines" in estimate)),
     scope,
     onScope: (next: "all" | "year") =>
       savePerson({ ...person, togetherScope: next === "year" ? "year" : undefined, updatedAt: new Date().toISOString() }),

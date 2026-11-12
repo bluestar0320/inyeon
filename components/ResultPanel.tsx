@@ -201,6 +201,8 @@ export default function ResultPanel({
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
   const hasPast = !together && Boolean(past && past.count >= 1);
   const metTotal = together ? together.met + together.estimated : 0;
+  // 해 수가 0으로 보일 줄은 감춘다(「졸업 뒤 0년」). 학원·군 복무·따로 사신 줄은 해를 적지 않는다.
+  const shown = (line: PastLine) => !["after", "together", "coworker"].includes(line.kind) || line.to - line.from > 0;
   const lineText = (line: PastLine): string => {
     const n = formatCount(Math.abs(Math.round(line.count)));
     const years = Math.max(0, line.to - line.from);
@@ -301,7 +303,7 @@ export default function ResultPanel({
               {together.lines && together.lines.length > 0 && (
                 <div data-testid="past-lines" className="mt-1 text-[11px] text-ink-400">
                   <ul className="space-y-0.5">
-                    {together.lines.map((line, i) => (
+                    {together.lines.filter(shown).map((line, i) => (
                       <li key={`${line.kind}${i}`}>{lineText(line)}</li>
                     ))}
                   </ul>
