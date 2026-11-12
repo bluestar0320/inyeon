@@ -8,7 +8,7 @@ import { getLang, defineCopy, locale, tr } from "@/lib/i18n";
 import { messageFor } from "@/lib/message";
 import { isNativeApp } from "@/lib/nativeShare";
 import { useActions, useAppState } from "@/lib/store";
-import { hash, relationKind, type Story } from "@/lib/story";
+import { hash, relOf, type Story } from "@/lib/story";
 import { TONE_ORDER, copyFor } from "@/lib/tone";
 
 const COPY = defineCopy({
@@ -33,11 +33,11 @@ export default function StoryLines({
   personId: string;
   returning: boolean;
   /** 인연이면 편지 끝에 「한마디 보내기」를 붙인다. 순간에는 없다. */
-  person?: { name: string; relation?: string };
+  person?: { name: string; relation?: string; bonds?: readonly string[] };
 }) {
   const t = tr(COPY);
   const [copied, setCopied] = useState(false);
-  const rel = relationKind(person?.relation);
+  const rel = relOf(person);
 
   /*
    * 그 사람에게 보낼 첫 문장을 공유 창에 담아 띄운다. 메신저에서 고쳐 보내면 된다.

@@ -5,7 +5,7 @@ import { setLang } from "../lib/i18n.ts";
 import { relationPresets } from "../lib/presets.ts";
 import { BANK } from "../lib/storyBank.ts";
 import {
-  buildStory, countBand, fill, freqBand, hash, metLine, momentStory, pastBand, pastShare, relationKind, relationTag, spanText,
+  buildStory, countBand, fill, freqBand, hash, metLine, momentStory, pastBand, pastShare, relationKind, relationTag, relOf, spanText,
 } from "../lib/story.ts";
 
 const NOW = new Date("2026-10-07T12:00:00");
@@ -369,4 +369,14 @@ test("한마디 보내기: 관계에 맞는 말투, 앱의 숫자는 넣지 않�
         assert.ok(line && !/[{}]|\d/.test(line), `${lang}/${rel}: ${line}`);
       }
   assert.match(messageFor("ko", "parent", "엄마", 0), /^엄마, .*요\.$/);
+});
+test("relOf: 가족 칩이 관계 칸보다 먼저, 다른 칩만 있으면 글을 읽고 못 읽으면 친구, 칩이 없으면 글로 짐작", () => {
+  assert.equal(relOf({ relation: "", bonds: ["parent"] }), "parent");
+  assert.equal(relOf({ relation: "우리 집 대장", bonds: ["grandparent"] }), "grandparent");
+  assert.equal(relOf({ bonds: ["sibling", "elementary"] }), "sibling");
+  assert.equal(relOf({ relation: "엄마", bonds: ["coworker"] }), "parent");
+  assert.equal(relOf({ relation: "팀장님", bonds: ["coworker"] }), "friend");
+  assert.equal(relOf({ relation: "엄마" }), "parent");
+  assert.equal(relOf({ relation: "팀장님" }), "other");
+  assert.equal(relOf(undefined), "other");
 });

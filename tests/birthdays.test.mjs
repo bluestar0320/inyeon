@@ -53,6 +53,7 @@ test("부모님·조부모님은 생신, 나머지는 생일", () => {
   setLang("ko");
   assert.equal(isElder({ name: "김영희", relation: "어머니" }), true);
   assert.equal(isElder({ name: "할머니" }), true);
+  assert.equal(isElder({ name: "김영희", relation: "", bonds: ["parent"] }), true); // 칩만 있어도 생신
   assert.equal(isElder({ name: "민수", relation: "친구" }), false);
   assert.equal(birthdayLine({ name: "엄마" }, 12), "엄마 생신까지 12일 남았어요");
   assert.equal(birthdayLine({ name: "엄마" }, 0), "오늘은 엄마 생신이에요");

@@ -54,6 +54,19 @@ export function relationKind(relation: string | undefined): Rel {
 }
 
 /**
+ * 사람의 관계 종류. 관계 칩이 있으면 칩으로 정한다(부모님·조부모님·형제자매).
+ * 다른 칩만 있으면 관계 칸 글을 읽고, 못 읽으면 친구로 본다. 칩이 없는 옛 기록만 글로 짐작한다.
+ */
+export function relOf(person: { relation?: string; bonds?: readonly string[] } | undefined): Rel {
+  const bonds = person?.bonds ?? [];
+  if (bonds.includes("parent")) return "parent";
+  if (bonds.includes("grandparent")) return "grandparent";
+  if (bonds.includes("sibling")) return "sibling";
+  const text = relationKind(person?.relation);
+  return bonds.length && text === "other" ? "friend" : text;
+}
+
+/**
  * 이름 옆에 붙일 관계. 이름과 관계가 같은 말이거나("어머니 · 어머니") 같은 칸의 말이면
  * ("엄마 · 어머니", "할머니 · 조부모") 하나만 보이게 비운다. "민수 · 친구"는 그대로.
  */
@@ -246,7 +259,7 @@ export function buildStory(i: {
 }): Story | null {
   if (!(i.remaining >= 1)) return null;
   const { person } = i;
-  const rel = relationKind(person.relation);
+  const rel = relOf(person);
   const freq = freqBand(person.frequency);
   const share = i.showPast === false ? null : pastShare({
     rel,
@@ -315,7 +328,7 @@ export function buildStory(i: {
 
 /** 「만났어요」 직후 한 마디. 남은 횟수는 줄지 않으니 쌓인 쪽(올해 n번째)을 말한다. */
 export function metLine(i: { person: Person; tone: Tone; thisYear: number; me?: string }): string | null {
-  const rel = relationKind(i.person.relation);
+  const rel = relOf(i.person);
   // 한국어는 "올해 1번째"가 아니라 "올해 첫 번째"다.
   const n = i.thisYear === 1 && getLang() === "ko" ? "첫 " : String(i.thisYear);
   const vars = { name: i.person.name, n, me: i.me?.trim() || tr(ME) };

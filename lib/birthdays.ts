@@ -1,5 +1,5 @@
 import { defineCopy, tr } from "./i18n.ts";
-import { relationKind } from "./story.ts";
+import { relationKind, relOf } from "./story.ts";
 import type { Person } from "./types";
 
 /*
@@ -51,9 +51,10 @@ export function upcomingBirthdays(people: Person[], now: Date = new Date(), with
 }
 
 /** 부모님·조부모님이면 생신. 관계 칸이 비었어도 이름이 "엄마"면 알아듣는다. */
-export function isElder(person: Pick<Person, "name" | "relation">): boolean {
-  const elder = (text?: string) => ["parent", "grandparent"].includes(relationKind(text));
-  return elder(person.relation) || elder(person.name);
+export function isElder(person: Pick<Person, "name" | "relation" | "bonds">): boolean {
+  const elder = (rel: string) => rel === "parent" || rel === "grandparent";
+  // 칩이 있으면 칩(과 관계 칸)으로 정하고, 칩이 없는 옛 기록만 이름까지 읽는다.
+  return elder(relOf(person)) || (!person.bonds?.length && elder(relationKind(person.name)));
 }
 
 const COPY = defineCopy({
