@@ -21,6 +21,7 @@ import {
   remainingYears,
   resolveAge,
 } from "../lib/calc.ts";
+import { cleanBondDetail, cleanBonds } from "../lib/bonds.ts";
 import { lookupLifeExpectancy, refreshLifeSpan } from "../lib/lifeExpectancy.ts";
 
 const RUNS = Number(process.env.FUZZ_RUNS ?? 2000);
@@ -181,5 +182,34 @@ test("필터가 없으면 빈도를 늘렸을 때 횟수가 줄지 않는다", (
     const a = countOccurrences({ years, perYear }).total;
     const b = countOccurrences({ years, perYear: perYear * (1 + m.r()) }).total;
     assert.ok(b >= a - 1e-9, `씨앗 ${seed}: ${a} → ${b}`);
+  }
+});
+
+test("관계 칩·세부 값 다듬기는 무엇이 들어와도 깨지지 않는다", () => {
+  for (let seed = 1; seed <= RUNS; seed += 1) {
+    const m = maker(seed);
+    const any = () => m.pick([m.num, () => "high", () => null, () => ({}), () => [], () => true, () => m.date()])();
+    const obj = (keys) => Object.fromEntries(keys.map((k) => [k, any()]));
+    try {
+      cleanBonds(m.pick([any, () => Array.from({ length: 5 }, any)])());
+      const d = cleanBondDetail(
+        m.pick([
+          any,
+          () => ({
+            schoolYears: m.pick([any, () => obj(["elementary", "middle", "high"])])(),
+            academy: m.pick([any, () => obj(["years", "perWeek"])])(),
+            military: m.pick([any, () => obj(["me", "them"])])(),
+            livedUntilAge: any(),
+            livesTogether: any(),
+            workEndYear: any(),
+            schoolShift: any(),
+          }),
+        ])(),
+      );
+      if (d?.academy) assert.ok(d.academy.years > 0 && d.academy.years <= 20 && d.academy.perWeek >= 1 && d.academy.perWeek <= 7);
+    } catch (error) {
+      error.message = `씨앗 ${seed}: ${error.message}`;
+      throw error;
+    }
   }
 });

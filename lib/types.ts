@@ -88,6 +88,24 @@ export interface Profile extends LifeSpan {
   nickname?: string;
 }
 
+export type Bond = "elementary" | "middle" | "high" | "university" | "academy" | "coworker" | "parent" | "grandparent" | "sibling";
+export type SchoolStage = "elementary" | "middle" | "high";
+export interface BondDetail {
+  /** 같이 다닌 햇수. 없으면 그 학교 전부(6/3/3), 0이면 「같이 안 다님」. 앞에서부터 센다. */
+  schoolYears?: Partial<Record<SchoolStage, number>>;
+  /** 없으면 ACADEMY_DEFAULT. */
+  academy?: { years: number; perWeek: number };
+  /** 없으면 미필(빼지 않음). */
+  military?: { me?: number; them?: number }; // 입대한 해
+  /** 같이 산 마지막 나이(내 나이). 부모님·형제자매·조부모님. */
+  livedUntilAge?: number;
+  livesTogether?: boolean;
+  /** 직장 동료를 그만둔 해. 없으면 지금도 같이 일한다. */
+  workEndYear?: number;
+  /** 빠른 년생 등: 학교 해를 몇 해 당길지(-1, 0, 1). */
+  schoolShift?: -1 | 0 | 1;
+}
+
 export interface Person extends LifeSpan {
   id: string;
   name: string;
@@ -104,6 +122,9 @@ export interface Person extends LifeSpan {
   memories?: { date: string; text: string }[];
   /** 그 사람이 자주 하는 말("밥은 먹고 다니니?"), 여러 개면 줄바꿈으로. 사용자가 적은 그대로 — 앱이 지어내지 않는다. lib/meetings.ts */
   saying?: string;
+  /** 지나온 만남 어림에 쓰는 관계 칩과 세부 값. lib/bonds.ts */
+  bonds?: Bond[];
+  bondDetail?: BondDetail;
   /** 상세의 「함께한 만남」을 어느 기간으로 셀지. 없으면 지금까지. */
   togetherScope?: "year";
   frequency: Frequency;
