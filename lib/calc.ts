@@ -308,7 +308,8 @@ function personHorizonYears(
     return Number.isFinite(horizon.years) ? Math.max(0, horizon.years) : null;
   }
   const myAge = profile ? resolveAge(profile, now) : null;
-  return myAge === null ? null : Math.max(0, horizon.age - myAge);
+  if (myAge === null || !Number.isFinite(horizon.age)) return null;
+  return Math.max(0, horizon.age - myAge);
 }
 
 /**
@@ -414,7 +415,7 @@ export function horizonYears(
   }
   if (horizon.kind === "untilAge") {
     const age = profile ? resolveAge(profile, now) : null;
-    if (age === null) return null;
+    if (age === null || !Number.isFinite(horizon.age)) return null;
     return capped(Math.max(0, horizon.age - age));
   }
   return mine;

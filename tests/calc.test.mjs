@@ -99,6 +99,33 @@ test("a missing profile falls back to the other side's horizon", () => {
   assert.equal(result.limitedBy, "them");
 });
 
+test("a non-finite untilMyAge target counts as no horizon", () => {
+  for (const age of [NaN, undefined]) {
+    const r = computeRelationship(
+      person({ hoursPerMeeting: 6, horizon: { kind: "untilMyAge", age } }),
+      profile(),
+      NOW,
+    );
+    // 양쪽 수명을 모르는 경우(limitedBy가 unknown)에 NaN이 새던 길
+    const unknown = computeRelationship(
+      person({
+        ageYears: undefined,
+        lifeExpectancy: undefined,
+        hoursPerMeeting: 6,
+        horizon: { kind: "untilMyAge", age },
+      }),
+      profile({ ageYears: 30, lifeExpectancy: undefined }),
+      NOW,
+    );
+    for (const x of [unknown.sharedYears, unknown.total, unknown.togetherDays]) {
+      assert.ok(x === null || Number.isFinite(x));
+    }
+    assert.ok(Number.isFinite(r.sharedYears));
+    assert.ok(Number.isFinite(r.total));
+    assert.ok(Number.isFinite(r.togetherDays));
+  }
+});
+
 test("interval and together-time are derived from the same count", () => {
   const result = computeRelationship(person({ hoursPerMeeting: 6 }), profile(), NOW);
   assert.ok(Math.abs(result.intervalDays - DAYS_PER_YEAR / 12) < 1e-9);
