@@ -5,7 +5,9 @@ import type { ReactNode } from "react";
 import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
+import type { PastLine } from "@/lib/bonds";
 import type { CountResult, PastResult } from "@/lib/calc";
+import { ACADEMY_DEFAULT } from "@/lib/pastRules";
 import { dotsFor } from "@/lib/dots";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
@@ -27,6 +29,16 @@ const COPY = defineCopy({
     scope: "함께한 만남을 셀 기간",
     scopeAll: "지금까지",
     scopeYear: "올해",
+    school: (name: string, years: number, from: number, to: number, n: string) => `${name} ${years}년 (${from}~${to}) · ${n}번`,
+    schoolName: { elementary: "초등학교", middle: "중학교", high: "고등학교", university: "대학교" },
+    after: (years: number, n: string) => `졸업 뒤 ${years}년, 지금 빈도로 · ${n}번`,
+    bondTogether: (years: number, n: string) => `같이 산 ${years}년 · ${n}번`,
+    coworker: (years: number, n: string) => `같이 일한 ${years}년 · ${n}번`,
+    apart: (n: string) => `따로 사신 동안 1년 2번 · ${n}번`,
+    academy: (perWeek: number, n: string) => `학원, 주 ${perWeek}번 · ${n}번`,
+    military: (n: string) => `군 복무로 못 본 기간 · −${n}번`,
+    linesNote: "학교는 그해 법정 수업일수에서 결석·다른 반이었던 날을 빼고 셌어요. 실제는 이보다 많았을 거예요.",
+    ageHint: "내 나이를 넣으면 학교 시절까지 셉니다.",
     estimatedYear: (years: string) => `올해 앱에 넣기 전까지(${years})는 지금 빈도로 어림했어요.`,
   },
   en: {
@@ -44,6 +56,16 @@ const COPY = defineCopy({
     scope: "Count time together over",
     scopeAll: "So far",
     scopeYear: "This year",
+    school: (name, years, from, to, n) => `${name}, ${years} yrs (${from}–${to}) · ${n}`,
+    schoolName: { elementary: "Elementary school", middle: "Middle school", high: "High school", university: "University" },
+    after: (years, n) => `${years} yrs since graduating, at the current frequency · ${n}`,
+    bondTogether: (years, n) => `Lived together ${years} yrs · ${n}`,
+    coworker: (years, n) => `Worked together ${years} yrs · ${n}`,
+    apart: (n) => `While living apart, 2 times a year · ${n}`,
+    academy: (perWeek, n) => `Cram school, ${perWeek} a week · ${n}`,
+    military: (n) => `Time apart for military service · −${n}`,
+    linesNote: "School days are counted from the legal school days that year, minus absences and days in a different class. The real number was probably higher. Based on Korean averages.",
+    ageHint: "Add your age and school years get counted too.",
     estimatedYear: (years) => `The part of this year before you added them (${years}) is estimated at the current frequency.`,
   },
   ja: {
@@ -61,6 +83,16 @@ const COPY = defineCopy({
     scope: "一緒に過ごした回数を数える期間",
     scopeAll: "これまで",
     scopeYear: "今年",
+    school: (name, years, from, to, n) => `${name}${years}年 (${from}〜${to}) · ${n}回`,
+    schoolName: { elementary: "小学校", middle: "中学校", high: "高校", university: "大学" },
+    after: (years, n) => `卒業後${years}年、今の頻度で · ${n}回`,
+    bondTogether: (years, n) => `一緒に暮らした${years}年 · ${n}回`,
+    coworker: (years, n) => `一緒に働いた${years}年 · ${n}回`,
+    apart: (n) => `離れて暮らしていた間、年2回 · ${n}回`,
+    academy: (perWeek, n) => `塾、週${perWeek}回 · ${n}回`,
+    military: (n) => `兵役で会えなかった期間 · −${n}回`,
+    linesNote: "学校は、その年の法定授業日数から欠席や別クラスだった日を引いて数えました。実際はもっと多かったはずです。韓国の平均にもとづきます。",
+    ageHint: "年齢を入れると、学校時代まで数えます。",
     estimatedYear: (years) => `今年、登録する前まで(${years})は今の頻度で見積もっています。`,
   },
   es: {
@@ -78,6 +110,16 @@ const COPY = defineCopy({
     scope: "Contar los encuentros de",
     scopeAll: "Hasta ahora",
     scopeYear: "Este año",
+    school: (name, years, from, to, n) => `${name}, ${years} años (${from}–${to}) · ${n}`,
+    schoolName: { elementary: "Primaria", middle: "Secundaria", high: "Bachillerato", university: "Universidad" },
+    after: (years, n) => `${years} años tras graduarse, con la frecuencia actual · ${n}`,
+    bondTogether: (years, n) => `${years} años viviendo juntos · ${n}`,
+    coworker: (years, n) => `${years} años trabajando juntos · ${n}`,
+    apart: (n) => `Mientras vivían lejos, 2 veces al año · ${n}`,
+    academy: (perWeek, n) => `Academia, ${perWeek} a la semana · ${n}`,
+    military: (n) => `Tiempo sin verse por el servicio militar · −${n}`,
+    linesNote: "Los días de colegio se cuentan con los días lectivos legales de ese año, sin las ausencias ni los días en otra clase. Seguramente fueron más. Según promedios de Corea.",
+    ageHint: "Si pones tu edad, también contamos la etapa escolar.",
     estimatedYear: (years) => `La parte de este año antes de añadirlo (${years}) se estima con la frecuencia actual.`,
   },
   zh: {
@@ -95,6 +137,16 @@ const COPY = defineCopy({
     scope: "共度次数的统计范围",
     scopeAll: "至今",
     scopeYear: "今年",
+    school: (name, years, from, to, n) => `${name}${years}年（${from}~${to}）· ${n}次`,
+    schoolName: { elementary: "小学", middle: "初中", high: "高中", university: "大学" },
+    after: (years, n) => `毕业后${years}年，按现在的频率 · ${n}次`,
+    bondTogether: (years, n) => `住在一起的${years}年 · ${n}次`,
+    coworker: (years, n) => `一起工作的${years}年 · ${n}次`,
+    apart: (n) => `分开生活期间，每年2次 · ${n}次`,
+    academy: (perWeek, n) => `补习班，每周${perWeek}次 · ${n}次`,
+    military: (n) => `因服兵役见不到的时间 · −${n}次`,
+    linesNote: "学校按当年法定上课天数，扣掉缺席和不在同一班的日子来算。实际应该比这更多。以韩国平均水平为准。",
+    ageHint: "填上你的年龄，就会把上学时期也算进来。",
     estimatedYear: (years) => `今年添加之前（${years}）按现在的频率估算。`,
   },
 });
@@ -134,6 +186,11 @@ export default function ResultPanel({
     showMissed: boolean;
     estimated: number;
     estimatedYears: number;
+    /** 관계 칩으로 센 근거. 있으면 estimated 안내문 자리에 목록을 그린다. */
+    lines?: PastLine[];
+    academy?: { years: number; perWeek: number };
+    /** 칩은 골랐는데 내 나이가 없어 학교 시절을 못 센 때. */
+    ageHint?: boolean;
     /** 함께한 만남을 지금까지 셀지, 올해만 셀지. 주면 고르는 단추가 붙는다. */
     scope?: "all" | "year";
     onScope?: (next: "all" | "year") => void;
@@ -144,6 +201,23 @@ export default function ResultPanel({
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
   const hasPast = !together && Boolean(past && past.count >= 1);
   const metTotal = together ? together.met + together.estimated : 0;
+  const lineText = (line: PastLine): string => {
+    const n = formatCount(Math.abs(Math.round(line.count)));
+    const years = Math.max(0, line.to - line.from);
+    switch (line.kind) {
+      case "elementary":
+      case "middle":
+      case "high":
+      case "university":
+        return t.school(t.schoolName[line.kind], line.to - line.from + 1, line.from, line.to, n);
+      case "after": return t.after(years, n);
+      case "together": return t.bondTogether(years, n);
+      case "coworker": return t.coworker(years, n);
+      case "apart": return t.apart(n);
+      case "academy": return t.academy((together?.academy ?? ACADEMY_DEFAULT).perWeek, n);
+      case "military": return t.military(n);
+    }
+  };
   const dots = together
     ? dotsFor(metTotal, result.total, together.missed)
     : dotsFor(hasPast ? past!.count : 0, result.total);
@@ -222,8 +296,19 @@ export default function ResultPanel({
                   : t.togetherShort(formatCount(metTotal), formatCount(result.total))}
               </p>
               <p className="mt-0.5 text-[11px] text-ink-400">
-                {together.estimated >= 1 ? (together.scope === "year" ? t.estimatedYear : t.estimated)(formatYears(together.estimatedYears)) : !together.showMissed ? t.startHint : null}
+                {together.lines?.length ? null : together.estimated >= 1 ? (together.scope === "year" ? t.estimatedYear : t.estimated)(formatYears(together.estimatedYears)) : !together.showMissed ? t.startHint : null}
               </p>
+              {together.lines && together.lines.length > 0 && (
+                <div data-testid="past-lines" className="mt-1 text-[11px] text-ink-400">
+                  <ul className="space-y-0.5">
+                    {together.lines.map((line, i) => (
+                      <li key={`${line.kind}${i}`}>{lineText(line)}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-1">{t.linesNote}</p>
+                </div>
+              )}
+              {together.ageHint && <p className="mt-0.5 text-[11px] text-ink-400">{t.ageHint}</p>}
             </>
           )}
           {hasPast && (

@@ -1,4 +1,6 @@
+import { livedTogetherCount } from "./bonds.ts";
 import { DAYS_PER_YEAR, computePast, pastLimit, toPerYear } from "./calc.ts";
+import { highSchoolEndYear } from "./pastRules.ts";
 import { formatCount, josa } from "./format.ts";
 import { defineCopy, getLang, tr, type Lang } from "./i18n.ts";
 import { BANK } from "./storyBank.ts";
@@ -81,9 +83,6 @@ export function pastBand(pct: number): PastBand {
   return pct < 10 ? "start" : pct < 40 ? "early" : pct < 70 ? "middle" : pct < 90 ? "late" : "last";
 }
 
-/** 부모님 곁을 떠난 나이. since가 없을 때만 쓰고, 쓴다고 화면에 밝힌다. */
-export const ASSUMED_MOVE_OUT_AGE = 20;
-
 /** 함께할 만남 전체 중 이미 지나간 몫(%). 셀 수 없으면 null. */
 export function pastShare(i: {
   rel: Rel;
@@ -100,24 +99,20 @@ export function pastShare(i: {
   recorded?: { years: number; met: number };
 }): { pct: number; assumed: boolean } | null {
   const now = i.now ?? new Date();
-  let away: number | null = null;
   if (i.since) {
     const start = new Date(`${i.since}T00:00:00`);
     if (Number.isNaN(start.getTime()) || start > now) return null;
-    away = (now.getTime() - start.getTime()) / 86_400_000 / DAYS_PER_YEAR;
   }
   let past: number;
   let assumed = false;
   if (i.rel === "parent") {
     if (i.myAge === null) return null;
-    if (away === null) {
-      if (i.myAge < ASSUMED_MOVE_OUT_AGE) return null; // 아직 같이 사는 중
-      away = i.myAge - ASSUMED_MOVE_OUT_AGE;
-      assumed = true;
-    }
-    away = Math.min(away, i.myAge);
-    // 같이 산 동안은 하루 한 번, 떠난 뒤로는 지금 빈도.
-    past = (i.myAge - away) * DAYS_PER_YEAR + toPerYear(i.frequency) * away;
+    const born = now.getFullYear() - i.myAge;
+    // 떠난 해: since가 있으면 그해, 없으면 고등학교를 마친 해(그렇다고 화면에 밝힌다).
+    const leftYear = i.since ? Number(i.since.slice(0, 4)) : highSchoolEndYear(born);
+    assumed = !i.since;
+    if (assumed && leftYear > now.getFullYear()) return null; // 아직 같이 사는 중
+    past = livedTogetherCount({ myBirthYear: born, leftYear, frequency: i.frequency, until: now });
   } else {
     if (!i.since) return null;
     const result = computePast(i.frequency, i.since, now, pastLimit(i.theirAge, i.myAge));

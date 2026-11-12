@@ -40,21 +40,23 @@ test("지나간 비율 구간 5단계", () => {
     ["start", "start", "early", "early", "middle", "middle", "late", "late", "last", "last"]);
 });
 
-test("부모님: since가 없으면 스무 살 독립을 가정하고 그렇다고 알린다", () => {
-  const s = pastShare({ rel: "parent", frequency: { count: 1, unit: "month" }, myAge: 35, theirAge: 63, remaining: 100, now: NOW });
-  // 20년 × 365.2425 + 12 × 15 = 7484.85, 7484.85 / 7584.85 = 98.68% → 98
-  assert.deepEqual(s, { pct: 98, assumed: true });
+test("부모님 이야기 비율은 고교 졸업까지 같이 산 것으로(329번/년) 센다", () => {
+  // 1993년생(33세), 매달 1번, since 없음 → 같이 산 19년 × 329 + 그 뒤 14년쯤 × 12
+  const r = pastShare({ rel: "parent", frequency: { count: 1, unit: "month" }, myAge: 33, theirAge: 63, remaining: 3000 });
+  const past = 19 * 365 * 0.9 + 14 * 12;
+  assert.equal(r.assumed, true);
+  assert.ok(Math.abs(r.pct - Math.floor(past / (past + 3000) * 100)) <= 1);
 });
 
-test("부모님: since가 있으면 그 날 독립한 것으로 본다", () => {
+test("부모님: since가 있으면 그해에 떠난 것으로 본다", () => {
+  // 1991년생, 2016년에 떠남 → 25년 × 329 + 10년쯤 × 12
   const s = pastShare({ rel: "parent", frequency: { count: 1, unit: "month" }, since: "2016-10-07", myAge: 35, theirAge: 63, remaining: 100, now: NOW });
   assert.equal(s.assumed, false);
-  const away = (NOW.getTime() - new Date("2016-10-07T00:00:00").getTime()) / 86_400_000 / 365.2425;
-  const past = (35 - away) * 365.2425 + 12 * away;
-  assert.equal(s.pct, Math.floor((past / (past + 100)) * 100));
+  const past = 25 * 365 * 0.9 + 10 * 12;
+  assert.ok(Math.abs(s.pct - Math.floor((past / (past + 100)) * 100)) <= 1);
 });
 
-test("부모님: 스무 살 전이고 since가 없으면(같이 사는 중) 비율이 없다", () => {
+test("부모님: 고등학교 졸업 전이고 since가 없으면(같이 사는 중) 비율이 없다", () => {
   assert.equal(pastShare({ rel: "parent", frequency: { count: 7, unit: "week" }, myAge: 17, theirAge: 45, remaining: 9000, now: NOW }), null);
 });
 

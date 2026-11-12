@@ -35,6 +35,7 @@ import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import { ledger } from "@/lib/meetings";
 import { useToday } from "@/lib/useToday";
+import { estimatePast } from "@/lib/bonds";
 import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -242,6 +243,23 @@ export default function PersonView({ person }: { person: Person }) {
   const estimate = useMemo(() => {
     if (!state.settings.showPast) return null;
     const added = new Date(person.createdAt);
+    // 관계 칩이 있으면 학교·같이 산 해로 세고, 못 세면(내 나이 없음 등) 아래 기존 방식으로 간다.
+    if (person.bonds?.length && scope === "all" && !Number.isNaN(added.getTime())) {
+      const birthYear = (who: { birthDate?: string } | null, age: number | null) =>
+        who?.birthDate && !Number.isNaN(new Date(`${who.birthDate}T00:00:00`).getTime())
+          ? new Date(`${who.birthDate}T00:00:00`).getFullYear()
+          : age === null ? null : Number(today.slice(0, 4)) - age;
+      const past = estimatePast({
+        bonds: person.bonds,
+        detail: person.bondDetail,
+        frequency: person.frequency,
+        since: person.since,
+        myBirthYear: birthYear(state.profile, state.profile ? resolveAge(state.profile) : null),
+        theirBirthYear: birthYear(person, resolveAge(person)),
+        until: added,
+      });
+      if (past) return { count: past.count, years: 0, lines: past.lines };
+    }
     const since = scope === "year" && person.since ? (person.since > yearStart ? person.since : yearStart) : person.since;
     return computePast(
       person.frequency,
@@ -249,7 +267,7 @@ export default function PersonView({ person }: { person: Person }) {
       Number.isNaN(added.getTime()) ? undefined : added,
       pastLimit(resolveAge(person), state.profile ? resolveAge(state.profile) : null),
     );
-  }, [person, state.profile, state.settings.showPast, scope, yearStart]);
+  }, [person, state.profile, state.settings.showPast, scope, yearStart, today]);
   const counted = useMemo(() => {
     if (scope !== "year") return result.together;
     const createdDay = `${created.getFullYear()}-${pad(created.getMonth() + 1)}-${pad(created.getDate())}`;
@@ -261,6 +279,9 @@ export default function PersonView({ person }: { person: Person }) {
     showMissed: recording,
     estimated: estimate?.count ?? 0,
     estimatedYears: estimate?.years ?? 0,
+    lines: estimate && "lines" in estimate ? estimate.lines : undefined,
+    academy: person.bondDetail?.academy,
+    ageHint: Boolean(state.settings.showPast && person.bonds?.length && !(estimate && "lines" in estimate)),
     scope,
     onScope: (next: "all" | "year") =>
       savePerson({ ...person, togetherScope: next === "year" ? "year" : undefined, updatedAt: new Date().toISOString() }),
