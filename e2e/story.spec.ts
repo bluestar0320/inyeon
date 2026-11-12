@@ -31,14 +31,14 @@ test("부모님은 그때·지금·오늘·비율과 가정 문구가 보인다"
   await expect(story.getByTestId("story-now")).toContainText("번");
   await expect(story.getByTestId("story-today")).toBeVisible();
   await expect(story.getByTestId("story-past")).toContainText("%");
-  await expect(story.getByText(/스무 살/)).toBeVisible();
+  await expect(story.getByText(/고등학교 졸업할 때까지 함께 살았다고/)).toBeVisible();
   await expect(story.getByRole("link", { name: "바꾸기" })).toHaveAttribute("href", /\/people\/edit\/?\?id=p1/);
 });
 
 test("since가 있으면 가정 문구가 없다", async ({ page }) => {
   await seed(page, "어머니", "엄마", 0, "2012-03-01");
   await expect(page.getByTestId("story-past")).toBeVisible();
-  await expect(page.getByText(/스무 살/)).toHaveCount(0);
+  await expect(page.getByText(/고등학교 졸업할 때까지 함께 살았다고/)).toHaveCount(0);
 });
 
 test("친구는 그때·비율 없이 지금·오늘만", async ({ page }) => {

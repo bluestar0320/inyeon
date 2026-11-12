@@ -222,7 +222,8 @@ test("내 정보를 다시 고치면 홈으로 돌아간다", async ({ page }) =
 test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으로 끌 수 있다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  // 관계 칩이 없는 사람으로 본다. 어머니 단추는 부모님 칩을 넣어 시작점 없이도 어림한다(past.spec.ts).
+  await page.getByRole("button", { name: "가까운 친구", exact: true }).click();
   await page.getByLabel("나이", { exact: true }).fill("68");
 
   // 시작점이 없으면 아예 세지 않는다 — 모르는 것을 지어내지 않는다.
@@ -248,6 +249,12 @@ test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으�
   await expect(page.getByText(/어림했어요/)).toBeHidden();
   await expect(page.getByTestId("together")).toHaveText(/함께한 만남 0번/);
   expect(await headline(page)).toBe(headlineBefore);
+
+  // 꺼 두면 편집 화면의 「지금까지 적어도 N번」 미리보기도 없다.
+  await page.goto("/people/new");
+  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByLabel("나이", { exact: true }).fill("68");
+  await expect(page.getByTestId("past-preview")).toHaveCount(0);
 });
 
 test("생년월일은 달력 없이 숫자 자판으로 친다 — 19650312가 1965-03-12가 된다", async ({ page }) => {

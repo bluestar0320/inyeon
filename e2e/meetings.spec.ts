@@ -33,7 +33,8 @@ test("잘못 눌렀으면 되돌린다", async ({ page }) => {
 test("이번 기간에 만나면 함께한 만남 +1·앞으로 −1, 계획보다 더 만난 건 함께한 쪽에만 더한다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click(); // 한 달에 1번
+  // 관계 칩이 없는 사람이어야 함께한 만남이 0번에서 시작한다(어머니 단추는 부모님 칩으로 지나온 만남을 어림한다).
+  await page.getByRole("button", { name: "형제·자매", exact: true }).click(); // 한 달에 1번
   await page.getByLabel("나이", { exact: true }).fill("60");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/detail/);
