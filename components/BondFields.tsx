@@ -125,6 +125,27 @@ const STAGES = ["elementary", "middle", "high"] as const;
 const THIS_YEAR = new Date().getFullYear();
 const CHIP = "chip min-h-11";
 
+/** 해 입력. 치는 동안은 자르지 않고, 범위 안의 해가 되면 올린다(20을 치다가 1950이 되지 않게). */
+function YearInput({ id, value, onChange }: { id: string; value: number | undefined; onChange: (y: number | undefined) => void }) {
+  const [text, setText] = useState<string | null>(null);
+  return (
+    <input
+      id={id}
+      type="number"
+      className="input w-28"
+      value={text ?? (value ?? "")}
+      onFocus={() => setText(value === undefined ? "" : String(value))}
+      onBlur={() => setText(null)}
+      onChange={(e) => {
+        setText(e.target.value);
+        const n = Number(e.target.value);
+        if (e.target.value.trim() === "") onChange(undefined);
+        else if (Number.isInteger(n) && n >= 1950 && n <= THIS_YEAR) onChange(n);
+      }}
+    />
+  );
+}
+
 export function withBond(bonds: Bond[] | undefined, bond: Bond): Bond[] {
   return bonds?.includes(bond) ? bonds : [...(bonds ?? []), bond];
 }
@@ -212,7 +233,7 @@ export function BondDetailFields({
             <label className="label" htmlFor={`${ids}-${stage}`}>{t.attended(name)}</label>
             <select
               id={`${ids}-${stage}`}
-              className="input w-full sm:w-56"
+              className="input w-full max-w-56"
               value={v === undefined ? "all" : String(v)}
               onChange={(e) => {
                 const { [stage]: _drop, ...rest } = d.schoolYears ?? {};
@@ -231,7 +252,7 @@ export function BondDetailFields({
       })}
 
       {has("academy") && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 min-[420px]:grid-cols-2">
           <div>
             <label className="label" htmlFor={`${ids}-ay`}>{t.academyYears}</label>
             <NumberInput
@@ -263,7 +284,7 @@ export function BondDetailFields({
           <label className="label" htmlFor={`${ids}-shift`}>{t.shift}</label>
           <select
             id={`${ids}-shift`}
-            className="input w-full sm:w-56"
+            className="input w-full max-w-56"
             value={String(d.schoolShift ?? 0)}
             onChange={(e) => set({ schoolShift: e.target.value === "0" ? undefined : (Number(e.target.value) as -1 | 1) })}
           >
@@ -305,15 +326,7 @@ export function BondDetailFields({
       {has("coworker") && (
         <div>
           <label className="label" htmlFor={`${ids}-end`}>{t.workEnd}</label>
-          <NumberInput
-            id={`${ids}-end`}
-            className="input w-28"
-            min={1950}
-            max={THIS_YEAR}
-            value={d.workEndYear}
-            onChange={(workEndYear) => set({ workEndYear })}
-            onEmpty={() => set({ workEndYear: undefined })}
-          />
+          <YearInput id={`${ids}-end`} value={d.workEndYear} onChange={(workEndYear) => set({ workEndYear })} />
         </div>
       )}
 
@@ -338,19 +351,11 @@ export function BondDetailFields({
             ))}
           </div>
           {mil === 2 && (
-            <div className="mt-2 grid grid-cols-2 gap-3">
+            <div className="mt-2 grid gap-3 min-[420px]:grid-cols-2">
               {(["me", "them"] as const).map((who) => (
                 <div key={who}>
                   <label className="label" htmlFor={`${ids}-${who}`}>{who === "me" ? t.meEnlist : t.themEnlist}</label>
-                  <NumberInput
-                    id={`${ids}-${who}`}
-                    className="input"
-                    min={1950}
-                    max={THIS_YEAR}
-                    value={d.military?.[who]}
-                    onChange={(y) => setEnlist(who, y)}
-                    onEmpty={() => setEnlist(who, undefined)}
-                  />
+                  <YearInput id={`${ids}-${who}`} value={d.military?.[who]} onChange={(y) => setEnlist(who, y)} />
                 </div>
               ))}
             </div>

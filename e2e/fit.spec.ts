@@ -137,3 +137,30 @@ for (const lang of ["ko", "en"])
       }
       expect(found, found.join("\n")).toEqual([]);
     });
+
+/* 관계 칩을 여럿 고르고 「더 자세히」를 펼친 인연 편집 화면: 가장 좁은 폭에서도 넘치지 않는다. */
+for (const lang of ["ko", "en"])
+  for (const scale of SCALES)
+    test(`${lang} ${scale}: 관계 칩과 세부 칸을 펼친 편집 화면이 넘치지 않는다`, async ({ page }) => {
+      test.setTimeout(120_000);
+      await clearState(page);
+      await page.evaluate(({ key, v }) => localStorage.setItem(key, JSON.stringify(v)),
+        { key: STORAGE_KEY, v: state(lang, scale === "xlarge" ? "xlarge" : undefined) });
+      const names = lang === "ko" ? ["초등학교 친구", "학원 친구", "직장 동료", "부모님"] : ["Elementary school friend", "Cram school friend", "Coworker", "Parent"];
+      const served = lang === "ko" ? "군필" : "Served";
+      const found: string[] = [];
+      for (const { w, h } of [SIZES[0], SIZES[1], SIZES[4]]) {
+        await page.setViewportSize({ width: w, height: h });
+        await page.goto("/people/new");
+        await page.waitForLoadState("networkidle");
+        for (const n of names) await page.getByRole("button", { name: n, exact: true }).click();
+        await page.locator("details > summary").filter({ hasText: lang === "ko" ? "언제부터" : "Since when" }).click();
+        await page.getByRole("button", { name: served, exact: true }).click();
+        // 붙어 다니는 윗줄이 스크롤된 내용을 덮는 것은 겹침이 아니다. 맨 위에서 잰다.
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(250);
+        if (scale === "font130") await systemFont(page, 1.3);
+        for (const p of await problems(page)) found.push(`${w}×${h} ${p}`);
+      }
+      expect(found, found.join("\n")).toEqual([]);
+    });

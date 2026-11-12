@@ -17,7 +17,8 @@ import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
-import { estimatePast } from "@/lib/bonds";
+import { birthYearOf, estimatePast } from "@/lib/bonds";
+import { ACADEMY_DEFAULT } from "@/lib/pastRules";
 import { computeRelationship, pastLimit, resolveAge, toPerYear } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
@@ -192,10 +193,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const pastPreview = useMemo(() => {
     if (!draft.bonds?.length || !state.settings.showPast) return null;
     const year = new Date().getFullYear();
-    const birthYear = (who: { birthDate?: string } | null, age: number | null) => {
-      const d = who?.birthDate ? new Date(`${who.birthDate}T00:00:00`) : null;
-      return d && !Number.isNaN(d.getTime()) ? d.getFullYear() : age === null ? null : year - age;
-    };
+    const birthYear = (who: { birthDate?: string } | null, age: number | null) => birthYearOf(who, age, year);
     return estimatePast({
       bonds: draft.bonds,
       detail: draft.bondDetail,
@@ -366,7 +364,14 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           other={other}
           onChange={(bonds, nextOther) => {
             setOther(nextOther);
-            setDraft({ ...draft, bonds });
+            // 칩이 다 꺼지면 세부 값도 비운다. 학원 칩은 켜면 기본값(1년, 주 2번)을 넣고 끄면 뺀다.
+            let detail = bonds ? draft.bondDetail : undefined;
+            if (bonds?.includes("academy") && !detail?.academy) detail = { ...detail, academy: { ...ACADEMY_DEFAULT } };
+            if (bonds && !bonds.includes("academy") && detail?.academy) {
+              const { academy: _drop, ...rest } = detail;
+              detail = Object.keys(rest).length ? rest : undefined;
+            }
+            setDraft({ ...draft, bonds, bondDetail: detail });
           }}
         />
         <div className="border-t border-ink-200/70 pt-4">

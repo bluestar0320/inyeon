@@ -35,7 +35,7 @@ import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import { ledger } from "@/lib/meetings";
 import { useToday } from "@/lib/useToday";
-import { estimatePast } from "@/lib/bonds";
+import { birthYearOf, estimatePast } from "@/lib/bonds";
 import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -245,10 +245,7 @@ export default function PersonView({ person }: { person: Person }) {
     const added = new Date(person.createdAt);
     // 관계 칩이 있으면 학교·같이 산 해로 세고, 못 세면(내 나이 없음 등) 아래 기존 방식으로 간다.
     if (person.bonds?.length && scope === "all" && !Number.isNaN(added.getTime())) {
-      const birthYear = (who: { birthDate?: string } | null, age: number | null) =>
-        who?.birthDate && !Number.isNaN(new Date(`${who.birthDate}T00:00:00`).getTime())
-          ? new Date(`${who.birthDate}T00:00:00`).getFullYear()
-          : age === null ? null : Number(today.slice(0, 4)) - age;
+      const birthYear = (who: { birthDate?: string } | null, age: number | null) => birthYearOf(who, age, Number(today.slice(0, 4)));
       const past = estimatePast({
         bonds: person.bonds,
         detail: person.bondDetail,

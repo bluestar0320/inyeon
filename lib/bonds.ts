@@ -235,3 +235,10 @@ export function estimatePast(i: {
   }
   return { count: sum(lines), lines };
 }
+
+/** 태어난 해: 생년월일이 있으면 그 해, 없으면 올해 − 나이. 나이도 모르면 null. 상세와 편집 미리보기가 같이 쓴다. */
+export function birthYearOf(who: { birthDate?: string } | null, age: number | null, thisYear: number): number | null {
+  const d = who?.birthDate ? new Date(`${who.birthDate}T00:00:00`) : null;
+  if (d && !Number.isNaN(d.getTime())) return d.getFullYear();
+  return age === null ? null : thisYear - age;
+}
