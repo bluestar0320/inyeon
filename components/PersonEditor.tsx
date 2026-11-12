@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, useRef } from "react";
 
+import { BondChips, BondDetailFields, BondPreview, withBond } from "@/components/BondFields";
 import MoreDetails from "@/components/MoreDetails";
 import NumberInput from "@/components/NumberInput";
 import ConsentCheck, { useConsent } from "@/components/ConsentCheck";
@@ -16,6 +17,7 @@ import LifeSpanFields from "@/components/LifeSpanFields";
 import PersonHorizonPicker from "@/components/PersonHorizonPicker";
 import ResultPanel from "@/components/ResultPanel";
 import YearBreakdown from "@/components/YearBreakdown";
+import { estimatePast } from "@/lib/bonds";
 import { computeRelationship, pastLimit, resolveAge, toPerYear } from "@/lib/calc";
 import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
@@ -177,6 +179,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
     () => state.people.find((p) => p.id === initial.id)?.updatedAt ?? null,
   );
   const [draft, setDraft] = useState<Person>(initial);
+  const [other, setOther] = useState(false);
 
   const t = tr(COPY);
   const presets = relationPresets();
@@ -185,6 +188,24 @@ export default function PersonEditor({ initial }: { initial: Person }) {
     () => computeRelationship(draft, state.profile),
     [draft, state.profile],
   );
+  // 「지금까지 적어도 N번」 미리보기. 상세 화면과 같은 방식으로 태어난 해를 구한다.
+  const pastPreview = useMemo(() => {
+    if (!draft.bonds?.length || !state.settings.showPast) return null;
+    const year = new Date().getFullYear();
+    const birthYear = (who: { birthDate?: string } | null, age: number | null) => {
+      const d = who?.birthDate ? new Date(`${who.birthDate}T00:00:00`) : null;
+      return d && !Number.isNaN(d.getTime()) ? d.getFullYear() : age === null ? null : year - age;
+    };
+    return estimatePast({
+      bonds: draft.bonds,
+      detail: draft.bondDetail,
+      frequency: draft.frequency,
+      since: draft.since,
+      myBirthYear: birthYear(state.profile, state.profile ? resolveAge(state.profile) : null),
+      theirBirthYear: birthYear(draft, resolveAge(draft)),
+      until: new Date(),
+    });
+  }, [draft, state.profile, state.settings.showPast]);
   const isNew = !state.people.some((p) => p.id === draft.id);
   const nameForCopy = draft.name.trim() || draft.relation || t.thisPerson;
   const ageMissing = result.theirYears === null;
@@ -294,9 +315,12 @@ export default function PersonEditor({ initial }: { initial: Person }) {
               key={preset.label}
               type="button"
               className="chip"
-              onClick={() =>
+              onClick={() => {
+                if (presets.indexOf(preset) < 2) setOther(false);
                 setDraft({
                   ...draft,
+                  // 어머니·아버지 단추는 부모님 칩도 함께 고른다.
+                  bonds: presets.indexOf(preset) < 2 ? withBond(draft.bonds, "parent") : draft.bonds,
                   relation: preset.relation,
                   // 이모지는 화면에 보이지 않고 폴라로이드 사진을 고르는 데만 쓴다(lib/photos.ts).
                   emoji: preset.emoji,
@@ -304,8 +328,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
                   name: !draft.name.trim() || presets.some((p) => p.label === draft.name) ? preset.label : draft.name,
                   frequency: preset.frequency,
                   hoursPerMeeting: preset.hoursPerMeeting,
-                })
-              }
+                });
+              }}
             >
               {preset.label}
             </button>
@@ -337,6 +361,14 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             />
           </div>
         </div>
+        <BondChips
+          bonds={draft.bonds}
+          other={other}
+          onChange={(bonds, nextOther) => {
+            setOther(nextOther);
+            setDraft({ ...draft, bonds });
+          }}
+        />
         <div className="border-t border-ink-200/70 pt-4">
           <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.age} />
         </div>
@@ -353,6 +385,9 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           summary={t.moreSummary}
           openWhen={Boolean(draft.since) || Boolean(draft.horizon) || draft.hoursPerMeeting !== undefined}
         >
+        {draft.bonds && (
+          <BondDetailFields bonds={draft.bonds} detail={draft.bondDetail} onChange={(bondDetail) => setDraft({ ...draft, bondDetail })} />
+        )}
         <SinceField
           value={draft.since}
           frequency={draft.frequency}
@@ -404,6 +439,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
           </MoreDetails>
         </div>
       </div>
+
+      {pastPreview && <BondPreview count={formatCount(pastPreview.count)} />}
 
       <div className="flex items-center gap-2">
         <button type="submit" className="btn-primary" disabled={consent.blocking}>
