@@ -79,3 +79,23 @@ test("근거 줄을 더하면 합계가 되고, 군 복무 줄은 음수다", ()
 test("livedTogetherCount: 같이 산 동안 329번/년 + 떠난 뒤 지금 빈도", () => {
   near(livedTogetherCount({ myBirthYear: 1993, leftYear: 2012, frequency: monthly, until: UNTIL }), 19 * 365 * 0.9 + 176, 4);
 });
+test("동료를 고르면 빈 곳·그 뒤도 근무일 상한(약 182)을 넘지 않는다", () => {
+  const r = estimatePast({ bonds: ["coworker", "elementary"], since: "2021-03-01", frequency: { count: 5, unit: "week" }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  near(r.lines.find((l) => l.kind === "after").count, 15 * 230 * (150 / 190), 1); // 2006.3~2021.3 빈 곳, 260/년이 아니라 182/년
+});
+test("동료를 고르면 since는 일 시작이고, 같이 산 끝으로 쓰지 않는다", () => {
+  const r = estimatePast({ bonds: ["parent", "coworker"], since: "2024-11-12", frequency: monthly, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  near(r.lines.find((l) => l.kind === "together").count, 19 * 365 * 0.9, 2);
+});
+test("첫 구간이 기준일 뒤면 학원도 더하지 않는다", () => {
+  const r = estimatePast({ bonds: ["elementary", "academy"], frequency: monthly, myBirthYear: 2024, theirBirthYear: null, until: UNTIL });
+  assert.deepEqual(r, { count: 0, lines: [] });
+});
+test("아직 시작 안 한 구간은 null이 아니라 0번", () => {
+  assert.deepEqual(estimatePast({ bonds: ["elementary"], frequency: monthly, myBirthYear: 2024, theirBirthYear: null, until: UNTIL }), { count: 0, lines: [] });
+});
+test("복무로 대학 학년이 밀리면 줄의 시작 해도 밀린다(2013 → 2015)", () => {
+  const base = { bonds: ["university"], frequency: monthly, myBirthYear: 1994, theirBirthYear: null, until: UNTIL };
+  assert.equal(estimatePast(base).lines.find((l) => l.kind === "university").from, 2013);
+  assert.equal(estimatePast({ ...base, detail: { military: { me: 2013 } } }).lines.find((l) => l.kind === "university").from, 2015);
+});

@@ -155,7 +155,8 @@ export function estimatePast(i: {
 
   const since = parseDate(i.since);
   const sinceAt = since ? monthOf(since) : null;
-  const afterRate = clean(toPerYear(i.frequency));
+  // 동료를 골랐으면 지금 빈도는 일하며 보는 횟수다. 빈 곳·그 뒤도 근무일 상한을 넘지 않는다.
+  const afterRate = Math.min(clean(toPerYear(i.frequency)), has("coworker") ? WORK_DAYS_PER_YEAR * ATTENDANCE : Infinity);
   const segments: Segment[] = [];
   const shift = detail.schoolShift ?? 0;
 
@@ -191,9 +192,10 @@ export function estimatePast(i: {
       }
     }
     // 같이 산 끝: 지금도 같이 살면 until, 아니면 since → 같이 산 마지막 나이 → 기본값.
+    // 동료를 골랐으면 since는 같이 일하기 시작한 때라 같이 산 끝으로 쓰지 않는다.
     const leftAt = (fallbackYear: number) =>
       detail.livesTogether ? until
-        : sinceAt !== null ? sinceAt
+        : sinceAt !== null && !has("coworker") ? sinceAt
         : detail.livedUntilAge !== undefined ? month(born + detail.livedUntilAge)
         : month(fallbackYear);
     if (has("parent")) segments.push({ kind: "together", start: month(born), end: leftAt(myHighEnd), perYear: DAYS_TOGETHER_PER_YEAR });
@@ -213,14 +215,16 @@ export function estimatePast(i: {
   if (has("coworker") && sinceAt !== null) {
     // 그만둔 해는 그해 끝까지 같이 일한 것으로 친다.
     const end = detail.workEndYear !== undefined ? month(detail.workEndYear + 1, 0) : until;
-    segments.push({ kind: "coworker", start: sinceAt, end, perYear: Math.min(afterRate, WORK_DAYS_PER_YEAR * ATTENDANCE) });
+    segments.push({ kind: "coworker", start: sinceAt, end, perYear: afterRate });
   }
 
   const live = segments.filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start);
   // 첫 구간부터 센다. 구간이 없으면 since부터 지금 빈도로(학원만 고른 경우).
   const start = live.length ? Math.min(...live.map((s) => s.start)) : sinceAt;
   if (start === null && !has("academy")) return null;
-  const lines = start !== null && start < until ? tally(live, services, start, until, afterRate) : [];
+  // 아직 시작 안 한 인연은 0번. 학원도 더하지 않는다(기준일 뒤의 해를 줄에 적지 않는다).
+  if (start !== null && start >= until) return { count: 0, lines: [] };
+  const lines = start !== null ? tally(live, services, start, until, afterRate) : [];
 
   if (has("academy")) {
     const { years, perWeek } = detail.academy ?? ACADEMY_DEFAULT;
