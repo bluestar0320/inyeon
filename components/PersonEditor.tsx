@@ -371,6 +371,12 @@ export default function PersonEditor({ initial }: { initial: Person }) {
               const { academy: _drop, ...rest } = detail;
               detail = Object.keys(rest).length ? rest : undefined;
             }
+            // 군 복무 칸은 학교·대학·동료 칩이 있을 때만 보인다. 칸이 사라지면 값도 빼서 몰래 빼지 않게 한다.
+            const serviceShown = bonds?.some((b) => ["elementary", "middle", "high", "university", "coworker"].includes(b));
+            if (!serviceShown && detail?.military) {
+              const { military: _drop, ...rest } = detail;
+              detail = Object.keys(rest).length ? rest : undefined;
+            }
             setDraft({ ...draft, bonds, bondDetail: detail });
           }}
         />

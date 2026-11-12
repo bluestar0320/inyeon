@@ -65,8 +65,12 @@ export function cleanBondDetail(value: unknown): BondDetail | undefined {
 }
 
 export type PastLineKind = "elementary" | "middle" | "high" | "university" | "academy" | "coworker" | "together" | "apart" | "after" | "military";
-/** from/to = 해. 학교·대학·같이 산 구간은 학년도(3월~이듬해 2월), 나머지는 달력 해. military는 count가 음수(뺀 양). */
-export interface PastLine { kind: PastLineKind; from: number; to: number; count: number }
+/**
+ * from/to = 센 첫 해와 마지막 해. 학교·대학·같이 산 구간은 학년도(3월~이듬해 2월), 나머지는 달력 해.
+ * years = 실제로 센 기간(달 합 ÷ 12, 반올림). 군 복무로 0이 된 달은 넣지 않는다. military는 count가 음수(뺀 양).
+ * after = 「그 뒤」 줄이 무엇 뒤인지(바로 앞에 끝난 구간의 종류). 없으면 처음부터 지금 빈도.
+ */
+export interface PastLine { kind: PastLineKind; from: number; to: number; years: number; count: number; after?: PastLineKind }
 export interface PastEstimate { count: number; lines: PastLine[] }
 
 /*
@@ -98,12 +102,13 @@ function tally(segments: Segment[], services: [number, number][], start: number,
   const cuts = [start, until, ...segments.flatMap((s) => [s.start, s.end]), ...services.flat()]
     .filter((t) => t >= start && t <= until)
     .sort((a, b) => a - b);
-  const lines = new Map<PastLineKind, { from: number; to: number; count: number }>();
-  const add = (kind: PastLineKind, a: number, b: number, count: number) => {
+  const lines = new Map<PastLineKind, { from: number; to: number; months: number; count: number; after?: PastLineKind }>();
+  const add = (kind: PastLineKind, a: number, b: number, count: number, months: number) => {
     const line = lines.get(kind);
-    if (line) Object.assign(line, { from: Math.min(line.from, a), to: Math.max(line.to, b), count: line.count + count });
-    else lines.set(kind, { from: a, to: b, count });
+    if (line) Object.assign(line, { from: Math.min(line.from, a), to: Math.max(line.to, b), months: line.months + months, count: line.count + count });
+    else lines.set(kind, { from: a, to: b, months, count });
   };
+  let prev: PastLineKind | undefined;
   for (let k = 0; k + 1 < cuts.length; k += 1) {
     const a = cuts[k], b = cuts[k + 1];
     if (b <= a) continue;
@@ -111,8 +116,12 @@ function tally(segments: Segment[], services: [number, number][], start: number,
     let best: Segment | null = null;
     for (const s of segments) if (s.start <= mid && mid < s.end && (!best || s.perYear > best.perYear)) best = s;
     const count = ((best ? best.perYear : afterRate) * (b - a)) / 12;
-    add(best ? best.kind : "after", a, b, count);
-    if (services.some(([s, e]) => s <= mid && mid < e)) add("military", a, b, -count);
+    const kind = best ? best.kind : "after";
+    const serving = services.some(([s, e]) => s <= mid && mid < e);
+    add(kind, a, b, count, serving ? 0 : b - a);
+    if (serving) add("military", a, b, -count, b - a);
+    if (kind === "after") lines.get("after")!.after = prev;
+    else prev = kind;
   }
   return [...lines]
     .filter(([, l]) => l.count !== 0)
@@ -121,7 +130,9 @@ function tally(segments: Segment[], services: [number, number][], start: number,
       from: Math.floor(l.from / 12),
       // 3월에 끝나는 학년도 구간은 2월이 마지막 달이라 끝 해를 학년도로 적는다(초등 2000~2005).
       to: Math.max(Math.floor(l.from / 12), Math.floor((l.to - (SCHOOL_LIKE.includes(kind) ? 2 : 0) - 1e-9) / 12)),
+      years: Math.round(l.months / 12),
       count: l.count,
+      ...(kind === "after" && l.after ? { after: l.after } : {}),
     }));
 }
 
@@ -161,7 +172,9 @@ export function estimatePast(i: {
   const shift = detail.schoolShift ?? 0;
 
   // 군 복무: 그해 1월 1일 입대로 친다(겹치는 기간이 가장 길게). 나와 상대가 겹친 기간은 한 번만 빠진다.
-  const services: [number, number][] = [finiteYear(detail.military?.me), finiteYear(detail.military?.them)]
+  // 군 복무 칸은 학교·대학·동료 칩에만 있다. 가족 칩만 남았으면 예전에 넣은 값은 쓰지 않는다.
+  const military = bonds.some((b) => ["elementary", "middle", "high", "university", "coworker"].includes(b)) ? detail.military : undefined;
+  const services: [number, number][] = [finiteYear(military?.me), finiteYear(military?.them)]
     .filter((y): y is number => y !== null)
     .map((y) => {
       const end = new Date(y, 0, 1);
@@ -219,6 +232,16 @@ export function estimatePast(i: {
   }
 
   const live = segments.filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start);
+  // 학교·가족·동료 구간이 없고 since가 있으면 학원은 since부터 이어진 구간으로 본다.
+  // 지금 빈도(after)도 같은 기간의 구간으로 넣어, 겹치는 동안은 둘 중 큰 쪽 하나만 센다.
+  const academyLive = has("academy") && !live.length && sinceAt !== null;
+  if (academyLive) {
+    const { years, perWeek } = detail.academy ?? ACADEMY_DEFAULT;
+    live.push(
+      { kind: "academy", start: sinceAt, end: sinceAt + clean(years) * 12, perYear: clean(perWeek * 52) },
+      { kind: "after", start: sinceAt, end: until, perYear: afterRate },
+    );
+  }
   // 첫 구간부터 센다. 구간이 없으면 since부터 지금 빈도로(학원만 고른 경우).
   const start = live.length ? Math.min(...live.map((s) => s.start)) : sinceAt;
   if (start === null && !has("academy")) return null;
@@ -226,12 +249,12 @@ export function estimatePast(i: {
   if (start !== null && start >= until) return { count: 0, lines: [] };
   const lines = start !== null ? tally(live, services, start, until, afterRate) : [];
 
-  if (has("academy")) {
+  if (has("academy") && !academyLive) {
     const { years, perWeek } = detail.academy ?? ACADEMY_DEFAULT;
     // 학원은 언제였는지 묻지 않는다. 줄의 해는 셈을 시작한 해(없으면 기준일의 해)로 둔다.
     const y = Math.floor((start ?? until) / 12);
     const count = clean(years * perWeek * 52);
-    if (count) lines.push({ kind: "academy", from: y, to: y, count });
+    if (count) lines.push({ kind: "academy", from: y, to: y, years: Math.round(clean(years)), count });
   }
   return { count: sum(lines), lines };
 }

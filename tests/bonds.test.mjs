@@ -99,3 +99,39 @@ test("복무로 대학 학년이 밀리면 줄의 시작 해도 밀린다(2013 �
   assert.equal(estimatePast(base).lines.find((l) => l.kind === "university").from, 2013);
   assert.equal(estimatePast({ ...base, detail: { military: { me: 2013 } } }).lines.find((l) => l.kind === "university").from, 2015);
 });
+test("근거 줄의 해는 실제로 센 해다: 어머니 19년, 형 16년, 복무 낀 대학 4년", () => {
+  const line = (r, kind) => r.lines.find((l) => l.kind === kind);
+  const mom = estimatePast({ bonds: ["parent"], frequency: monthly, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  assert.equal(line(mom, "together").years, 19); // 1993.3~2012.3
+  const sib = estimatePast({ bonds: ["sibling"], frequency: monthly, myBirthYear: 1993, theirBirthYear: 1990, until: UNTIL });
+  assert.equal(line(sib, "together").years, 16); // 형이 고교를 마친 2009.3까지
+  const uni = estimatePast({ bonds: ["university"], detail: { military: { me: 2013 } }, frequency: monthly, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  assert.equal(line(uni, "university").years, 4);
+  assert.equal(line(uni, "university").to, 2017); // 끝 해는 마지막으로 센 학년도
+});
+test("얼마 전 따로 살게 됐어도 그 뒤 줄은 셈에 든 만큼 보인다", () => {
+  const r = estimatePast({ bonds: ["parent"], since: "2026-03-15", frequency: { count: 1, unit: "day" }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  const after = r.lines.find((l) => l.kind === "after");
+  assert.ok(after.count >= 1); // ResultPanel은 count < 1인 줄만 감춘다
+  assert.equal(after.after, "together");
+});
+test("학원 + since: 겹치는 동안 지금 빈도와 학원 중 큰 쪽 하나만 센다", () => {
+  const base = { since: "2020-03-01", frequency: { count: 1, unit: "day" }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL };
+  const withAcademy = estimatePast({ ...base, bonds: ["academy"], detail: { academy: { years: 3, perWeek: 2 } } });
+  const daysSince = (UNTIL - new Date("2020-03-01T00:00:00")) / 86400000;
+  assert.ok(withAcademy.count <= daysSince + 1); // 매일 본 사이에 학원 312번을 또 얹지 않는다
+  // 지금 빈도가 학원보다 드물면 학원 3년은 학원 빈도로 센다.
+  const rare = estimatePast({ ...base, frequency: { count: 1, unit: "month" }, bonds: ["academy"], detail: { academy: { years: 3, perWeek: 2 } } });
+  near(rare.lines.find((l) => l.kind === "academy").count, 3 * 2 * 52, 1);
+  near(rare.lines.reduce((s, l) => s + l.count, 0), rare.count, 1e-6);
+});
+test("「그 뒤」 줄은 바로 앞에 끝난 구간을 적는다", () => {
+  const after = (bonds, extra = {}) => estimatePast({ bonds, frequency: monthly, myBirthYear: 1993, theirBirthYear: null, until: UNTIL, ...extra }).lines.find((l) => l.kind === "after").after;
+  assert.equal(after(["high"]), "high");
+  assert.equal(after(["parent"]), "together");
+  assert.equal(after(["coworker"], { since: "2015-01-01", detail: { workEndYear: 2020 } }), "coworker");
+});
+test("가족 칩만 남으면 예전에 넣은 군 복무 값은 빼지 않는다", () => {
+  const r = estimatePast({ bonds: ["parent"], detail: { military: { me: 2013 } }, frequency: monthly, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  assert.equal(r.lines.find((l) => l.kind === "military"), undefined);
+});

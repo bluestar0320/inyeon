@@ -5,13 +5,22 @@ import type { ReactNode } from "react";
 import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
-import type { PastLine } from "@/lib/bonds";
+import type { PastLine, PastLineKind } from "@/lib/bonds";
 import type { CountResult, PastResult } from "@/lib/calc";
 import { ACADEMY_DEFAULT } from "@/lib/pastRules";
 import { dotsFor } from "@/lib/dots";
 import { formatCount, formatPercent, formatYears } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import type { ShareSpec } from "@/lib/shareCard";
+
+/** 「그 뒤」 줄이 무엇 뒤인지. 바로 앞에 끝난 구간의 종류로 고른다. */
+type AfterWhat = "school" | "together" | "left" | "none";
+function afterWhat(kind: PastLineKind | undefined): AfterWhat {
+  if (kind === "together") return "together";
+  if (kind === "coworker" || kind === "academy") return "left";
+  if (kind === "elementary" || kind === "middle" || kind === "high" || kind === "university") return "school";
+  return "none";
+}
 
 const COPY = defineCopy({
   ko: {
@@ -31,7 +40,7 @@ const COPY = defineCopy({
     scopeYear: "올해",
     school: (name: string, years: number, from: number, to: number, n: string) => `${name} ${years}년 (${from}~${to}) · ${n}번`,
     schoolName: { elementary: "초등학교", middle: "중학교", high: "고등학교", university: "대학교" },
-    after: (years: number, n: string) => `졸업 뒤 ${years}년, 지금 빈도로 · ${n}번`,
+    after: (what: AfterWhat, years: number, n: string) => `${{ school: "졸업 뒤 ", together: "따로 살게 된 뒤 ", left: "그만둔 뒤 ", none: "" }[what]}${years}년, 지금 빈도로 · ${n}번`,
     bondTogether: (years: number, n: string) => `같이 산 ${years}년 · ${n}번`,
     coworker: (years: number, n: string) => `같이 일한 ${years}년 · ${n}번`,
     apart: (n: string) => `따로 사신 동안 1년 2번 · ${n}번`,
@@ -58,7 +67,7 @@ const COPY = defineCopy({
     scopeYear: "This year",
     school: (name, years, from, to, n) => `${name}, ${years} yrs (${from}–${to}) · ${n}`,
     schoolName: { elementary: "Elementary school", middle: "Middle school", high: "High school", university: "University" },
-    after: (years, n) => `${years} yrs since graduating, at the current frequency · ${n}`,
+    after: (what, years, n) => `${years} yrs${{ school: " since graduating", together: " since moving apart", left: " since leaving", none: "" }[what]}, at the current frequency · ${n}`,
     bondTogether: (years, n) => `Lived together ${years} yrs · ${n}`,
     coworker: (years, n) => `Worked together ${years} yrs · ${n}`,
     apart: (n) => `While living apart, 2 times a year · ${n}`,
@@ -85,7 +94,7 @@ const COPY = defineCopy({
     scopeYear: "今年",
     school: (name, years, from, to, n) => `${name}${years}年 (${from}〜${to}) · ${n}回`,
     schoolName: { elementary: "小学校", middle: "中学校", high: "高校", university: "大学" },
-    after: (years, n) => `卒業後${years}年、今の頻度で · ${n}回`,
+    after: (what, years, n) => `${{ school: "卒業後", together: "離れて暮らしてから", left: "辞めてから", none: "" }[what]}${years}年、今の頻度で · ${n}回`,
     bondTogether: (years, n) => `一緒に暮らした${years}年 · ${n}回`,
     coworker: (years, n) => `一緒に働いた${years}年 · ${n}回`,
     apart: (n) => `離れて暮らしていた間、年2回 · ${n}回`,
@@ -112,7 +121,7 @@ const COPY = defineCopy({
     scopeYear: "Este año",
     school: (name, years, from, to, n) => `${name}, ${years} años (${from}–${to}) · ${n}`,
     schoolName: { elementary: "Primaria", middle: "Secundaria", high: "Bachillerato", university: "Universidad" },
-    after: (years, n) => `${years} años tras graduarse, con la frecuencia actual · ${n}`,
+    after: (what, years, n) => `${years} años${{ school: " tras graduarse", together: " desde que dejaron de vivir juntos", left: " desde que lo dejó", none: "" }[what]}, con la frecuencia actual · ${n}`,
     bondTogether: (years, n) => `${years} años viviendo juntos · ${n}`,
     coworker: (years, n) => `${years} años trabajando juntos · ${n}`,
     apart: (n) => `Mientras vivían lejos, 2 veces al año · ${n}`,
@@ -139,7 +148,7 @@ const COPY = defineCopy({
     scopeYear: "今年",
     school: (name, years, from, to, n) => `${name}${years}年（${from}~${to}）· ${n}次`,
     schoolName: { elementary: "小学", middle: "初中", high: "高中", university: "大学" },
-    after: (years, n) => `毕业后${years}年，按现在的频率 · ${n}次`,
+    after: (what, years, n) => `${{ school: "毕业后", together: "分开住之后", left: "离开之后", none: "" }[what]}${years}年，按现在的频率 · ${n}次`,
     bondTogether: (years, n) => `住在一起的${years}年 · ${n}次`,
     coworker: (years, n) => `一起工作的${years}年 · ${n}次`,
     apart: (n) => `分开生活期间，每年2次 · ${n}次`,
@@ -201,18 +210,18 @@ export default function ResultPanel({
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
   const hasPast = !together && Boolean(past && past.count >= 1);
   const metTotal = together ? together.met + together.estimated : 0;
-  // 해 수가 0으로 보일 줄은 감춘다(「졸업 뒤 0년」). 학원·군 복무·따로 사신 줄은 해를 적지 않는다.
-  const shown = (line: PastLine) => !["after", "together", "coworker"].includes(line.kind) || line.to - line.from > 0;
+  // 1번도 안 되는 줄만 감춘다. 해가 짧아도 셈에 들어갔으면 근거에 보인다.
+  const shown = (line: PastLine) => Math.abs(line.count) >= 1;
   const lineText = (line: PastLine): string => {
     const n = formatCount(Math.abs(Math.round(line.count)));
-    const years = Math.max(0, line.to - line.from);
+    const years = line.years;
     switch (line.kind) {
       case "elementary":
       case "middle":
       case "high":
       case "university":
-        return t.school(t.schoolName[line.kind], line.to - line.from + 1, line.from, line.to, n);
-      case "after": return t.after(years, n);
+        return t.school(t.schoolName[line.kind], years, line.from, line.to, n);
+      case "after": return t.after(afterWhat(line.after), years, n);
       case "together": return t.bondTogether(years, n);
       case "coworker": return t.coworker(years, n);
       case "apart": return t.apart(n);
@@ -307,7 +316,7 @@ export default function ResultPanel({
                       <li key={`${line.kind}${i}`}>{lineText(line)}</li>
                     ))}
                   </ul>
-                  <p className="mt-1">{t.linesNote}</p>
+                  {together.lines.some((line) => ["elementary", "middle", "high", "university"].includes(line.kind)) && <p className="mt-1">{t.linesNote}</p>}
                 </div>
               )}
               {together.ageHint && <p className="mt-0.5 text-[11px] text-ink-400">{t.ageHint}</p>}
