@@ -21,7 +21,7 @@ import {
   remainingYears,
   resolveAge,
 } from "../lib/calc.ts";
-import { cleanBondDetail, cleanBonds } from "../lib/bonds.ts";
+import { cleanBondDetail, cleanBonds, estimatePast } from "../lib/bonds.ts";
 import { lookupLifeExpectancy, refreshLifeSpan } from "../lib/lifeExpectancy.ts";
 
 const RUNS = Number(process.env.FUZZ_RUNS ?? 2000);
@@ -207,6 +207,38 @@ test("관계 칩·세부 값 다듬기는 무엇이 들어와도 깨지지 않�
         ])(),
       );
       if (d?.academy) assert.ok(d.academy.years > 0 && d.academy.years <= 20 && d.academy.perWeek >= 1 && d.academy.perWeek <= 7);
+    } catch (error) {
+      error.message = `씨앗 ${seed}: ${error.message}`;
+      throw error;
+    }
+  }
+});
+
+test("지나온 만남 어림은 무엇이 들어와도 null이거나 유한하고 0 이상이다", () => {
+  const all = ["elementary", "middle", "high", "university", "academy", "coworker", "parent", "grandparent", "sibling"];
+  const until = [NOW, new Date("2040-01-01T00:00:00"), new Date("1990-06-01T00:00:00")];
+  for (let seed = 1; seed <= RUNS; seed += 1) {
+    const m = maker(seed);
+    const any = () => m.pick([m.num, () => 1950 + Math.floor(m.r() * 100), () => true, () => -1, () => 1])();
+    const birth = () => m.pick([() => null, m.num, () => 1940 + Math.floor(m.r() * 90)])();
+    try {
+      const bonds = all.filter(() => m.r() > 0.7);
+      // 다듬은 값과 다듬지 않은 값을 둘 다 던진다.
+      const raw = {
+        schoolYears: { elementary: any(), middle: any(), high: any() },
+        academy: m.r() > 0.5 ? { years: any(), perWeek: any() } : undefined,
+        military: { me: any(), them: any() },
+        livedUntilAge: any(),
+        livesTogether: m.r() > 0.5,
+        workEndYear: any(),
+        schoolShift: m.pick([-1, 0, 1]),
+      };
+      const detail = m.pick([() => undefined, () => cleanBondDetail(raw), () => raw])();
+      const r = estimatePast({ bonds, detail, frequency: m.frequency(), since: m.date(), myBirthYear: birth(), theirBirthYear: birth(), until: m.pick(until) });
+      if (r !== null) {
+        sane(r.count, "어림");
+        for (const l of r.lines) assert.ok(Number.isFinite(l.count) && Number.isFinite(l.from) && Number.isFinite(l.to), `줄 ${JSON.stringify(l)}`);
+      }
     } catch (error) {
       error.message = `씨앗 ${seed}: ${error.message}`;
       throw error;
