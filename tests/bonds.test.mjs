@@ -135,3 +135,25 @@ test("가족 칩만 남으면 예전에 넣은 군 복무 값은 빼지 않는�
   const r = estimatePast({ bonds: ["parent"], detail: { military: { me: 2013 } }, frequency: monthly, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
   assert.equal(r.lines.find((l) => l.kind === "military"), undefined);
 });
+test("동료 + 학원 + since: 같은 기간을 두 번 세지 않는다(둘을 따로 센 것 중 큰 쪽을 넘지 않음)", () => {
+  const base = { since: "2025-01-01", frequency: { count: 1, unit: "week" }, detail: { academy: { years: 3, perWeek: 2 } }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL };
+  const both = estimatePast({ ...base, bonds: ["coworker", "academy"] }).count;
+  const work = estimatePast({ ...base, bonds: ["coworker"] }).count;
+  const academy = estimatePast({ ...base, bonds: ["academy"] }).count;
+  assert.ok(both <= Math.max(work, academy) + 1e-6, `${both} > max(${work}, ${academy})`);
+  assert.ok(both < work + academy - 1);
+});
+test("학원 + since + 매일: 학원 줄이 남고 숫자는 그대로", () => {
+  const r = estimatePast({ bonds: ["academy"], since: "2020-03-01", frequency: { count: 1, unit: "day" }, detail: { academy: { years: 3, perWeek: 2 } }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  const academy = r.lines.find((l) => l.kind === "academy");
+  assert.ok(academy && academy.count > 0);
+  near(r.count, 2446.6174687500516, 1e-6); // 고치기 전의 합(매일 × 2020.3~2026.11)
+  near(r.lines.reduce((s, l) => s + l.count, 0), r.count, 1e-6);
+});
+test("6달이 안 되는 줄은 달로 센다(0년 대신)", () => {
+  const r = estimatePast({ bonds: ["parent"], since: "2026-06-01", frequency: { count: 1, unit: "day" }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  const after = r.lines.find((l) => l.kind === "after");
+  assert.equal(after.years, 0);
+  assert.equal(after.months, 5); // 2026.6.1~11.12
+  assert.equal(r.lines.find((l) => l.kind === "together").months, 399);
+});

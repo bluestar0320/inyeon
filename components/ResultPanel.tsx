@@ -40,9 +40,10 @@ const COPY = defineCopy({
     scopeYear: "올해",
     school: (name: string, years: number, from: number, to: number, n: string) => `${name} ${years}년 (${from}~${to}) · ${n}번`,
     schoolName: { elementary: "초등학교", middle: "중학교", high: "고등학교", university: "대학교" },
-    after: (what: AfterWhat, years: number, n: string) => `${{ school: "졸업 뒤 ", together: "따로 살게 된 뒤 ", left: "그만둔 뒤 ", none: "" }[what]}${years}년, 지금 빈도로 · ${n}번`,
-    bondTogether: (years: number, n: string) => `같이 산 ${years}년 · ${n}번`,
-    coworker: (years: number, n: string) => `같이 일한 ${years}년 · ${n}번`,
+    period: (years: number, months: number) => (years >= 1 ? `${years}년` : `${months}개월`),
+    after: (what: AfterWhat, span: string, n: string) => `${{ school: "졸업 뒤 ", together: "따로 살게 된 뒤 ", left: "그만둔 뒤 ", none: "" }[what]}${span}, 지금 빈도로 · ${n}번`,
+    bondTogether: (span: string, n: string) => `같이 산 ${span} · ${n}번`,
+    coworker: (span: string, n: string) => `같이 일한 ${span} · ${n}번`,
     apart: (n: string) => `따로 사신 동안 1년 2번 · ${n}번`,
     academy: (perWeek: number, n: string) => `학원, 주 ${perWeek}번 · ${n}번`,
     military: (n: string) => `군 복무로 못 본 기간 · −${n}번`,
@@ -67,9 +68,10 @@ const COPY = defineCopy({
     scopeYear: "This year",
     school: (name, years, from, to, n) => `${name}, ${years} yrs (${from}–${to}) · ${n}`,
     schoolName: { elementary: "Elementary school", middle: "Middle school", high: "High school", university: "University" },
-    after: (what, years, n) => `${years} yrs${{ school: " since graduating", together: " since moving apart", left: " since leaving", none: "" }[what]}, at the current frequency · ${n}`,
-    bondTogether: (years, n) => `Lived together ${years} yrs · ${n}`,
-    coworker: (years, n) => `Worked together ${years} yrs · ${n}`,
+    period: (years, months) => (years >= 1 ? `${years} yrs` : `${months} ${months === 1 ? "month" : "months"}`),
+    after: (what, span, n) => `${span}${{ school: " since graduating", together: " since moving apart", left: " since leaving", none: "" }[what]}, at the current frequency · ${n}`,
+    bondTogether: (span, n) => `Lived together ${span} · ${n}`,
+    coworker: (span, n) => `Worked together ${span} · ${n}`,
     apart: (n) => `While living apart, 2 times a year · ${n}`,
     academy: (perWeek, n) => `Cram school, ${perWeek} a week · ${n}`,
     military: (n) => `Time apart for military service · −${n}`,
@@ -94,9 +96,10 @@ const COPY = defineCopy({
     scopeYear: "今年",
     school: (name, years, from, to, n) => `${name}${years}年 (${from}〜${to}) · ${n}回`,
     schoolName: { elementary: "小学校", middle: "中学校", high: "高校", university: "大学" },
-    after: (what, years, n) => `${{ school: "卒業後", together: "離れて暮らしてから", left: "辞めてから", none: "" }[what]}${years}年、今の頻度で · ${n}回`,
-    bondTogether: (years, n) => `一緒に暮らした${years}年 · ${n}回`,
-    coworker: (years, n) => `一緒に働いた${years}年 · ${n}回`,
+    period: (years, months) => (years >= 1 ? `${years}年` : `${months}か月`),
+    after: (what, span, n) => `${{ school: "卒業後", together: "離れて暮らしてから", left: "辞めてから", none: "" }[what]}${span}、今の頻度で · ${n}回`,
+    bondTogether: (span, n) => `一緒に暮らした${span} · ${n}回`,
+    coworker: (span, n) => `一緒に働いた${span} · ${n}回`,
     apart: (n) => `離れて暮らしていた間、年2回 · ${n}回`,
     academy: (perWeek, n) => `塾、週${perWeek}回 · ${n}回`,
     military: (n) => `兵役で会えなかった期間 · −${n}回`,
@@ -121,9 +124,10 @@ const COPY = defineCopy({
     scopeYear: "Este año",
     school: (name, years, from, to, n) => `${name}, ${years} años (${from}–${to}) · ${n}`,
     schoolName: { elementary: "Primaria", middle: "Secundaria", high: "Bachillerato", university: "Universidad" },
-    after: (what, years, n) => `${years} años${{ school: " tras graduarse", together: " desde que dejaron de vivir juntos", left: " desde que lo dejó", none: "" }[what]}, con la frecuencia actual · ${n}`,
-    bondTogether: (years, n) => `${years} años viviendo juntos · ${n}`,
-    coworker: (years, n) => `${years} años trabajando juntos · ${n}`,
+    period: (years, months) => (years >= 1 ? `${years} años` : `${months} ${months === 1 ? "mes" : "meses"}`),
+    after: (what, span, n) => `${span}${{ school: " tras graduarse", together: " desde que dejaron de vivir juntos", left: " desde que lo dejó", none: "" }[what]}, con la frecuencia actual · ${n}`,
+    bondTogether: (span, n) => `${span} viviendo juntos · ${n}`,
+    coworker: (span, n) => `${span} trabajando juntos · ${n}`,
     apart: (n) => `Mientras vivían lejos, 2 veces al año · ${n}`,
     academy: (perWeek, n) => `Academia, ${perWeek} a la semana · ${n}`,
     military: (n) => `Tiempo sin verse por el servicio militar · −${n}`,
@@ -148,9 +152,10 @@ const COPY = defineCopy({
     scopeYear: "今年",
     school: (name, years, from, to, n) => `${name}${years}年（${from}~${to}）· ${n}次`,
     schoolName: { elementary: "小学", middle: "初中", high: "高中", university: "大学" },
-    after: (what, years, n) => `${{ school: "毕业后", together: "分开住之后", left: "离开之后", none: "" }[what]}${years}年，按现在的频率 · ${n}次`,
-    bondTogether: (years, n) => `住在一起的${years}年 · ${n}次`,
-    coworker: (years, n) => `一起工作的${years}年 · ${n}次`,
+    period: (years, months) => (years >= 1 ? `${years}年` : `${months}个月`),
+    after: (what, span, n) => `${{ school: "毕业后", together: "分开住之后", left: "离开之后", none: "" }[what]}${span}，按现在的频率 · ${n}次`,
+    bondTogether: (span, n) => `住在一起的${span} · ${n}次`,
+    coworker: (span, n) => `一起工作的${span} · ${n}次`,
     apart: (n) => `分开生活期间，每年2次 · ${n}次`,
     academy: (perWeek, n) => `补习班，每周${perWeek}次 · ${n}次`,
     military: (n) => `因服兵役见不到的时间 · −${n}次`,
@@ -215,15 +220,17 @@ export default function ResultPanel({
   const lineText = (line: PastLine): string => {
     const n = formatCount(Math.abs(Math.round(line.count)));
     const years = line.years;
+    // 1년이 안 되면 달로 적는다(「0년」 대신). 1번이라도 셌으면 적어도 1개월.
+    const span = t.period(years, Math.max(1, line.months));
     switch (line.kind) {
       case "elementary":
       case "middle":
       case "high":
       case "university":
         return t.school(t.schoolName[line.kind], years, line.from, line.to, n);
-      case "after": return t.after(afterWhat(line.after), years, n);
-      case "together": return t.bondTogether(years, n);
-      case "coworker": return t.coworker(years, n);
+      case "after": return t.after(afterWhat(line.after), span, n);
+      case "together": return t.bondTogether(span, n);
+      case "coworker": return t.coworker(span, n);
       case "apart": return t.apart(n);
       case "academy": return t.academy((together?.academy ?? ACADEMY_DEFAULT).perWeek, n);
       case "military": return t.military(n);
