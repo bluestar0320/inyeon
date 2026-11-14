@@ -157,3 +157,25 @@ test("6달이 안 되는 줄은 달로 센다(0년 대신)", () => {
   assert.equal(after.months, 5); // 2026.6.1~11.12
   assert.equal(r.lines.find((l) => l.kind === "together").months, 399);
 });
+test("동료 + 학원: 동료 빈도가 이기는 동안은 동료 줄로 적는다", () => {
+  const base = { bonds: ["coworker", "academy"], detail: { academy: { years: 3, perWeek: 2 } }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL };
+  const daily = estimatePast({ ...base, since: "2020-03-01", frequency: { count: 1, unit: "day" } });
+  const work = daily.lines.find((l) => l.kind === "coworker");
+  const alone = estimatePast({ ...base, bonds: ["coworker"], since: "2020-03-01", frequency: { count: 1, unit: "day" } });
+  near(work.count, alone.count, 1e-6); // 동료 빈도가 학원(주 2번)보다 커서 내내 동료 줄
+  assert.equal(daily.lines.find((l) => l.kind === "academy"), undefined);
+  // 주 1번 + 2025년에 그만둠: 학원 3년(주 2번)이 이기는 동안만 학원, 그 뒤 그만둘 때까지 동료, 그 뒤 지금 빈도.
+  const weekly = estimatePast({ ...base, since: "2020-03-01", frequency: { count: 1, unit: "week" }, detail: { ...base.detail, workEndYear: 2025 } });
+  const kinds = Object.fromEntries(weekly.lines.map((l) => [l.kind, l]));
+  near(kinds.academy.count, 3 * 2 * 52, 1e-6);
+  assert.equal(kinds.academy.months, 36);
+  assert.ok(kinds.coworker.count > 0);
+  assert.equal(kinds.coworker.months, 34); // 2023.3~2026.1
+  assert.equal(kinds.after.after, "coworker");
+});
+test("8달짜리 줄은 months 8(화면은 「8개월」)", () => {
+  const r = estimatePast({ bonds: ["parent"], since: "2026-03-12", frequency: { count: 1, unit: "day" }, myBirthYear: 1993, theirBirthYear: null, until: UNTIL });
+  const after = r.lines.find((l) => l.kind === "after");
+  assert.equal(after.months, 8);
+  assert.equal(after.years, 1); // 반올림하면 1년이라 화면은 months < 12로 고른다
+});

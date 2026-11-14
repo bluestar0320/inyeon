@@ -40,7 +40,7 @@ const COPY = defineCopy({
     scopeYear: "올해",
     school: (name: string, years: number, from: number, to: number, n: string) => `${name} ${years}년 (${from}~${to}) · ${n}번`,
     schoolName: { elementary: "초등학교", middle: "중학교", high: "고등학교", university: "대학교" },
-    period: (years: number, months: number) => (years >= 1 ? `${years}년` : `${months}개월`),
+    period: (years: number, months: number) => (months >= 12 ? `${years}년` : `${months}개월`),
     after: (what: AfterWhat, span: string, n: string) => `${{ school: "졸업 뒤 ", together: "따로 살게 된 뒤 ", left: "그만둔 뒤 ", none: "" }[what]}${span}, 지금 빈도로 · ${n}번`,
     bondTogether: (span: string, n: string) => `같이 산 ${span} · ${n}번`,
     coworker: (span: string, n: string) => `같이 일한 ${span} · ${n}번`,
@@ -68,7 +68,7 @@ const COPY = defineCopy({
     scopeYear: "This year",
     school: (name, years, from, to, n) => `${name}, ${years} yrs (${from}–${to}) · ${n}`,
     schoolName: { elementary: "Elementary school", middle: "Middle school", high: "High school", university: "University" },
-    period: (years, months) => (years >= 1 ? `${years} yrs` : `${months} ${months === 1 ? "month" : "months"}`),
+    period: (years, months) => (months >= 12 ? `${years} yrs` : `${months} ${months === 1 ? "month" : "months"}`),
     after: (what, span, n) => `${span}${{ school: " since graduating", together: " since moving apart", left: " since leaving", none: "" }[what]}, at the current frequency · ${n}`,
     bondTogether: (span, n) => `Lived together ${span} · ${n}`,
     coworker: (span, n) => `Worked together ${span} · ${n}`,
@@ -96,7 +96,7 @@ const COPY = defineCopy({
     scopeYear: "今年",
     school: (name, years, from, to, n) => `${name}${years}年 (${from}〜${to}) · ${n}回`,
     schoolName: { elementary: "小学校", middle: "中学校", high: "高校", university: "大学" },
-    period: (years, months) => (years >= 1 ? `${years}年` : `${months}か月`),
+    period: (years, months) => (months >= 12 ? `${years}年` : `${months}か月`),
     after: (what, span, n) => `${{ school: "卒業後", together: "離れて暮らしてから", left: "辞めてから", none: "" }[what]}${span}、今の頻度で · ${n}回`,
     bondTogether: (span, n) => `一緒に暮らした${span} · ${n}回`,
     coworker: (span, n) => `一緒に働いた${span} · ${n}回`,
@@ -124,7 +124,7 @@ const COPY = defineCopy({
     scopeYear: "Este año",
     school: (name, years, from, to, n) => `${name}, ${years} años (${from}–${to}) · ${n}`,
     schoolName: { elementary: "Primaria", middle: "Secundaria", high: "Bachillerato", university: "Universidad" },
-    period: (years, months) => (years >= 1 ? `${years} años` : `${months} ${months === 1 ? "mes" : "meses"}`),
+    period: (years, months) => (months >= 12 ? `${years} años` : `${months} ${months === 1 ? "mes" : "meses"}`),
     after: (what, span, n) => `${span}${{ school: " tras graduarse", together: " desde que dejaron de vivir juntos", left: " desde que lo dejó", none: "" }[what]}, con la frecuencia actual · ${n}`,
     bondTogether: (span, n) => `${span} viviendo juntos · ${n}`,
     coworker: (span, n) => `${span} trabajando juntos · ${n}`,
@@ -152,7 +152,7 @@ const COPY = defineCopy({
     scopeYear: "今年",
     school: (name, years, from, to, n) => `${name}${years}年（${from}~${to}）· ${n}次`,
     schoolName: { elementary: "小学", middle: "初中", high: "高中", university: "大学" },
-    period: (years, months) => (years >= 1 ? `${years}年` : `${months}个月`),
+    period: (years, months) => (months >= 12 ? `${years}年` : `${months}个月`),
     after: (what, span, n) => `${{ school: "毕业后", together: "分开住之后", left: "离开之后", none: "" }[what]}${span}，按现在的频率 · ${n}次`,
     bondTogether: (span, n) => `住在一起的${span} · ${n}次`,
     coworker: (span, n) => `一起工作的${span} · ${n}次`,
@@ -220,7 +220,7 @@ export default function ResultPanel({
   const lineText = (line: PastLine): string => {
     const n = formatCount(Math.abs(Math.round(line.count)));
     const years = line.years;
-    // 1년이 안 되면 달로 적는다(「0년」 대신). 1번이라도 셌으면 적어도 1개월.
+    // 12달이 안 되면 달로 적는다(「0년」·「1년」 대신). 1번이라도 셌으면 적어도 1개월.
     const span = t.period(years, Math.max(1, line.months));
     switch (line.kind) {
       case "elementary":

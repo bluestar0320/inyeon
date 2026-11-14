@@ -97,7 +97,8 @@ const clean = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 /*
  * 시작부터 until까지, 구간 경계로 자른 조각마다 센다.
  * 조각을 덮는 구간 중 1년 횟수가 가장 큰 것 하나만 세고, 덮는 게 없으면 지금 빈도(after).
- * 학원 구간이 덮는 조각은 다른 구간이 더 커도 학원 줄에 적는다(셈은 같은 큰 쪽). 고른 칩이 근거에서 사라지지 않게.
+ * 학원 구간이 덮는 조각에서 지금 빈도(after)가 이기면 학원 줄에 적는다(셈은 같은 큰 쪽). 고른 칩이 근거에서 사라지지 않게.
+ * 동료 같은 실제 구간이 이기거나 비기면 그 구간 줄에 그대로 적는다.
  * 군 복무 중인 조각은 0이고, 셌을 양을 military 줄에 음수로 적는다. 그래서 줄의 합 = count.
  */
 function tally(segments: Segment[], services: [number, number][], start: number, until: number, afterRate: number): PastLine[] {
@@ -118,7 +119,8 @@ function tally(segments: Segment[], services: [number, number][], start: number,
     let best: Segment | null = null;
     for (const s of segments) if (s.start <= mid && mid < s.end && (!best || s.perYear > best.perYear)) best = s;
     const count = ((best ? best.perYear : afterRate) * (b - a)) / 12;
-    const kind = segments.some((s) => s.kind === "academy" && s.start <= mid && mid < s.end) ? "academy" : best ? best.kind : "after";
+    const academyHere = segments.some((s) => s.kind === "academy" && s.start <= mid && mid < s.end);
+    const kind = !best ? "after" : best.kind === "after" && academyHere ? "academy" : best.kind;
     const serving = services.some(([s, e]) => s <= mid && mid < e);
     add(kind, a, b, count, serving ? 0 : b - a);
     if (serving) add("military", a, b, -count, b - a);

@@ -106,9 +106,9 @@ test("입대한 해를 치는 도중 1950으로 잘리지 않는다", async ({ p
   await expect(me).toHaveValue("2015");
 });
 
-test("1년이 안 된 동료는 「0년」 대신 달로 적는다", async ({ page }) => {
+test("1년이 안 된 동료는 「0년」·「1년」 대신 달로 적는다", async ({ page }) => {
   const d = new Date();
-  d.setDate(d.getDate() - 130);
+  d.setDate(d.getDate() - 250);
   const since = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   await page.goto("/people/new");
   await page.getByLabel("이름").fill("하늘");
@@ -119,6 +119,5 @@ test("1년이 안 된 동료는 「0년」 대신 달로 적는다", async ({ pa
   await page.getByLabel("언제부터 (선택)").fill(since);
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(AFTER_ADD_PERSON);
-  await expect(page.getByTestId("past-lines")).toContainText("같이 일한 4개월");
-  await expect(page.getByTestId("past-lines")).not.toContainText("0년");
+  await expect(page.getByTestId("past-lines")).toContainText("같이 일한 8개월");
 });
