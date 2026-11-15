@@ -26,9 +26,10 @@ const COPY = defineCopy({
   ko: {
     causeNames: { age: "나이", marry: "결혼", child: "아이", health: "건강", filters: "직접 건 조건" },
     join: "·",
+    and: "·",
     reason: (names: string, from: string, pct: string, down: boolean) => `${josa(names, "을/를")} 따져 보니 ${from}번에서 ${pct} ${down ? "줄었어요" : "늘었어요"}.`,
     ageNote: " 나이는 30대부터 사람을 덜 만난다는 통계청 생활시간조사를 따랐어요.",
-    aheadNote: (names: string) => ` ${josa(names, "은/는")} 통계가 아니라 앱이 정한 어림이고요.`,
+    aheadNote: (names: string) => ` ${josa(names, "은/는")} 통계가 아니라 앱이 정한 어림이에요.`,
     unit: "번",
     filtered: (from: string, cut: string) => `조건 필터를 적용해 ${from}번에서 ${cut} 줄었습니다.`,
     capped: (n: string) => ` (최대 ${n}번 상한 적용)`,
@@ -59,7 +60,8 @@ const COPY = defineCopy({
   en: {
     causeNames: { age: "age", marry: "marriage", child: "a child", health: "health", filters: "your own conditions" },
     join: ", ",
-    reason: (names, from, pct, down) => `Counting ${names}, it went ${down ? "down" : "up"} ${pct} from ${from}.`,
+    and: " and ",
+    reason: (names, from, pct, down) => `With ${names} factored in, it's ${down ? "down" : "up"} ${pct} from ${from}.`,
     ageNote: " The age part follows Statistics Korea's Time Use Survey: from their 30s, people meet others less.",
     aheadNote: () => " The chip multipliers are the app's own guess, not statistics.",
     unit: "times",
@@ -92,6 +94,7 @@ const COPY = defineCopy({
   ja: {
     causeNames: { age: "年齢", marry: "結婚", child: "子ども", health: "健康", filters: "自分で付けた条件" },
     join: "・",
+    and: "・",
     reason: (names, from, pct, down) => `${names}を考えると、${from}回から${pct}${down ? "減りました" : "増えました"}。`,
     ageNote: "年齢の分は、30代から人と会う時間が減るという韓国統計庁の生活時間調査によります。",
     aheadNote: () => "チップの倍率は統計ではなく、アプリが決めた目安です。",
@@ -123,8 +126,9 @@ const COPY = defineCopy({
     estimatedYear: (years) => `今年、登録する前まで(${years})は今の頻度で見積もっています。`,
   },
   es: {
-    causeNames: { age: "la edad", marry: "la boda", child: "un hijo", health: "la salud", filters: "tus condiciones" },
+    causeNames: { age: "la edad", marry: "el matrimonio", child: "un hijo", health: "la salud", filters: "tus condiciones" },
     join: ", ",
+    and: " y ",
     reason: (names, from, pct, down) => `Teniendo en cuenta ${names}, ${down ? "bajó" : "subió"} un ${pct} desde ${from}.`,
     ageNote: " Lo de la edad sigue la Encuesta de Uso del Tiempo de Statistics Korea: desde los 30 se ve menos gente.",
     aheadNote: () => " Los multiplicadores de las etiquetas son un cálculo propio de la app, no estadísticas.",
@@ -158,6 +162,7 @@ const COPY = defineCopy({
   zh: {
     causeNames: { age: "年龄", marry: "结婚", child: "孩子", health: "健康", filters: "自己设的条件" },
     join: "、",
+    and: "、",
     reason: (names, from, pct, down) => `考虑到${names}，从${from}次${down ? "减少" : "增加"}了${pct}。`,
     ageNote: "年龄部分参考韩国统计厅生活时间调查：30多岁起见人会变少。",
     aheadNote: () => "标签的倍数是应用自己定的估计，不是统计数据。",
@@ -293,6 +298,9 @@ export default function ResultPanel({
     );
   }
 
+  const joinNames = (a: string[], t: { join: string; and: string }) =>
+    a.length < 2 ? a.join("") : a.slice(0, -1).join(t.join) + t.and + a[a.length - 1];
+
   return (
     <div className="hero space-y-6">
       <BigNumber label={label} value={formatCount(result.total)} unit={t.unit} sub={story ? undefined : sentence} />
@@ -305,7 +313,7 @@ export default function ResultPanel({
       {causes ? (
         changed && causeKeys.length > 0 && (
           <p data-testid="reason" className="border-l-2 border-accent-400 pl-3 text-xs leading-relaxed text-ink-600">
-            {t.reason(causeKeys.map((k) => t.causeNames[k]).join(t.join), formatCount(result.baselineTotal), formatPercent(Math.abs(cut)), cut > 0)}
+            {t.reason(joinNames(causeKeys.map((k) => t.causeNames[k]), t), formatCount(result.baselineTotal), formatPercent(Math.abs(cut)), cut > 0)}
             {result.cappedAt !== null && t.capped(formatCount(result.cappedAt))}
             {causes.age && t.ageNote}
             {aheadNames && t.aheadNote(aheadNames)}
