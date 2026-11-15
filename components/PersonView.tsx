@@ -307,6 +307,7 @@ export default function PersonView({ person }: { person: Person }) {
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
+        causes={result.causes}
         sentence={copy.meetingSentence(person.name, formatCount(result.total))}
         share={{
           photo: imageFor(person),

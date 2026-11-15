@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState, useRef } from "react";
 
+import AheadChips from "@/components/AheadChips";
 import { BondChips, BondDetailFields, BondPreview, withBond } from "@/components/BondFields";
 import MoreDetails from "@/components/MoreDetails";
 import NumberInput from "@/components/NumberInput";
@@ -24,6 +25,7 @@ import { formatCount, formatDays, formatFrequency, formatInterval, formatYears, 
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { imageFor } from "@/lib/photos";
 import { relationPresets } from "@/lib/presets";
+import { relOf } from "@/lib/rel";
 import { pairTitle } from "@/lib/shareCard";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
@@ -274,6 +276,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
       <ResultPanel
         label={copy.meetingLabel}
         result={result}
+        causes={result.causes}
         sentence={copy.meetingSentence(nameForCopy, formatCount(result.total))}
         unknownMessage={
           ageMissing ? t.ageMissing : undefined
@@ -380,6 +383,7 @@ export default function PersonEditor({ initial }: { initial: Person }) {
             setDraft({ ...draft, bonds, bondDetail: detail });
           }}
         />
+        <AheadChips rel={relOf(draft)} ahead={draft.ahead} onChange={(ahead) => setDraft({ ...draft, ahead })} />
         <div className="border-t border-ink-200/70 pt-4">
           <LifeSpanFields value={draft} onChange={setDraft} ageLabel={t.age} />
         </div>

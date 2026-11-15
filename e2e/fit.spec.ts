@@ -164,3 +164,24 @@ for (const lang of ["ko", "en"])
       }
       expect(found, found.join("\n")).toEqual([]);
     });
+
+/* 「앞으로」 칩 줄: 가장 좁은 폭, 큰 글씨에서도 칩이 옆으로 넘치지 않는다. */
+for (const lang of ["ko", "en"])
+  for (const scale of ["xlarge", "font130"] as const)
+    test(`${lang} ${scale}: 「앞으로」 칩 줄이 344폭에서 넘치지 않는다`, async ({ page }) => {
+      await clearState(page);
+      await page.evaluate(({ key, v }) => localStorage.setItem(key, JSON.stringify(v)),
+        { key: STORAGE_KEY, v: state(lang, scale === "xlarge" ? "xlarge" : undefined) });
+      await page.setViewportSize({ width: 344, height: 882 });
+      await page.goto("/people/new");
+      await page.waitForLoadState("networkidle");
+      const chips = page.getByTestId("ahead-chips");
+      await expect(chips.getByRole("button")).toHaveCount(3);
+      if (scale === "font130") await systemFont(page, 1.3);
+      const over = await chips.evaluate((el) => {
+        const W = document.documentElement.getBoundingClientRect().width;
+        return [el, ...el.querySelectorAll("*")].filter((c) => c.getBoundingClientRect().right > W + 1 || c.scrollWidth > c.clientWidth + 1).length;
+      });
+      expect(over).toBe(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
+    });

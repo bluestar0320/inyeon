@@ -44,7 +44,7 @@ test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다",
   // 이번 달 칸은 달이 끝날 때까지 남겨 두므로(lib/meetings.ts ledger) 이달 지난 만큼(0~1) 더해져
   // 날짜에 따라 173이나 174가 된다.
   await expect.poll(() => headline(page)).toMatch(/^17[34]번$/);
-  await expect(page.getByText(/240번에서 .*% 줄었습니다/)).toBeVisible();
+  await expect(page.getByText(/240번에서 .*% 줄었어요/)).toBeVisible();
 });
 
 test("결혼 계획: 목표 나이를 지나면 0번 대신 다시 잡으라고 말한다", async ({ page }) => {

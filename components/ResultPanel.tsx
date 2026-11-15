@@ -6,10 +6,10 @@ import BigNumber from "@/components/BigNumber";
 import ShareButton from "@/components/ShareButton";
 import StatCard from "@/components/StatCard";
 import type { PastLine, PastLineKind } from "@/lib/bonds";
-import type { CountResult, PastResult } from "@/lib/calc";
+import type { CountResult, PastResult, RelationshipResult } from "@/lib/calc";
 import { ACADEMY_DEFAULT } from "@/lib/pastRules";
 import { dotsFor } from "@/lib/dots";
-import { formatCount, formatPercent, formatYears } from "@/lib/format";
+import { formatCount, formatPercent, formatYears, josa } from "@/lib/format";
 import { defineCopy, tr } from "@/lib/i18n";
 import type { ShareSpec } from "@/lib/shareCard";
 
@@ -24,6 +24,11 @@ function afterWhat(kind: PastLineKind | undefined): AfterWhat {
 
 const COPY = defineCopy({
   ko: {
+    causeNames: { age: "나이", marry: "결혼", child: "아이", health: "건강", filters: "직접 건 조건" },
+    join: "·",
+    reason: (names: string, from: string, pct: string, down: boolean) => `${josa(names, "을/를")} 따져 보니 ${from}번에서 ${pct} ${down ? "줄었어요" : "늘었어요"}.`,
+    ageNote: " 나이는 30대부터 사람을 덜 만난다는 통계청 생활시간조사를 따랐어요.",
+    aheadNote: (names: string) => ` ${josa(names, "은/는")} 통계가 아니라 앱이 정한 어림이고요.`,
     unit: "번",
     filtered: (from: string, cut: string) => `조건 필터를 적용해 ${from}번에서 ${cut} 줄었습니다.`,
     capped: (n: string) => ` (최대 ${n}번 상한 적용)`,
@@ -52,6 +57,11 @@ const COPY = defineCopy({
     estimatedYear: (years: string) => `올해 앱에 넣기 전까지(${years})는 지금 빈도로 어림했어요.`,
   },
   en: {
+    causeNames: { age: "age", marry: "marriage", child: "a child", health: "health", filters: "your own conditions" },
+    join: ", ",
+    reason: (names, from, pct, down) => `Counting ${names}, it went ${down ? "down" : "up"} ${pct} from ${from}.`,
+    ageNote: " The age part follows Statistics Korea's Time Use Survey: from their 30s, people meet others less.",
+    aheadNote: () => " The chip multipliers are the app's own guess, not statistics.",
     unit: "times",
     filtered: (from, cut) => `Your conditions brought this down by ${cut}, from ${from}.`,
     capped: (n) => ` (capped at ${n})`,
@@ -80,6 +90,11 @@ const COPY = defineCopy({
     estimatedYear: (years) => `The part of this year before you added them (${years}) is estimated at the current frequency.`,
   },
   ja: {
+    causeNames: { age: "年齢", marry: "結婚", child: "子ども", health: "健康", filters: "自分で付けた条件" },
+    join: "・",
+    reason: (names, from, pct, down) => `${names}を考えると、${from}回から${pct}${down ? "減りました" : "増えました"}。`,
+    ageNote: "年齢の分は、30代から人と会う時間が減るという韓国統計庁の生活時間調査によります。",
+    aheadNote: () => "チップの倍率は統計ではなく、アプリが決めた目安です。",
     unit: "回",
     filtered: (from, cut) => `条件フィルターで${from}回から${cut}減りました。`,
     capped: (n) => `(上限${n}回を適用)`,
@@ -108,6 +123,11 @@ const COPY = defineCopy({
     estimatedYear: (years) => `今年、登録する前まで(${years})は今の頻度で見積もっています。`,
   },
   es: {
+    causeNames: { age: "la edad", marry: "la boda", child: "un hijo", health: "la salud", filters: "tus condiciones" },
+    join: ", ",
+    reason: (names, from, pct, down) => `Teniendo en cuenta ${names}, ${down ? "bajó" : "subió"} un ${pct} desde ${from}.`,
+    ageNote: " Lo de la edad sigue la Encuesta de Uso del Tiempo de Statistics Korea: desde los 30 se ve menos gente.",
+    aheadNote: () => " Los multiplicadores de las etiquetas son un cálculo propio de la app, no estadísticas.",
     unit: "veces",
     filtered: (from, cut) => `Con tus condiciones bajó un ${cut} desde ${from}.`,
     capped: (n) => ` (con un máximo de ${n})`,
@@ -136,6 +156,11 @@ const COPY = defineCopy({
     estimatedYear: (years) => `La parte de este año antes de añadirlo (${years}) se estima con la frecuencia actual.`,
   },
   zh: {
+    causeNames: { age: "年龄", marry: "结婚", child: "孩子", health: "健康", filters: "自己设的条件" },
+    join: "、",
+    reason: (names, from, pct, down) => `考虑到${names}，从${from}次${down ? "减少" : "增加"}了${pct}。`,
+    ageNote: "年龄部分参考韩国统计厅生活时间调查：30多岁起见人会变少。",
+    aheadNote: () => "标签的倍数是应用自己定的估计，不是统计数据。",
     unit: "次",
     filtered: (from, cut) => `应用条件筛选后，从${from}次减少了${cut}。`,
     capped: (n) => `（已设上限${n}次）`,
@@ -177,6 +202,7 @@ export default function ResultPanel({
   past,
   story,
   together,
+  causes,
 }: {
   label: string;
   result: CountResult;
@@ -188,6 +214,8 @@ export default function ResultPanel({
   shareFileName?: string[];
   /** 시작점을 넣었고 설정이 켜져 있을 때만 온다. 없으면 막대를 그리지 않는다. */
   past?: PastResult | null;
+  /** 인연만: 숫자를 바꾼 이유. 주면 줄었든 늘었든 원인을 밝히는 줄을 보인다. 없으면 조건 필터로 준 것만 적는다. */
+  causes?: RelationshipResult["causes"];
   /** 큰 숫자 아래의 이야기. 있으면 sentence 대신 이것을 보인다. */
   story?: ReactNode;
   /**
@@ -213,6 +241,11 @@ export default function ResultPanel({
   const t = tr(COPY);
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
+  const causeKeys = causes
+    ? [...(causes.age ? ["age" as const] : []), ...causes.ahead, ...(causes.filters ? ["filters" as const] : [])]
+    : [];
+  const changed = Math.abs(result.total - result.baselineTotal) > 0.5;
+  const aheadNames = causes?.ahead.map((a) => t.causeNames[a]).join(t.join) ?? "";
   const hasPast = !together && Boolean(past && past.count >= 1);
   const metTotal = together ? together.met + together.estimated : 0;
   // 1번도 안 되는 줄만 감춘다. 해가 짧아도 셈에 들어갔으면 근거에 보인다.
@@ -269,7 +302,16 @@ export default function ResultPanel({
         줄어든 사실은 상자에 담지 않는다. 이 블록 안에 또 상자를 넣으면 숫자와
         경쟁한다. 왼쪽에 선 하나만 긋는다.
       */}
-      {filtered && (
+      {causes ? (
+        changed && causeKeys.length > 0 && (
+          <p data-testid="reason" className="border-l-2 border-accent-400 pl-3 text-xs leading-relaxed text-ink-600">
+            {t.reason(causeKeys.map((k) => t.causeNames[k]).join(t.join), formatCount(result.baselineTotal), formatPercent(Math.abs(cut)), cut > 0)}
+            {result.cappedAt !== null && t.capped(formatCount(result.cappedAt))}
+            {causes.age && t.ageNote}
+            {aheadNames && t.aheadNote(aheadNames)}
+          </p>
+        )
+      ) : filtered && (
         <p className="border-l-2 border-accent-400 pl-3 text-xs leading-relaxed text-ink-600">
           {t.filtered(formatCount(result.baselineTotal), formatPercent(cut))}
           {result.cappedAt !== null && t.capped(formatCount(result.cappedAt))}
