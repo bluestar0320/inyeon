@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import BigNumber from "@/components/BigNumber";
-import EmptyState from "@/components/EmptyState";
+import CardRow, { type DeckCard } from "@/components/CardRow";
 import { lastMetLine } from "@/components/MeetingLog";
-import PhotoStack from "@/components/PhotoStack";
 import StatCard from "@/components/StatCard";
 import { backupDue } from "@/lib/backup";
 import { birthdayLine, upcomingBirthdays } from "@/lib/birthdays";
@@ -20,6 +19,7 @@ import {
   remainingYears,
   resolveAge,
 } from "@/lib/calc";
+import { startIndex } from "@/lib/deck";
 import {
   formatAge,
   formatCount,
@@ -38,6 +38,9 @@ import { copyFor } from "@/lib/tone";
 
 const COPY = defineCopy({
   ko: {
+    overview: (i: number, n: number) => `모아 보기, ${n}장 중 ${i}번째`,
+    newPerson: "새 인연",
+    newMoment: "새 순간",
     loading: "불러오는 중…",
     lifeSub: (age: string, lifeExpectancy: number) => `${age} · 예상 수명 ${lifeExpectancy}세`,
     progress: (past: string, left: string) => `지나온 ${past} · 남은 ${left}`,
@@ -48,16 +51,12 @@ const COPY = defineCopy({
     backupNudge: "기록은 이 기기 안에만 있습니다. 지난 백업 뒤로 바뀐 것이 있어요 — 내보내 두기 →",
     people: "인연",
     seeAll: "전체 보기",
-    emptyPeopleBody:
-      "부모님, 친구, 아이 — 나와 이어진 사람이면 누구든. 나이와 만나는 빈도만 있으면 앞으로 몇 번 더 볼 수 있는지 바로 나옵니다.",
-    addPerson: "인연 추가",
     times: "번",
     timesValue: (n: number) => `${n}번`,
     growingTitle: "아이와 남은 것들",
     untilAdult: (age: number, years: string) => `만 ${age}세까지 ${years}`,
     moments: "순간",
     emptyMomentsBody: "벚꽃, 해외여행, 서핑… 빈도만 정하면 남은 횟수가 나옵니다.",
-    addMoment: "순간 추가",
     marriageLink: "결혼까지 남은 기회도 세어 보기 →",
     marriageTitle: "결혼 계획",
     untilAge: (age: number) => `만 ${age}세까지`,
@@ -65,6 +64,9 @@ const COPY = defineCopy({
     timesLeft: "번 남음",
   },
   en: {
+    overview: (i, n) => `See all, ${i} of ${n}`,
+    newPerson: "New person",
+    newMoment: "New moment",
     loading: "Loading…",
     lifeSub: (age, lifeExpectancy) => `${age} · life expectancy ${lifeExpectancy}`,
     progress: (past, left) => `${past} behind · ${left} ahead`,
@@ -76,16 +78,12 @@ const COPY = defineCopy({
       "Your records live only on this device, and some have changed since your last backup — export a copy →",
     people: "People",
     seeAll: "See all",
-    emptyPeopleBody:
-      "Parents, friends, kids — anyone in your life. With just an age and how often you meet, you'll see how many more times you can be together.",
-    addPerson: "Add person",
     times: "times",
     timesValue: (n) => `${n} ${n === 1 ? "time" : "times"}`,
     growingTitle: "Time with your kids",
     untilAdult: (age, years) => `${years} until age ${age}`,
     moments: "Moments",
     emptyMomentsBody: "Cherry blossoms, trips abroad, surfing… just set how often, and you'll see how many times remain.",
-    addMoment: "Add moment",
     marriageLink: "Count your chances to meet someone, too →",
     marriageTitle: "Marriage plan",
     untilAge: (age) => `By age ${age}`,
@@ -93,6 +91,9 @@ const COPY = defineCopy({
     timesLeft: "times left",
   },
   ja: {
+    overview: (i, n) => `一覧、${n}枚中${i}枚目`,
+    newPerson: "新しい大切な人",
+    newMoment: "新しいひととき",
     loading: "読み込み中…",
     lifeSub: (age, lifeExpectancy) => `${age} · 予想寿命 ${lifeExpectancy}歳`,
     progress: (past, left) => `過ぎた ${past} · 残り ${left}`,
@@ -103,16 +104,12 @@ const COPY = defineCopy({
     backupNudge: "記録はこの端末の中にだけあります。前回のバックアップから変更があります — 書き出しておく →",
     people: "大切な人",
     seeAll: "すべて見る",
-    emptyPeopleBody:
-      "両親、友だち、子ども — つながっている人なら誰でも。年齢と会う頻度だけで、あと何回会えるかがすぐにわかります。",
-    addPerson: "大切な人を追加",
     times: "回",
     timesValue: (n) => `${n}回`,
     growingTitle: "子どもと過ごせる時間",
     untilAdult: (age, years) => `${age}歳まで ${years}`,
     moments: "ひととき",
     emptyMomentsBody: "桜、海外旅行、サーフィン… 頻度を決めるだけで残りの回数がわかります。",
-    addMoment: "ひとときを追加",
     marriageLink: "結婚までの出会いの機会も数えてみる →",
     marriageTitle: "結婚の計画",
     untilAge: (age) => `${age}歳まで`,
@@ -120,6 +117,9 @@ const COPY = defineCopy({
     timesLeft: "回",
   },
   es: {
+    overview: (i, n) => `Ver todo, ${i} de ${n}`,
+    newPerson: "Nueva persona",
+    newMoment: "Nuevo momento",
     loading: "Cargando…",
     lifeSub: (age, lifeExpectancy) => `${age} · esperanza de vida ${lifeExpectancy}`,
     progress: (past, left) => `${past} recorrido · ${left} por delante`,
@@ -131,16 +131,12 @@ const COPY = defineCopy({
       "Tus registros solo están en este dispositivo y hay cambios sin respaldar: exporta una copia →",
     people: "Personas",
     seeAll: "Ver todo",
-    emptyPeopleBody:
-      "Padres, amigos, hijos — cualquiera que forme parte de tu vida. Con su edad y cada cuánto se ven, verás cuántas veces más pueden estar juntos.",
-    addPerson: "Añadir persona",
     times: "veces",
     timesValue: (n) => `${n} ${n === 1 ? "vez" : "veces"}`,
     growingTitle: "Tiempo con tus hijos",
     untilAdult: (age, years) => `${years} hasta los ${age}`,
     moments: "Momentos",
     emptyMomentsBody: "Cerezos en flor, viajes, surf… solo elige cada cuánto y verás cuántas veces quedan.",
-    addMoment: "Añadir momento",
     marriageLink: "Cuenta también tus oportunidades de conocer a alguien →",
     marriageTitle: "Plan de boda",
     untilAge: (age) => `Hasta los ${age}`,
@@ -148,6 +144,9 @@ const COPY = defineCopy({
     timesLeft: "veces más",
   },
   zh: {
+    overview: (i, n) => `查看全部，第${i}张，共${n}张`,
+    newPerson: "新亲友",
+    newMoment: "新时光",
     loading: "加载中…",
     lifeSub: (age, lifeExpectancy) => `${age} · 预期寿命 ${lifeExpectancy}岁`,
     progress: (past, left) => `已走过 ${past} · 还有 ${left}`,
@@ -158,16 +157,12 @@ const COPY = defineCopy({
     backupNudge: "记录只保存在这台设备上。上次备份后有了新的变化 — 导出一份 →",
     people: "亲友",
     seeAll: "查看全部",
-    emptyPeopleBody:
-      "父母、朋友、孩子 — 只要是你在乎的人都可以。只需年龄和见面频率，就能看到还能见几次。",
-    addPerson: "添加亲友",
     times: "次",
     timesValue: (n) => `${n}次`,
     growingTitle: "和孩子相处的时光",
     untilAdult: (age, years) => `到${age}岁还有${years}`,
     moments: "时光",
     emptyMomentsBody: "樱花、出国旅行、冲浪… 只要设定频率，就能看到还剩几次。",
-    addMoment: "添加时光",
     marriageLink: "也数一数结婚前还有多少相遇的机会 →",
     marriageTitle: "结婚计划",
     untilAge: (age) => `${age}岁之前`,
@@ -273,17 +268,26 @@ export default function HomePage() {
             {t.seeAll}
           </Link>
         </div>
-        {people.length === 0 ? (
-          <EmptyState
-            title={copy.emptyPeople}
-            body={t.emptyPeopleBody}
-            actionHref="/people/new"
-            actionLabel={t.addPerson}
-          />
-        ) : (
-          <PhotoStack
-            label={t.people}
-            cards={people.slice(0, 10).map(({ person, result }) => ({
+        {/* 「나」 → 사람들 → 「＋ 새 인연」. 사람이 없어도 두 장은 있다. */}
+        <CardRow
+          label={t.people}
+          index={startIndex(
+            people.map(({ person }) => person.id),
+            upcomingBirthdays(state.people).map(({ person, days }) => ({ id: person.id, days })),
+          )}
+          onIndex={() => {}}
+          listHref="/people"
+          overviewLabel={t.overview}
+          cards={[
+            {
+              kind: "me",
+              id: "me",
+              href: "/settings",
+              label: copy.lifeLabel,
+              value: myRemaining === null ? "-" : formatYears(myRemaining),
+            },
+            ...people.map(({ person, result }): DeckCard => ({
+              kind: "photo",
               id: person.id,
               href: `/people/detail?id=${person.id}`,
               photo: imageFor(person),
@@ -292,9 +296,10 @@ export default function HomePage() {
               count: formatCount(result.total),
               unit: t.times,
               note: lastMetLine(person),
-            }))}
-          />
-        )}
+            })),
+            { kind: "add", id: "add", href: "/people/new", label: t.newPerson },
+          ]}
+        />
       </section>
 
       <section className="hero space-y-5">
@@ -384,17 +389,16 @@ export default function HomePage() {
             {t.seeAll}
           </Link>
         </div>
-        {moments.length === 0 ? (
-          <EmptyState
-            title={copy.emptyMoments}
-            body={t.emptyMomentsBody}
-            actionHref="/moments/new"
-            actionLabel={t.addMoment}
-          />
-        ) : (
-          <PhotoStack
-            label={t.moments}
-            cards={moments.slice(0, 10).map(({ moment, result }) => ({
+        {/* 순간들 → 「＋ 새 순간」. 순간이 없으면 「＋」 한 장과 안내 문장. */}
+        <CardRow
+          label={t.moments}
+          index={0}
+          onIndex={() => {}}
+          listHref="/moments"
+          overviewLabel={t.overview}
+          cards={[
+            ...moments.map(({ moment, result }): DeckCard => ({
+              kind: "photo",
               id: moment.id,
               href: `/moments/detail?id=${moment.id}`,
               photo: imageFor(moment),
@@ -402,8 +406,14 @@ export default function HomePage() {
               sentence: copy.momentSentence(moment.title, formatCount(result.total)),
               count: formatCount(result.total),
               unit: t.times,
-            }))}
-          />
+            })),
+            { kind: "add", id: "add", href: "/moments/new", label: t.newMoment },
+          ]}
+        />
+        {moments.length === 0 && (
+          <p className="break-keep text-center text-xs leading-relaxed text-ink-600">
+            {copy.emptyMoments} {t.emptyMomentsBody}
+          </p>
         )}
       </section>
 

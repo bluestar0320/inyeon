@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { STORAGE_KEY, clearState, readState } from "./helpers";
 
@@ -24,6 +24,9 @@ function moment(id: string, title: string, extra: Record<string, unknown> = {}) 
     createdAt: now, updatedAt: now, ...extra,
   };
 }
+
+/** 줄 아래 모아 보기 링크. 이름에 몇째 장인지 적혀 있다. */
+const at = (stack: Locator) => stack.getByRole("link", { name: /모아 보기/ });
 
 async function seed(page: Page, value: Record<string, unknown>) {
   await clearState(page);
@@ -104,15 +107,17 @@ test("아랍어·이모지만·보이지 않는 글자 이름도 화면을 밀�
   }
 });
 
-test("다른 창에서 지금 보던 장의 사람을 지워도 번호가 '3 / 2'가 되지 않는다", async ({ page, context }) => {
+test("다른 창에서 사람을 지워도 끝 장 번호가 '5 / 4'가 되지 않는다", async ({ page, context }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 }), person("c", "셋", { ageYears: 60 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
+  // 폰에서는 ‹ › 단추가 화면 낭독기·키보드용으로 숨어 있다. 키보드로 누른다.
   const next = stack.getByRole("button", { name: "다음" });
-  await next.click();
-  await expect(stack.getByText("2 / 3")).toBeVisible();
-  await next.click();
-  await expect(stack.getByText("3 / 3")).toBeVisible();
+  // 「나」 · 하나 · 둘 · 셋 · 「＋」. 첫 사람(2번째)에서 시작해 끝 장까지.
+  for (const k of [3, 4, 5]) {
+    await next.press("Enter");
+    await expect(at(stack)).toHaveAttribute("aria-label", `모아 보기, 5장 중 ${k}번째`);
+  }
 
   const other = await context.newPage();
   await other.goto("/");
@@ -123,33 +128,32 @@ test("다른 창에서 지금 보던 장의 사람을 지워도 번호가 '3 / 2
   }, STORAGE_KEY);
   await other.close();
 
-  await expect(stack.getByText("2 / 2")).toBeVisible();
-  await expect(stack.getByText("3 / 2")).toHaveCount(0);
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 4장 중 4번째");
 });
 
-test("열두 명이면 더미에는 열 장, 전체 보기에는 열두 명", async ({ page }) => {
+test("열두 명이면 줄에 14장 모두, 점 대신 숫자, 모아 보기에는 열두 명", async ({ page }) => {
   await seed(page, { people: Array.from({ length: 12 }, (_, i) => person(`p${i}`, `사람${i + 1}`, { ageYears: 40 + i })) });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
-  await expect(stack.getByText("1 / 10")).toBeVisible();
-  await page.getByRole("link", { name: "전체 보기" }).first().click();
+  await expect(stack.getByText("2 / 14")).toBeVisible();
+  await at(stack).click();
   await expect(page.locator("a.card")).toHaveCount(12);
 });
 
-test("셋째 장을 보다가 화면을 돌려도 같은 장에 머문다", async ({ page }) => {
+test("셋째 사람을 보다가 화면을 돌려도 같은 장에 머문다", async ({ page }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 }), person("c", "셋", { ageYears: 60 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
-  await stack.getByRole("button", { name: "다음" }).click();
-  await stack.getByRole("button", { name: "다음" }).click();
-  await expect(stack.getByText("3 / 3")).toBeVisible();
+  await stack.getByRole("button", { name: "다음" }).press("Enter");
+  await stack.getByRole("button", { name: "다음" }).press("Enter");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 4번째");
   const size = page.viewportSize()!;
   await page.setViewportSize({ width: size.height, height: size.width });
   await page.waitForTimeout(400);
-  await expect(stack.getByText("3 / 3")).toBeVisible();
-  const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-  // 셋째 장은 덧붙인 장 하나 뒤라 3번 자리다.
-  expect(Math.abs(at - 3)).toBeLessThan(0.05);
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 4번째");
+  const pos = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
+  // 「나」 · 하나 · 둘 · 셋. 셋째 사람은 덧붙인 장 하나 뒤라 4번 자리다.
+  expect(Math.abs(pos - 4)).toBeLessThan(0.05);
   await page.setViewportSize(size);
 });
 
@@ -159,16 +163,21 @@ test("끝에서 다음을 누르면 첫 장으로, 첫 장에서 이전을 누�
   const stack = page.getByRole("region", { name: "인연" });
   const next = stack.getByRole("button", { name: "다음" });
   const prev = stack.getByRole("button", { name: "이전" });
-  await prev.click();
-  await expect(stack.getByText("3 / 3")).toBeVisible();
-  await next.click();
-  await expect(stack.getByText("1 / 3")).toBeVisible();
+  // 첫 사람에서 시작한다. 한 번 이전이면 첫 장(「나」), 한 번 더면 끝 장(「＋」).
+  await prev.press("Enter");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 1번째");
+  await page.waitForTimeout(800);
+  await prev.press("Enter");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 5번째");
+  await page.waitForTimeout(800);
+  await next.press("Enter");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 1번째");
   // 이어 붙인 자리에서 멈춘 채로 남지 않고 진짜 장으로 옮겨져 있어야 다음 넘기기도 이어진다.
   await page.waitForTimeout(400);
-  const at = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-  expect(Math.round(at)).toBe(1);
-  await next.click();
-  await expect(stack.getByText("2 / 3")).toBeVisible();
+  const pos = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
+  expect(Math.round(pos)).toBe(1);
+  await next.press("Enter");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 2번째");
 });
 
 test("다음을 열 번 연타해도 번호가 깨지지 않는다", async ({ page }) => {
@@ -176,18 +185,18 @@ test("다음을 열 번 연타해도 번호가 깨지지 않는다", async ({ pa
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
   const next = stack.getByRole("button", { name: "다음" });
-  for (let i = 0; i < 10; i++) await next.click();
+  for (let i = 0; i < 10; i++) await next.press("Enter");
   await page.waitForTimeout(600);
-  await expect(stack.getByText(/^[123] \/ 3$/)).toBeVisible();
+  await expect(at(stack)).toHaveAttribute("aria-label", /^모아 보기, 5장 중 [1-5]번째$/);
 });
 
 test("손가락으로 밀어도 번호가 따라온다", async ({ page }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
-  // 맨 앞에 덧붙인 장이 하나 있어 둘째 장은 2번 자리다.
-  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: 2 * (el.firstElementChild as HTMLElement).offsetWidth }));
-  await expect(stack.getByText("2 / 2")).toBeVisible();
+  // 덧붙인 장 | 「나」 · 하나 · 둘 · 「＋」. 첫 사람(2번 자리)에서 시작하니 둘은 3번 자리다.
+  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: 3 * (el.firstElementChild as HTMLElement).offsetWidth }));
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 4장 중 3번째");
 });
 
 test("더미의 사진을 연타해도 한 번만 넘어가고 오류가 없다", async ({ page }) => {
@@ -195,7 +204,7 @@ test("더미의 사진을 연타해도 한 번만 넘어가고 오류가 없다"
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await page.getByRole("region", { name: "인연" }).getByRole("link").first().dblclick();
+  await page.getByRole("region", { name: "인연" }).getByRole("link", { name: /엄마/ }).dblclick();
   await page.waitForURL(/detail/);
   await page.goBack();
   await expect(page.getByRole("region", { name: "인연" })).toBeVisible();
@@ -206,7 +215,7 @@ test("남은 만남이 0번인 사람도 더미에 제대로 걸린다", async (
   // 예상 수명을 넘긴 분은 이제 생명표로 세어 0이 되지 않는다. 0번은 정해 둔 목표 나이를 지났을 때 생긴다.
   await seed(page, { people: [person("a", "연인", { horizon: { kind: "untilMyAge", age: 1 } })] });
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "인연" }).getByRole("link").first()).toContainText("0");
+  await expect(page.getByRole("region", { name: "인연" }).getByRole("link", { name: /연인/ })).toContainText("0");
 });
 
 test("사진을 고른 사람을 지웠다 되돌리면 사진도 돌아온다", async ({ page }) => {
@@ -229,7 +238,8 @@ test("어두운 모드에서 입력 화면·더미·상세에 접근성 위반�
   for (const path of ["/", "/people/edit?id=a", "/people/detail?id=a", "/privacy/"]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
-    const { violations } = await new AxeBuilder({ page }).analyze();
+    // 옆에 흐리게 비치는 이웃 장은 뺀다(e2e/a11y.spec.ts의 SIDE_CARD 참고).
+    const { violations } = await new AxeBuilder({ page }).exclude(".snap-center.opacity-60").analyze();
     expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(" ")}`), path).toEqual([]);
   }
 });
