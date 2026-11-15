@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 
 import { useDeckRow } from "@/lib/deckRow";
 import { defineCopy, tr } from "@/lib/i18n";
-import { confirmLeave } from "@/lib/unsaved";
+import { clearDirty, confirmLeave, leaveTo } from "@/lib/unsaved";
 
 const COPY = defineCopy({
   ko: { brand: "몇번더", back: "뒤로", people: "인연", moments: "순간" },
@@ -35,8 +35,11 @@ export default function Nav() {
   function back(): void {
     // 편집 중 저장하지 않은 게 있으면 화면을 옮기기 전에 한 번 묻는다.
     if (!confirmLeave()) return;
-    if (moved) router.back();
-    else router.push(DOC_PAGE.test(pathname) ? "/settings" : "/");
+    // 이미 물었으니 편집기의 뒤로 가기 가드가 다시 묻지 않게 표시부터 지운다.
+    if (moved) {
+      clearDirty();
+      router.back();
+    } else leaveTo(router, DOC_PAGE.test(pathname) ? "/settings" : "/");
   }
 
   return (

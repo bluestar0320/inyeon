@@ -137,3 +137,29 @@ test("편집 중 뒤로를 누르면 묻고, 취소하면 남는다", async ({ p
   await expect.poll(() => asked).toBe(true);
   await expect(page).toHaveURL(/\/people\/new/);
 });
+
+test("목록에서 추가로 들어가 편집 중 뒤로를 누르면 한 번만 묻고 목록으로", async ({ page }) => {
+  await seed(page, 1);
+  await page.goto("/people");
+  await page.getByRole("link", { name: "추가", exact: true }).click();
+  await page.waitForURL(/\/people\/new\/?$/);
+  await page.getByLabel("이름").fill("테스트");
+  let asked = 0;
+  page.on("dialog", (d) => { asked++; void d.accept(); });
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/people\/?$/);
+  await page.waitForTimeout(500);
+  expect(asked).toBe(1);
+});
+
+test("주소로 바로 들어온 편집 화면에서 뒤로를 누르면 한 번만 묻고 첫 화면", async ({ page }) => {
+  await seed(page, 0);
+  await page.goto("/people/new");
+  await page.getByLabel("이름").fill("테스트");
+  let asked = 0;
+  page.on("dialog", (d) => { asked++; void d.accept(); });
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.waitForTimeout(500);
+  expect(asked).toBe(1);
+});
