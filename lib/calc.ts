@@ -1,6 +1,7 @@
 import type {
   AgeSource,
   CalcFilter,
+  Ahead,
   Frequency,
   FrequencyUnit,
   GrowthSetup,
@@ -14,7 +15,9 @@ import type {
 } from "./types";
 import { defineCopy, tr } from "./i18n.ts";
 import { lookupLifeExpectancy } from "./lifeExpectancy.ts";
+import { ageApplies, ageFactorAt, aheadFor, cleanAhead, yearFactor } from "./future.ts";
 import { ledger, type Ledger } from "./meetings.ts";
+import { relOf } from "./rel.ts";
 
 export const DAYS_PER_YEAR = 365.2425;
 
@@ -185,6 +188,8 @@ export interface CountInput {
   filters?: CalcFilter[];
   /** 기간 계산의 기준 나이. window 필터를 나이로 쓰고 싶을 때 필요하다. */
   startAge?: number;
+  /** i번째 조각(i년 뒤부터 span년)에 곱하는 배수. 유한하지 않거나 음수면 1. */
+  yearFactor?: (i: number, span: number) => number;
 }
 
 function overlapFraction(sliceStart: number, sliceSpan: number, from: number, to: number): number {
@@ -233,6 +238,10 @@ export function countOccurrences(input: CountInput): CountResult {
     if (span <= 0) break;
     const baseline = perYear * span;
     let factor = 1;
+    if (input.yearFactor) {
+      const y = input.yearFactor(i, span);
+      factor = Number.isFinite(y) && y >= 0 ? y : 1;
+    }
 
     for (const filter of filters) {
       if (filter.kind === "multiplier") {
@@ -295,6 +304,8 @@ export interface RelationshipResult extends CountResult {
   horizonPassed: boolean;
   /** 「만났어요」 기록으로 센 함께한·놓친 만남(lib/meetings.ts). 인연을 넣은 날부터 센다. */
   together: Ledger;
+  /** 숫자를 바꾼 이유: 나이 감소, 앞으로 칩, 켜진 필터. */
+  causes: { age: boolean; ahead: Ahead[]; filters: boolean };
 }
 
 /** 목표 시점까지 남은 기간. horizon이 life면 상한이 없으므로 null. */
@@ -361,7 +372,20 @@ export function computeRelationship(
   }
 
   const perYear = toPerYear(person.frequency);
-  const counted = countOccurrences({ years: sharedYears, perYear, filters: person.filters });
+  const rel = relOf(person);
+  const baseAge = resolveAge(profile ?? person, now) ?? resolveAge(person, now);
+  const ahead = cleanAhead(person.ahead);
+  const counted = countOccurrences({
+    years: sharedYears,
+    perYear,
+    filters: person.filters,
+    yearFactor: yearFactor(rel, ahead, baseAge),
+  });
+  const causes = {
+    age: ageApplies(rel) && baseAge !== null && ageFactorAt(baseAge, sharedYears) < 1,
+    ahead: sharedYears > 1 ? aheadFor(rel).filter((a) => ahead?.includes(a)) : [],
+    filters: (person.filters ?? []).some((f) => f.enabled),
+  };
   // 오늘 기준의 칸: 이번 기간에 만난 칸은 앞으로에서 빼고, 아직 안 만난 칸은 기간이 끝날 때까지 남긴다.
   const together = ledger(person.meetings ?? [], person.frequency, localDate(person.createdAt, now), localDate(undefined, now));
   if (counted.total > 0) {
@@ -395,6 +419,7 @@ export function computeRelationship(
       profile !== null &&
       (resolveAge(profile, now) ?? 0) >= person.horizon.age,
     together,
+    causes,
   };
 }
 

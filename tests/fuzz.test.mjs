@@ -112,6 +112,15 @@ function maker(seed) {
       ]),
       growth: r() > 0.7 ? { adultAge: num(), dinners: frequency() } : undefined,
       since: date(),
+      bonds: r() > 0.5 ? [pick(["parent", "grandparent", "sibling", "school", "coworker"])] : undefined,
+      relation: pick(["친구", "아들", "어머니", "", undefined, "friend"]),
+      ahead: pick([
+        () => undefined,
+        () => ["marry", "child", "health"].filter(() => r() > 0.5),
+        () => ["x", 1, null, "marry", "marry"],
+        () => "marry",
+        () => ({}),
+      ])(),
     }),
     moment: () => ({
       id: "m",

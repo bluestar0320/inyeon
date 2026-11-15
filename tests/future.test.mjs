@@ -43,3 +43,15 @@ test("yearFactor: 칩은 내년부터, 관계별 배수", () => {
 test("relOf는 story.ts에서 그대로 쓸 수 있다", () => {
   assert.equal(relOf({ bonds: ["parent"] }), "parent");
 });
+
+test("연령대 경계와 이상 값", () => {
+  assert.ok(Math.abs(ageFactorAt(25, 5) - 0.9) < 1e-9);
+  assert.equal(ageFactorAt(25, -3), 1);
+  assert.equal(yearFactor("friend", undefined, Number.NaN)(5, 1), 1);
+  assert.equal(yearFactor("friend", ["marry"], Number.NaN)(5, 1), 0.5);
+});
+
+test("친구의 나이 감소와 칩이 함께 곱해진다, 그 밖에도 나이 감소", () => {
+  assert.ok(Math.abs(yearFactor("friend", ["marry"], 25)(10, 1) - 0.45) < 1e-9);
+  assert.ok(yearFactor("other", undefined, 25)(10, 1) < 1);
+});

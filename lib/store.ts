@@ -5,6 +5,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { todayISO } from "./format";
 import { DEFAULT_COUNTRY_CODE, lookupLifeExpectancy, refreshLifeSpan } from "./lifeExpectancy";
 import { cleanBondDetail, cleanBonds } from "./bonds";
+import { cleanAhead } from "./future";
 import { cleanMeetings, cleanMemories, cleanSaying } from "./meetings";
 import { mirrorRead, mirrorWrite } from "./nativeMirror";
 import { loadPhotos, writePhotos } from "./photoStore";
@@ -216,6 +217,7 @@ function repairPerson(raw: unknown): Person | null {
       : undefined,
     horizon,
     growth,
+    ahead: cleanAhead(item.ahead),
   } as unknown as Person;
 }
 

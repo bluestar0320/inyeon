@@ -640,3 +640,58 @@ test("year table counts the same meetings as the big number", () => {
     assert.ok(Math.abs(sum - result.total) < 1e-6, `${meetings.length}: ${sum} vs ${result.total}`);
   }
 });
+
+test("yearFactor는 해마다 곱해지고, 깨진 값은 1로 본다", () => {
+  const r = countOccurrences({ years: 3, perYear: 12, yearFactor: (i) => (i === 0 ? 1 : 0.5) });
+  assert.equal(r.total, 24);
+  assert.equal(countOccurrences({ years: 3, perYear: 12, yearFactor: () => Number.NaN }).total, 36);
+  assert.equal(countOccurrences({ years: 3, perYear: 12, yearFactor: () => -1 }).total, 36);
+});
+
+const friend = (o = {}) => person({ relation: "친구", ageYears: 40, lifeExpectancy: 80, ...o });
+
+test("35세 사용자의 칩 없는 친구는 보정이 없다", () => {
+  const p = friend();
+  const r = computeRelationship(p, profile({ ageYears: 35 }), NOW);
+  const plain = countOccurrences({ years: r.sharedYears, perYear: 12 }).total;
+  assert.ok(Math.abs(r.total - plain) < 1e-9);
+  assert.deepEqual(r.causes, { age: false, ahead: [], filters: false });
+});
+
+test("25세 사용자의 친구는 나이 감소로 줄어든다", () => {
+  const r = computeRelationship(friend(), profile({ ageYears: 25 }), NOW);
+  assert.ok(r.total < r.baselineTotal);
+  assert.equal(r.causes.age, true);
+});
+
+test("나이를 둘 다 모르면 유한하고 age 원인이 없다", () => {
+  const r = computeRelationship(friend({ ageYears: undefined, lifeExpectancy: 80 }), profile({ ageYears: undefined }), NOW);
+  assert.ok(Number.isFinite(r.total));
+  assert.equal(r.causes.age, false);
+});
+
+test("부모님에게 marry 칩은 적용되지 않는다", () => {
+  const base = { bonds: ["parent"] };
+  const a = computeRelationship(person(base), profile(), NOW);
+  const b = computeRelationship(person({ ...base, ahead: ["marry"] }), profile(), NOW);
+  assert.equal(b.total, a.total);
+  assert.deepEqual(b.causes.ahead, []);
+});
+
+test("남은 기간이 1년 이하면 칩을 적용하지 않는다", () => {
+  const base = { relation: "친구", ageYears: 79.2, lifeExpectancy: 80 };
+  const a = computeRelationship(person(base), profile({ ageYears: 35 }), NOW);
+  const b = computeRelationship(person({ ...base, ahead: ["marry"] }), profile({ ageYears: 35 }), NOW);
+  assert.ok(a.sharedYears < 1);
+  assert.equal(b.total, a.total);
+  assert.deepEqual(b.causes.ahead, []);
+});
+
+test("칩과 곱해도 MAX_FACTOR 상한을 넘지 않는다", () => {
+  const f = { id: "m", label: "", enabled: true, kind: "multiplier", factor: 8 };
+  const r = computeRelationship(person({ bonds: ["parent"], ahead: ["health"], filters: [f] }), profile(), NOW);
+  assert.deepEqual(r.causes.ahead, ["health"]);
+  assert.equal(r.causes.filters, true);
+  const s = r.slices[1];
+  assert.ok(s.adjusted <= s.baseline * 10 + 1e-9);
+});
