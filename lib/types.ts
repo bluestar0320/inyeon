@@ -88,6 +88,7 @@ export interface Profile extends LifeSpan {
   nickname?: string;
 }
 
+export type Ahead = "marry" | "child" | "health";
 export type Bond = "elementary" | "middle" | "high" | "university" | "academy" | "coworker" | "parent" | "grandparent" | "sibling";
 export type SchoolStage = "elementary" | "middle" | "high";
 export interface BondDetail {
@@ -124,6 +125,8 @@ export interface Person extends LifeSpan {
   saying?: string;
   /** 지나온 만남 어림에 쓰는 관계 칩과 세부 값. lib/bonds.ts */
   bonds?: Bond[];
+  /** 「앞으로」 칩: 앞으로 만남이 달라질 일. lib/future.ts */
+  ahead?: Ahead[];
   bondDetail?: BondDetail;
   /** 상세의 「함께한 만남」을 어느 기간으로 셀지. 없으면 지금까지. */
   togetherScope?: "year";
