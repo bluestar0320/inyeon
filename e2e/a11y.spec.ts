@@ -16,7 +16,7 @@ const SCREENS = [
   { path: "/people", label: "인연 목록" },
   { path: "/moments", label: "순간 목록" },
   { path: "/marriage", label: "결혼 계획" },
-  { path: "/settings", label: "설정" },
+  { path: "/settings", label: "나" },
 ];
 
 /** 빈 화면만 보면 의미가 없다. 실제 데이터가 있는 상태를 만든다. */

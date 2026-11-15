@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { defineCopy, tr } from "@/lib/i18n";
 
@@ -12,9 +13,13 @@ const COPY = defineCopy({
   zh: { nav: "说明", about: "关于", reads: "阅读", privacy: "隐私政策", terms: "使用条款", note: "记录只保存在这台设备上，不会发送到任何地方。" },
 });
 
-/* 모든 화면 맨 아래. 흐름을 막지 않고, 궁금한 사람만 찾아 들어가게 한다. */
+/* 나·문서 화면 맨 아래. 흐름을 막지 않고, 궁금한 사람만 찾아 들어가게 한다. 카드 화면에는 없다. */
+const SHOWN_ON = ["/settings", "/about", "/privacy", "/terms", "/reads"];
+
 export default function Footer() {
   const t = tr(COPY);
+  const path = usePathname() ?? "";
+  if (!SHOWN_ON.some((s) => path.startsWith(s))) return null;
   const links: [string, string][] = [
     ["/about", t.about],
     ["/reads", t.reads],
@@ -22,8 +27,8 @@ export default function Footer() {
     ["/terms", t.terms],
   ];
   return (
-    // 아래쪽 시스템 바(제스처 막대)와 되돌리기 막대에 가리지 않도록 아래 여백을 넉넉히 둔다.
-    <footer className="mx-auto mt-16 max-w-3xl border-t border-ink-200/70 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] text-center">
+    // main의 아래 여백 안으로 끌어올려 간격을 4rem으로 맞추고, 하단 바 밑에 묻히지 않도록 아래 여백을 따로 둔다.
+    <footer className="mx-auto mt-[calc(-2rem-env(safe-area-inset-bottom))] max-w-3xl border-t border-ink-200/70 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] text-center">
       <nav aria-label={t.nav} className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         {links.map(([href, label]) => (
           <Link key={href} href={href} prefetch={false} className="inline-flex min-h-9 items-center text-xs text-ink-600 hover:text-ink-900">

@@ -140,7 +140,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* 아래쪽 시스템 바(제스처 막대)에 마지막 단추가 가리지 않도록 더 준다. */}
           <main
             id="main"
-            className="mx-auto max-w-3xl px-4 pt-6"
+            className="mx-auto max-w-3xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"
           >
             {children}
           </main>

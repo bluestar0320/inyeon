@@ -66,3 +66,33 @@ test("사람이 없으면 나와 새 인연 두 장", async ({ page }) => {
   await expect(row.getByRole("link", { name: /새 인연/ })).toHaveAttribute("href", /^\/people\/new\/?$/);
   await expect(row.getByRole("link", { name: /모아 보기/ })).toHaveAttribute("aria-label", /2장/);
 });
+
+/* 「나」 화면과 바닥글 */
+test("나 화면 맨 위에 남은 시간, 그 아래 설정과 바닥글", async ({ page }) => {
+  await seed(page, 1);
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "나", level: 1 })).toBeVisible();
+  await expect(page.getByText("나에게 남은 시간")).toBeVisible();
+  await expect(page.getByRole("link", { name: "서비스 소개" })).toBeVisible();
+});
+
+test("첫 화면과 상세에는 바닥글이 없다", async ({ page }) => {
+  await seed(page, 1);
+  await expect(page.getByRole("link", { name: "서비스 소개" })).toHaveCount(0);
+  await page.goto("/people/detail/?id=p0");
+  await expect(page.getByRole("link", { name: "서비스 소개" })).toHaveCount(0);
+});
+
+test("백업 알림을 누르면 같은 화면의 내보내기로", async ({ page }) => {
+  await seed(page, 1); // 시드의 updatedAt은 이번 시각이라 7일을 채우도록 옛날로 돌린다
+  await page.evaluate((key) => {
+    const s = JSON.parse(localStorage.getItem(key)!);
+    const old = "2026-01-02T00:00:00.000Z";
+    s.people.forEach((p: { createdAt: string; updatedAt: string }) => { p.createdAt = old; p.updatedAt = old; });
+    localStorage.setItem(key, JSON.stringify(s));
+  }, STORAGE_KEY);
+  await page.goto("/settings");
+  await page.getByRole("link", { name: /내보내 두기/ }).click();
+  await expect(page).toHaveURL(/#backup$/);
+  await expect(page.getByRole("button", { name: "내보내기" })).toBeVisible();
+});

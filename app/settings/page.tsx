@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 
 import InstallButton from "@/components/InstallButton";
+import MeSummary from "@/components/MeSummary";
 import { analyticsEnabled, countingOff, setCountingOff } from "@/lib/analytics";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { todayISO } from "@/lib/format";
@@ -26,7 +27,7 @@ const COPY = defineCopy({
     groupData: "기록",
     groupApp: "앱",
     loading: "불러오는 중…",
-    title: "설정",
+    title: "나",
     languageTitle: "언어",
     languageHint: "자동을 고르면 기기 언어를 따라갑니다.",
     languageAuto: "자동",
@@ -103,7 +104,7 @@ const COPY = defineCopy({
     groupData: "Your records",
     groupApp: "App",
     loading: "Loading…",
-    title: "Settings",
+    title: "Me",
     languageTitle: "Language",
     languageHint: "Auto follows your device language.",
     languageAuto: "Auto",
@@ -181,7 +182,7 @@ const COPY = defineCopy({
     groupData: "記録",
     groupApp: "アプリ",
     loading: "読み込み中…",
-    title: "設定",
+    title: "わたし",
     languageTitle: "言語",
     languageHint: "自動を選ぶと端末の言語に合わせます。",
     languageAuto: "自動",
@@ -258,7 +259,7 @@ const COPY = defineCopy({
     groupData: "Tus registros",
     groupApp: "App",
     loading: "Cargando…",
-    title: "Ajustes",
+    title: "Yo",
     languageTitle: "Idioma",
     languageHint: "Automático sigue el idioma del dispositivo.",
     languageAuto: "Automático",
@@ -336,7 +337,7 @@ const COPY = defineCopy({
     groupData: "记录",
     groupApp: "应用",
     loading: "加载中…",
-    title: "设置",
+    title: "我",
     languageTitle: "语言",
     languageHint: "选择自动时跟随设备语言。",
     languageAuto: "自动",
@@ -517,6 +518,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-5">
       <h1 className="pt-2 text-xl font-semibold tracking-tight text-ink-900">{t.title}</h1>
+      <MeSummary />
       {/* 서로 비슷한 것끼리 묶는다: 보기 · 기록 · 앱. 카드 아홉 장이 줄줄이 서 있으면 찾기 어렵다. */}
       <div className="space-y-2">
         <h2 className="px-1 text-xs font-semibold tracking-[0.1em] text-ink-600">{t.groupView}</h2>
