@@ -10,12 +10,6 @@ import { AFTER_ADD_PERSON, clearState, setUpProfile, openMore } from "./helpers"
  */
 const RULES = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"];
 
-/**
- * 카드 줄에서 옆에 흐리게 비치는 이웃 장. 넘어가면 가운데 장이 되어 제 진하기로 검사받는다.
- * 비침은 "옆에 더 있다"는 표시일 뿐 읽으라고 둔 글이 아니다.
- */
-const SIDE_CARD = ".snap-center.opacity-60";
-
 const SCREENS = [
   { path: "/", label: "홈" },
   { path: "/setup", label: "내 정보" },
@@ -55,7 +49,7 @@ for (const scheme of ["light", "dark"] as const) {
       test(`${label}에 위반이 없다`, async ({ page }) => {
         await page.goto(path);
         await page.waitForTimeout(200);
-        const { violations } = await new AxeBuilder({ page }).withTags(RULES).exclude(SIDE_CARD).analyze();
+        const { violations } = await new AxeBuilder({ page }).withTags(RULES).analyze();
         expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
       });
     }

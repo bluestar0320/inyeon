@@ -103,7 +103,7 @@ function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) 
  *
  * 넘기기는 브라우저의 가로 스크롤 + scroll-snap이 한다. 손가락으로 밀면 그대로 되고,
  * 라이브러리가 필요 없다. ‹ › 단추는 키보드·화면 낭독기용이며 같은 스크롤을 움직인다.
- * 카드는 화면보다 좁다. 이웃 장이 흐리고 조금 작게 옆에 비쳐, 밀면 넘어간다는 걸 말하지 않아도 안다.
+ * 카드는 화면보다 좁다. 이웃 장이 조금 작게, 사진은 흐리게 옆에 비쳐, 밀면 넘어간다는 걸 말하지 않아도 안다.
  */
 const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
   { label, cards, index: start, onIndex, listHref, overviewLabel },
@@ -210,13 +210,14 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
           // 덧붙인 장은 화면 낭독기와 키보드가 지나치게 한다. 같은 카드가 두 번 읽히지 않게.
           const copy = many && (k === 0 || k === n + 1);
           const i = (k - lead + n) % n;
-          // 가운데가 아닌 장은 흐리고 조금 작게. 움직임을 줄인 사람에게는 크기를 바꾸지 않는다.
+          // 가운데가 아닌 장은 조금 작게, 사진만 흐리게. 글자까지 흐리면 대비가 모자라 읽기 어렵다(옆 장도 초점이 가고 화면 낭독기가 읽는 링크다).
+          // 움직임을 줄인 사람에게는 크기를 바꾸지 않는다.
           const side = i !== index;
           return (
             <div
               key={copy ? `${card.id}-${k}` : card.id}
               aria-hidden={copy || undefined}
-              className={`shrink-0 snap-center py-3 transition-[opacity,transform] duration-300 ${many ? "w-full px-[4%]" : "w-full px-[14%]"} ${side ? "opacity-60 motion-safe:scale-[.92]" : ""}`}
+              className={`shrink-0 snap-center py-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[4%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
             >
               {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. */}
               <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">

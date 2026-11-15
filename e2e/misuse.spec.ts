@@ -238,8 +238,7 @@ test("어두운 모드에서 입력 화면·더미·상세에 접근성 위반�
   for (const path of ["/", "/people/edit?id=a", "/people/detail?id=a", "/privacy/"]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
-    // 옆에 흐리게 비치는 이웃 장은 뺀다(e2e/a11y.spec.ts의 SIDE_CARD 참고).
-    const { violations } = await new AxeBuilder({ page }).exclude(".snap-center.opacity-60").analyze();
+    const { violations } = await new AxeBuilder({ page }).analyze();
     expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(" ")}`), path).toEqual([]);
   }
 });
