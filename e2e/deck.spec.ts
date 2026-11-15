@@ -96,3 +96,44 @@ test("백업 알림을 누르면 같은 화면의 내보내기로", async ({ pag
   await expect(page).toHaveURL(/#backup$/);
   await expect(page.getByRole("button", { name: "내보내기" })).toBeVisible();
 });
+
+/* 머리글: 아래 탭 없이 「←」 하나 */
+test("아래 탭이 없다", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await seed(page, 1);
+  await expect(page.locator("nav.fixed")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "설정", exact: true })).toHaveCount(0);
+});
+
+test("상세에 주소로 바로 들어와 뒤로를 누르면 첫 화면", async ({ page }) => {
+  await seed(page, 1);
+  await page.goto("/people/detail/?id=p0");
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test("목록에서 상세로 갔다가 뒤로를 누르면 목록", async ({ page }) => {
+  await seed(page, 2);
+  await page.goto("/people");
+  await page.locator("a.card").first().click();
+  await expect(page).toHaveURL(/\/people\/detail/);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/people\/?$/);
+});
+
+test("문서 화면에 바로 들어와 뒤로를 누르면 나 화면", async ({ page }) => {
+  await page.goto("/privacy");
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/settings\/?$/);
+});
+
+test("편집 중 뒤로를 누르면 묻고, 취소하면 남는다", async ({ page }) => {
+  await seed(page, 0);
+  await page.goto("/people/new");
+  await page.getByLabel("이름").fill("테스트");
+  let asked = false;
+  page.once("dialog", (d) => { asked = true; void d.dismiss(); });
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect.poll(() => asked).toBe(true);
+  await expect(page).toHaveURL(/\/people\/new/);
+});

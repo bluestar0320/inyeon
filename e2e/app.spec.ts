@@ -72,8 +72,8 @@ test.describe("저장하지 않고 나가기", () => {
     page.on("dialog", (d) => { asked = true; void d.accept(); });
 
     await page.goto("/people/new");
-    await page.getByRole("link", { name: "순간" }).click();
-    await page.waitForURL(/\/moments\/?$/);
+    await page.getByRole("button", { name: "뒤로" }).click();
+    await page.waitForURL(/\/$/);
     expect(asked).toBe(false);
   });
 
@@ -83,7 +83,7 @@ test.describe("저장하지 않고 나가기", () => {
 
     await page.goto("/people/new");
     await page.getByLabel("이름").fill("테스트");
-    await page.getByRole("link", { name: "순간" }).click();
+    await page.getByRole("button", { name: "뒤로" }).click();
 
     await expect(page).toHaveURL(/\/people\/new/);
     await expect(page.getByLabel("이름")).toHaveValue("테스트");
@@ -229,11 +229,6 @@ test.describe("테마", () => {
       );
       expect(overflow, path).toBeLessThanOrEqual(0);
     }
-    // 아래 탭 막대도 화면 안에 다 들어온다.
-    const nav = page.locator("nav.fixed").first();
-    const box = (await nav.boundingBox())!;
-    expect(box.x + box.width).toBeLessThanOrEqual(361);
-
     // 보통으로 돌리면 저장소에서도 빠진다.
     await page.goto("/settings");
     await page.getByRole("button", { name: "보통", exact: true }).click();
@@ -560,7 +555,7 @@ test.describe("백업 권유", () => {
       },
       { key: STORAGE_KEY, old },
     );
-    await page.goto("/");
+    await page.goto("/settings");
     const nudge = page.getByRole("link", { name: /내보내 두기/ });
     await expect(nudge).toBeVisible();
 
@@ -570,7 +565,7 @@ test.describe("백업 권유", () => {
     expect((await download).suggestedFilename()).toMatch(/^몇번더-.*\.json$/);
     await expect(page.getByText(/마지막 내보내기:/)).toBeVisible();
 
-    await page.goto("/");
+    await page.goto("/settings");
     await expect(page.getByRole("link", { name: /내보내 두기/ })).toHaveCount(0);
   });
 });

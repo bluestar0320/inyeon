@@ -205,7 +205,7 @@ test("내 정보도 다른 창에서 바뀌면 알리고, 손대지 않았으면
     asked = true;
     void dialog.dismiss();
   });
-  await page.getByRole("link", { name: "홈" }).click();
+  await page.getByRole("button", { name: "뒤로" }).click();
   await page.waitForURL(/\/$/);
   expect(asked).toBe(false);
 });
