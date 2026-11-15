@@ -381,10 +381,17 @@ export function computeRelationship(
     filters: person.filters,
     yearFactor: yearFactor(rel, ahead, baseAge),
   });
+  // yearFactor는 조각의 한가운데 나이를 보므로, 여기서도 마지막 조각의 한가운데로 본다.
+  const lastI = Math.ceil(sharedYears) - 1;
+  const lastMid = lastI + (sharedYears - lastI) / 2;
+  const plain = countOccurrences({ years: sharedYears, perYear, yearFactor: yearFactor(rel, ahead, baseAge) });
   const causes = {
-    age: ageApplies(rel) && baseAge !== null && ageFactorAt(baseAge, sharedYears) < 1,
+    age: sharedYears > 0 && ageApplies(rel) && baseAge !== null && ageFactorAt(baseAge, lastMid) < 1,
     ahead: sharedYears > 1 ? aheadFor(rel).filter((a) => ahead?.includes(a)) : [],
-    filters: (person.filters ?? []).some((f) => f.enabled),
+    // 켜 둔 필터가 실제로 개수를 바꿀 때만 원인으로 본다.
+    filters:
+      (person.filters ?? []).some((f) => f.enabled) &&
+      (Math.abs(counted.total - plain.total) > 0.5 || counted.cappedAt !== null),
   };
   // 오늘 기준의 칸: 이번 기간에 만난 칸은 앞으로에서 빼고, 아직 안 만난 칸은 기간이 끝날 때까지 남긴다.
   const together = ledger(person.meetings ?? [], person.frequency, localDate(person.createdAt, now), localDate(undefined, now));

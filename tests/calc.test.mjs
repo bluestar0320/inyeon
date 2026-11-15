@@ -695,3 +695,17 @@ test("칩과 곱해도 MAX_FACTOR 상한을 넘지 않는다", () => {
   const s = r.slices[1];
   assert.ok(s.adjusted <= s.baseline * 10 + 1e-9);
 });
+
+test("causes.filters: 개수를 바꾸지 않는 필터는 원인이 아니다", () => {
+  const m = (factor) => [{ id: "m", label: "", enabled: true, kind: "multiplier", factor }];
+  const p = (factor) => friend({ filters: m(factor) });
+  assert.equal(computeRelationship(p(1), profile({ ageYears: 35 }), NOW).causes.filters, false);
+  assert.equal(computeRelationship(p(0.5), profile({ ageYears: 35 }), NOW).causes.filters, true);
+});
+
+test("causes.age: 마지막 조각의 한가운데 나이로 본다", () => {
+  const short = friend({ horizon: { kind: "years", years: 1.3 } });
+  // 28.8세 + 1.15년 = 29.95세: 30대 경계를 아직 안 넘었다.
+  assert.equal(computeRelationship(short, profile({ ageYears: 28.8 }), NOW).causes.age, false);
+  assert.equal(computeRelationship(friend(), profile({ ageYears: 25 }), NOW).causes.age, true);
+});
