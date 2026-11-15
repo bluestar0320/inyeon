@@ -13,7 +13,11 @@ const person = (i: number) => ({
   countryCode: "KR", sex: "female", frequency: { count: 1, unit: "month" }, filters: [], createdAt: now, updatedAt: now,
 });
 
-async function seed(page: Page, people: number) {
+const moment = (i: number) => ({
+  id: `m${i}`, title: `순간${i + 1}`, frequency: { count: i + 1, unit: "year" }, filters: [], createdAt: now, updatedAt: now,
+});
+
+async function seed(page: Page, people: number, extra: { moments?: number; people?: Record<string, unknown>[] } = {}) {
   await clearState(page);
   await page.evaluate(
     ({ key, v }) => localStorage.setItem(key, JSON.stringify(v)),
@@ -22,8 +26,8 @@ async function seed(page: Page, people: number) {
       v: {
         version: 1,
         profile: { ageYears: 35, ageAsOf: "2026-01-01", lifeExpectancy: 85, lifeExpectancyManual: true, countryCode: "KR", sex: "all" },
-        people: Array.from({ length: people }, (_, i) => person(i)),
-        moments: [],
+        people: [...Array.from({ length: people }, (_, i) => person(i)), ...(extra.people ?? [])],
+        moments: Array.from({ length: extra.moments ?? 0 }, (_, i) => moment(i)),
         marriage: null,
         settings: { tone: "aware", theme: "light", showPast: true },
       },
@@ -32,6 +36,26 @@ async function seed(page: Page, people: number) {
   await page.goto("/");
   return page.getByRole("region", { name: "인연" });
 }
+
+/** 줄 가운데에 가장 가까운 장의 글자. 화면에 지금 보이는 카드다(옆 장은 작게 줄어 사이가 비므로 가장 가까운 것). */
+async function current(page: Page, name: string): Promise<string> {
+  return page.getByRole("region", { name }).evaluate((el) => {
+    const track = el.firstElementChild as HTMLElement;
+    const box = track.getBoundingClientRect();
+    const mid = box.left + box.width / 2;
+    const off = (s: Element) => {
+      const r = s.getBoundingClientRect();
+      return Math.abs(r.left + r.width / 2 - mid);
+    };
+    const hit = [...track.children].reduce((a, b) => (off(b) < off(a) ? b : a)) as HTMLElement;
+    return hit.innerText.trim();
+  });
+}
+
+/** 「나」 카드: 첫 줄이 「나」 한 글자. */
+const ME = /^나\s/;
+
+const title = (page: Page) => page.locator("header").getByText(/^(인연|순간)$/);
 
 test("사람 3명이면 인연 줄은 5장, 점이 5개", async ({ page }) => {
   const row = await seed(page, 3);
@@ -45,20 +69,13 @@ test("14명이면 점 대신 숫자, 누르면 인연 목록", async ({ page }) 
   await expect(page).toHaveURL(/\/people\/?$/);
 });
 
-test("끝에서 다음을 누르면 처음(나)으로", async ({ page }) => {
+test("끝에서 다음을 누르면 고리를 돌아 나에게 닿는다", async ({ page }) => {
   const row = await seed(page, 3);
-  const overview = row.getByRole("link", { name: /모아 보기/ });
-  const start = (await overview.getAttribute("aria-label"))!;
   // 폰에서는 ‹ › 단추가 화면 낭독기·키보드용으로 숨어 있다. 키보드로 누른다.
   const next = row.getByRole("button", { name: "다음" });
-  await next.press("Enter");
-  await expect(overview).not.toHaveAttribute("aria-label", start);
-  // 5장이니 네 번 더 누르면 한 바퀴 돌아 처음 번호다. 고리 자리에서 멈추지 않게 한 번씩 기다린다.
-  for (let i = 0; i < 4; i++) {
-    await page.waitForTimeout(800);
-    await next.press("Enter");
-  }
-  await expect(overview).toHaveAttribute("aria-label", start);
+  // 첫 사람(2번째)에서 네 번: 사람 둘, 새 인연, 그리고 고리를 넘어 「나」. 기다리지 않고 바로 눌러도 하나도 빠지지 않는다.
+  for (let i = 0; i < 4; i++) await next.press("Enter");
+  await expect.poll(() => current(page, "인연")).toMatch(ME);
 });
 
 test("사람이 없으면 나와 새 인연 두 장", async ({ page }) => {
@@ -162,4 +179,92 @@ test("주소로 바로 들어온 편집 화면에서 뒤로를 누르면 한 번
   await expect(page).toHaveURL(/\/$/);
   await page.waitForTimeout(500);
   expect(asked).toBe(1);
+});
+
+/* 첫 화면: 인연·순간 두 줄 */
+test("새로 열면 첫 사람 카드, 생일이 가까우면 그 사람", async ({ page }) => {
+  await clearState(page);
+  // 둘째(나이로 가운데)의 생일이 5일 뒤. 2월 29일생은 해마다 날이 달라 6일로 비켜 간다.
+  const born = await page.evaluate(() => {
+    const p = (v: number) => String(v).padStart(2, "0");
+    for (let n = 5; ; n++) {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      const s = `${d.getFullYear() - 42}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+      if (!s.endsWith("-02-29")) return { s, n };
+    }
+  });
+  await seed(page, 0, { people: [person(0), { ...person(1), ageYears: undefined, ageAsOf: undefined, birthDate: born.s }, person(2)] });
+  await expect.poll(() => current(page, "인연")).toMatch(/^사람2/);
+  expect(await current(page, "인연")).toContain(`생일 ${born.n}일 전`);
+});
+
+test("순간 ↓를 누르면 제목이 순간, ↑ 인연으로 돌아온다", async ({ page }) => {
+  await seed(page, 1, { moments: 2 });
+  await expect(title(page)).toHaveText("인연");
+  await page.getByRole("button", { name: "순간 ↓" }).click();
+  await expect(title(page)).toHaveText("순간");
+  await page.getByRole("button", { name: "↑ 인연" }).click();
+  await expect(title(page)).toHaveText("인연");
+});
+
+test("키보드만으로 모든 카드에 닿는다", async ({ page }) => {
+  await seed(page, 3, { moments: 2 });
+  await page.getByRole("group", { name: "카드" }).focus();
+  async function walk(row: string, n: number): Promise<string[]> {
+    const seen = [await current(page, row)];
+    for (let i = 1; i < n; i++) {
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(() => current(page, row)).not.toBe(seen[i - 1]);
+      seen.push(await current(page, row));
+    }
+    return seen;
+  }
+  const people = await walk("인연", 5);
+  expect(people.filter((s) => ME.test(s))).toHaveLength(1);
+  for (const name of ["사람1", "사람2", "사람3", "＋ 새 인연"]) expect(people.filter((s) => s.startsWith(name))).toHaveLength(1);
+  await page.keyboard.press("ArrowDown");
+  await expect(title(page)).toHaveText("순간");
+  const moments = await walk("순간", 3);
+  for (const name of ["순간1", "순간2", "＋ 새 순간"]) expect(moments.filter((s) => s.startsWith(name))).toHaveLength(1);
+});
+
+test("나 카드에서 내보내기까지", async ({ page }) => {
+  await seed(page, 2);
+  await page.getByRole("group", { name: "카드" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => current(page, "인연")).toMatch(ME);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/settings\/?$/);
+  await expect(page.getByRole("button", { name: "내보내기" })).toBeVisible();
+});
+
+test("상세에 갔다 돌아오면 같은 줄의 같은 카드", async ({ page }) => {
+  await seed(page, 1, { moments: 3 });
+  await page.getByRole("button", { name: "순간 ↓" }).click();
+  await expect(title(page)).toHaveText("순간");
+  const first = await current(page, "순간");
+  await page.getByRole("region", { name: "순간" }).getByRole("button", { name: "다음" }).press("Enter");
+  await expect.poll(() => current(page, "순간")).not.toBe(first);
+  const second = await current(page, "순간");
+  await page.getByRole("group", { name: "카드" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/moments\/detail/);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(title(page)).toHaveText("순간");
+  await expect.poll(() => current(page, "순간")).toBe(second);
+});
+
+test("아이 카드에는 성장 한 줄", async ({ page }) => {
+  await seed(page, 0, { people: [{ ...person(0), name: "지우", ageYears: 7 }] });
+  await expect(page.getByRole("region", { name: "인연" }).getByRole("link", { name: /지우/ })).toContainText("만 20세까지");
+});
+
+test("세로로 밀면 순간 줄로", async ({ page }) => {
+  await seed(page, 1, { moments: 1 });
+  const box = (await page.getByRole("group", { name: "카드" }).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, 600);
+  await expect(title(page)).toHaveText("순간");
 });

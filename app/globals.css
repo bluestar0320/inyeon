@@ -376,4 +376,21 @@
       transform: translateY(0.3rem);
     }
   }
+
+  /* 첫 화면 「순간 ↓」가 아래로 살짝 흔들린다. 움직임을 줄인 사람에게는 가만히 있다. */
+  @media (prefers-reduced-motion: no-preference) {
+    .deck-nudge {
+      animation: deck-nudge 2.4s ease-in-out infinite;
+    }
+  }
+  @keyframes deck-nudge {
+    0%,
+    60%,
+    100% {
+      transform: translateY(0);
+    }
+    75% {
+      transform: translateY(3px);
+    }
+  }
 }

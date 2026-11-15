@@ -23,7 +23,8 @@ export type DeckCard =
       /** 사진 모서리 리본. "생일 6일 전" 같은 것. */
       ribbon?: string | null;
     }
-  | { kind: "me"; id: "me"; href: "/settings"; label: string; value: string; nudge?: string | null }
+  // 「나」·「＋」 장의 id는 저장된 id와 겹치지 않게 __로 시작한다.
+  | { kind: "me"; id: "__me"; href: "/settings"; label: string; value: string; nudge?: string | null }
   | { kind: "add"; id: string; href: string; label: string };
 
 export type CardRowHandle = { go(step: number): void; open(): void };
@@ -40,11 +41,11 @@ type Props = {
 };
 
 const COPY = defineCopy({
-  ko: { prev: "이전", next: "다음", me: "나" },
-  en: { prev: "Previous", next: "Next", me: "Me" },
-  ja: { prev: "前へ", next: "次へ", me: "わたし" },
-  es: { prev: "Anterior", next: "Siguiente", me: "Yo" },
-  zh: { prev: "上一张", next: "下一张", me: "我" },
+  ko: { prev: "이전", next: "다음", me: "나", at: (i: number, n: number) => `${n}장 중 ${i}번째` },
+  en: { prev: "Previous", next: "Next", me: "Me", at: (i, n) => `${i} of ${n}` },
+  ja: { prev: "前へ", next: "次へ", me: "わたし", at: (i, n) => `${n}枚中${i}枚目` },
+  es: { prev: "Anterior", next: "Siguiente", me: "Yo", at: (i, n) => `${i} de ${n}` },
+  zh: { prev: "上一张", next: "下一张", me: "我", at: (i, n) => `第${i}张，共${n}张` },
 });
 
 /** 서버에서 미리 그릴 때는 useLayoutEffect가 경고만 낸다. 브라우저에서만 쓴다. */
@@ -173,7 +174,12 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
   const go = (step: number) => {
     const el = track.current;
     if (!el) return;
-    const from = heading.current ?? Math.round(el.scrollLeft / cardWidth(el));
+    let from = heading.current ?? Math.round(el.scrollLeft / cardWidth(el));
+    // 덧붙인 장에 있거나 그리로 가는 중이면, 같은 그림의 진짜 장으로 먼저 몰래 옮긴 뒤 센다. 아니면 끝에서 누른 게 사라진다.
+    if (many && (from === 0 || from === n + 1)) {
+      from = from === 0 ? n : 1;
+      el.scrollTo({ left: from * cardWidth(el), behavior: "auto" });
+    }
     const target = Math.max(0, Math.min(slides.length - 1, from + step));
     heading.current = target;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -255,7 +261,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
       </div>
       {/* 넘길 때 몇째 장인지 화면 낭독기에 알린다. */}
       <span className="sr-only" aria-live="polite">
-        {overviewLabel(index + 1, n)}
+        {t.at(index + 1, n)}
       </span>
     </section>
   );

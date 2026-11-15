@@ -21,7 +21,7 @@ async function seed(page: import("@playwright/test").Page, people: Record<string
   }, { key: STORAGE_KEY, people });
 }
 
-test("생신이 5일 남았으면 홈에 한 줄이 뜨고, 누르면 그 사람 화면으로 간다", async ({ page }) => {
+test("생신이 5일 남았으면 첫 화면에 그 사람 카드가 리본을 달고 서고, 누르면 그 사람 화면으로 간다", async ({ page }) => {
   await setUpProfile(page, 35);
   // 2월 29일생이면 해에 따라 날이 하루 달라진다. 테스트 날짜가 그 근처면 6일로 비켜 간다.
   let days = 5;
@@ -29,9 +29,9 @@ test("생신이 5일 남았으면 홈에 한 줄이 뜨고, 누르면 그 사람
   if (birthDate.endsWith("-02-29")) birthDate = await birthDateIn(page, ++days);
   await seed(page, [{ id: "p1", name: "엄마", relation: "부모님", birthDate }]);
   await page.goto("/");
-  const line = page.getByRole("link", { name: `엄마 생신까지 ${days}일 남았어요` });
-  await expect(line).toBeVisible();
-  await line.click();
+  const card = page.getByRole("region", { name: "인연" }).getByRole("link", { name: /엄마/ });
+  await expect(card).toContainText(`생신 ${days}일 전`);
+  await card.click();
   await page.waitForURL(/\/people\/detail\/?\?id=p1/);
 });
 
@@ -64,8 +64,6 @@ test("한 줄 기억이 두 개면 기억 편지가 되고, 생신이 가까우�
   if (birthDate.endsWith("-02-29")) birthDate = await birthDateIn(page, ++days);
   await seed(page, [{ id: "p1", name: "엄마", relation: "부모님", birthDate, meetings: [a, b],
     memories: [{ date: a, text: "같이 시장 가서 떡볶이" }, { date: b, text: "송편 같이 빚음" }] }]);
-  await page.goto("/");
-  await expect(page.getByRole("link", { name: /기억 편지가 준비돼 있어요/ })).toBeVisible();
   await page.goto("/people/detail?id=p1");
   const letter = page.getByTestId("memory-letter");
   await expect(letter.getByText("엄마께")).toBeVisible();
