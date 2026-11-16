@@ -67,6 +67,18 @@ export function clearDirty(): void {
   leaving = true;
 }
 
+/*
+ * 앱 안에서 거쳐 온 화면(주소+쿼리). Nav가 화면이 바뀔 때마다 쌓고, 뒤에 앱 화면이
+ * 남아 있을 때만 「←」가 router.back()을 쓴다. 새로고침하면 빈다.
+ */
+export const trail: string[] = [];
+
+/** 지금 화면을 히스토리에서 갈아 끼운다. 기록에서도 지금 화면을 빼야 「←」가 없는 화면으로 돌아가지 않는다. */
+export function replaceTo(router: { replace: (href: string) => void }, href: string): void {
+  trail.pop();
+  router.replace(href);
+}
+
 /** 뒤로 가기를 한 번 받아내려고 심어 두는 히스토리 항목의 표식. */
 const SENTINEL = "rc-unsaved-guard";
 

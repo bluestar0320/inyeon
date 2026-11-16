@@ -22,6 +22,7 @@ import { imageFor } from "@/lib/photos";
 import { relationTag } from "@/lib/story";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
+import { replaceTo } from "@/lib/unsaved";
 
 const COPY = defineCopy({
   ko: {
@@ -91,7 +92,7 @@ export default function HomePage() {
 
   const router = useRouter();
   useEffect(() => {
-    if (hydrated && !profile) router.replace("/setup");
+    if (hydrated && !profile) replaceTo(router, "/setup");
   }, [hydrated, profile, router]);
 
   // 처음 온 사람에게 소개 화면과 "시작하기" 단추를 한 번 더 거치게 하지 않는다. 바로 적게 한다.

@@ -20,7 +20,7 @@ import { momentFrom, useActions, useAppState } from "@/lib/store";
 import { imageFor } from "@/lib/photos";
 import { copyFor } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { confirmLeave, useUnsavedGuard, leaveTo, leaveAfterAdd, returnedAfterAdd, blockImeEnter } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, leaveAfterAdd, returnedAfterAdd, replaceTo, blockImeEnter } from "@/lib/unsaved";
 import { DAYS_PER_YEAR, toPerYear } from "@/lib/calc";
 import type { Moment, MomentHorizon } from "@/lib/types";
 
@@ -169,7 +169,7 @@ export default function MomentEditor({ initial }: { initial: Moment }) {
   // 저장을 마친 추가 화면에 뒤로 가기로 돌아왔으면 빈 칸을 다시 보여 주지 않는다(lib/unsaved.ts).
   useEffect(() => {
     const to = returnedAfterAdd();
-    if (to) router.replace(to);
+    if (to) replaceTo(router, to);
   }, [router]);
   const { state } = useAppState();
   const { saveMoment, removeMoment } = useActions();

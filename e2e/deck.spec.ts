@@ -236,6 +236,37 @@ test("주소로 바로 들어온 편집 화면에서 뒤로를 누르면 한 번
   expect(asked).toBe(1);
 });
 
+test("처음 온 사람의 시작 설정 화면에는 「←」가 없다", async ({ page }) => {
+  await clearState(page);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/setup\/?$/);
+  await expect(page.getByRole("button", { name: "뒤로" })).toHaveCount(0);
+});
+
+test("나 화면에서 시작 설정으로 가면 「←」로 돌아온다", async ({ page }) => {
+  await seed(page, 0);
+  await page.goto("/settings");
+  await page.locator('a[href^="/setup"]').first().click();
+  await expect(page).toHaveURL(/\/setup\/?$/);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/settings\/?$/);
+});
+
+test("추가 화면에 주소로 들어와 저장하고 뒤로 두 번이면 앱 안에 남는다", async ({ page }) => {
+  await seed(page, 0);
+  await page.goto("/people/new");
+  await page.getByLabel("이름").fill("테스트");
+  await page.getByLabel("나이", { exact: true }).fill("60");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/\/people(\/detail)?\/?(\?.*)?$/);
+  await page.goBack();
+  await page.waitForTimeout(500);
+  await expect(page).not.toHaveURL(/\/people\/new/);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/127\.0\.0\.1|localhost/);
+  await expect(page).not.toHaveURL(/\/people\/new/);
+});
+
 /* 첫 화면: 인연·순간 두 줄 */
 test("새로 열면 첫 사람 카드, 생일이 가까우면 그 사람", async ({ page }) => {
   await clearState(page);

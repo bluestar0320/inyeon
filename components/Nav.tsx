@@ -5,7 +5,8 @@ import { useEffect } from "react";
 
 import { ROW_NAMES, useDeckRow } from "@/lib/deckRow";
 import { defineCopy, tr } from "@/lib/i18n";
-import { clearDirty, confirmLeave, leaveTo } from "@/lib/unsaved";
+import { useAppState } from "@/lib/store";
+import { clearDirty, confirmLeave, leaveTo, trail } from "@/lib/unsaved";
 
 const COPY = defineCopy({
   ko: { brand: "몇번더", back: "뒤로" },
@@ -15,13 +16,6 @@ const COPY = defineCopy({
   zh: { brand: "还有几次", back: "返回" },
 });
 
-/*
- * 앱 안에서 거쳐 온 화면(주소+쿼리). 뒤에 앱 화면이 남아 있을 때만 router.back()을 쓴다.
- * 주소로 바로 들어와 몇 번 옮긴 뒤 되돌아가도 사이트 밖으로 나가지 않는다.
- * 새로고침하면 비고, 그때 「←」는 첫 화면(문서는 나 화면)으로 간다.
- */
-const trail: string[] = [];
-
 const DOC_PAGE = /^\/(about|privacy|terms|reads)(\/|$)/;
 
 export default function Nav() {
@@ -29,6 +23,7 @@ export default function Nav() {
   const router = useRouter();
   const t = tr(COPY);
   const row = useDeckRow();
+  const profile = useAppState().state.profile;
 
   useEffect(() => {
     const here = pathname + window.location.search;
@@ -55,9 +50,10 @@ export default function Nav() {
     */
     <header className="sticky top-0 z-10 border-b border-ink-200/70 bg-page/90 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        {pathname === "/" ? (
+        {/* 처음 온 사람의 시작 설정 화면에는 돌아갈 곳이 없다(첫 화면이 다시 이리로 보낸다). */}
+        {pathname === "/" || (pathname.startsWith("/setup") && !profile) ? (
           <>
-            <span className="text-sm font-semibold tracking-tight text-ink-900">{tr(ROW_NAMES)[row]}</span>
+            <span className="text-sm font-semibold tracking-tight text-ink-900">{pathname === "/" ? tr(ROW_NAMES)[row] : ""}</span>
             <span className="text-xs text-ink-400">{t.brand}</span>
           </>
         ) : (
