@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { hintFor } from "@/components/DecayHint";
 import OwnPhotoPicker from "@/components/OwnPhotoPicker";
 import Polaroid from "@/components/Polaroid";
+import { useFlip } from "@/lib/flip";
 import ResultPanel from "@/components/ResultPanel";
 import StoryLines from "@/components/StoryLines";
 import WhatIf from "@/components/WhatIf";
@@ -131,6 +132,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 /** 저장된 순간을 보는 화면. 설계 의도는 PersonView와 같다. */
 export default function MomentView({ moment }: { moment: Moment }) {
+  const flip = useFlip<HTMLSpanElement>(`moment:${moment.id}`);
   const router = useRouter();
   const { state } = useAppState();
   const { saveMoment, removeMoment } = useActions();
@@ -160,9 +162,11 @@ export default function MomentView({ moment }: { moment: Moment }) {
   return (
     <div className="space-y-5">
       <div className="flex justify-center pt-2">
-        <Polaroid src={imageFor(moment)} size="lg" tilt={-2}>
+<span ref={flip} className="block w-full max-w-[16rem]">
+                <Polaroid src={imageFor(moment)} size="lg" tilt={-2}>
           <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{moment.title}</span>
         </Polaroid>
+        </span>
       </div>
       <OwnPhotoPicker
         value={moment.ownPhoto}

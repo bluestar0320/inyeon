@@ -94,6 +94,8 @@ export default function Deck({
     const el = box.current;
     if (el && start.row === "moments") el.scrollTop = sections.moments.current?.offsetTop ?? 0;
     setDeckRow(start.row);
+    // 상세에서 돌아왔으면 그 카드 사진이 내려앉는다(칸을 맞춘 뒤라야 자리가 맞다).
+    rows[start.row].current?.play();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

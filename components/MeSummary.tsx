@@ -8,6 +8,7 @@ import StatCard from "@/components/StatCard";
 import { backupDue } from "@/lib/backup";
 import { computeMarriage, lifeProgress, remainingYears, resolveAge } from "@/lib/calc";
 import { formatAge, formatCount, formatFrequency, formatPercent, formatYears } from "@/lib/format";
+import { useFlip } from "@/lib/flip";
 import { defineCopy, tr } from "@/lib/i18n";
 import { useAppState } from "@/lib/store";
 import { copyFor } from "@/lib/tone";
@@ -94,6 +95,7 @@ const COPY = defineCopy({
 
 /* 「나」 화면 맨 위. 남은 시간 → (밀린 백업) → 결혼 계획. 첫 화면의 「나」 카드가 이리로 이어진다. */
 export default function MeSummary() {
+  const flip = useFlip<HTMLDivElement>("me");
   const t = tr(COPY);
   const { state } = useAppState();
   const copy = copyFor(state.settings.tone);
@@ -114,7 +116,7 @@ export default function MeSummary() {
   return (
     <div className="space-y-6">
       {/* 첫 화면의 「나」 카드가 이 블록으로 펼쳐진다(Task 6). */}
-      <div data-flip="me">
+      <div ref={flip} data-flip="me">
         <section className="hero space-y-5">
           <BigNumber
             label={copy.lifeLabel}

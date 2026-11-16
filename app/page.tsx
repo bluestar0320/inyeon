@@ -128,6 +128,7 @@ export default function HomePage() {
             return {
               kind: "photo",
               id: person.id,
+              flipKey: `person:${person.id}`,
               href: `/people/detail?id=${person.id}`,
               photo: imageFor(person),
               title: [person.name, relationTag(person.name, person.relation)].filter(Boolean).join(" · "),
@@ -145,6 +146,7 @@ export default function HomePage() {
           ...moments.map(({ moment, result }): DeckCard => ({
             kind: "photo",
             id: moment.id,
+            flipKey: `moment:${moment.id}`,
             href: `/moments/detail?id=${moment.id}`,
             photo: imageFor(moment),
             title: moment.title,

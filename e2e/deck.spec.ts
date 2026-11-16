@@ -268,3 +268,53 @@ test("세로로 밀면 순간 줄로", async ({ page }) => {
   await page.mouse.wheel(0, 600);
   await expect(title(page)).toHaveText("순간");
 });
+
+// 화살표 흔들림 같은 CSS 움직임은 빼고, element.animate로 만든 효과만 센다.
+const anims = (page: Page) =>
+  page.evaluate(() => document.getAnimations().filter((a) => !(a instanceof CSSAnimation) && !(a instanceof CSSTransition)).length);
+
+test("카드를 누르면 상세 사진이 날아 온다", async ({ page }) => {
+  const row = await seed(page, 1);
+  await row.getByRole("link", { name: /사람1/ }).click();
+  await expect(page).toHaveURL(/\/people\/detail/);
+  expect(await anims(page)).toBeGreaterThan(0);
+});
+
+test("주소로 바로 들어오면 효과가 없다", async ({ page }) => {
+  await seed(page, 1);
+  await page.goto("/people/detail?id=p0");
+  await expect(page.getByRole("heading", { name: /사람1/ }).first()).toBeVisible();
+  expect(await anims(page)).toBe(0);
+});
+
+test("효과 도중 뒤로 가도 사진이 제자리", async ({ page }) => {
+  const row = await seed(page, 1);
+  await row.getByRole("link", { name: /사람1/ }).click();
+  await expect(page).toHaveURL(/\/people\/detail/);
+  await page.waitForTimeout(100);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  const img = page.getByRole("region", { name: "인연" }).getByRole("link", { name: /사람1/ }).locator("img");
+  await expect.poll(() => img.evaluate((el) => getComputedStyle(el).transform), { timeout: 3000 }).toBe("none");
+  expect(await anims(page)).toBe(0);
+});
+
+test("돌아오면 카드 사진이 내려앉는다", async ({ page }) => {
+  const row = await seed(page, 1);
+  await row.getByRole("link", { name: /사람1/ }).click();
+  await expect(page).toHaveURL(/\/people\/detail/);
+  await page.waitForTimeout(600);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await anims(page)).toBeGreaterThan(0);
+});
+
+test.describe("움직임 줄이기", () => {
+  test.use({ reducedMotion: "reduce" });
+  test("누른 뒤에도 효과가 없다", async ({ page }) => {
+    const row = await seed(page, 1);
+    await row.getByRole("link", { name: /사람1/ }).click();
+    await expect(page).toHaveURL(/\/people\/detail/);
+    expect(await anims(page)).toBe(0);
+  });
+});

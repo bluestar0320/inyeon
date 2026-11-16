@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
 import Polaroid from "@/components/Polaroid";
+import { playFrom, remember } from "@/lib/flip";
 import { defineCopy, tr } from "@/lib/i18n";
 
 export type DeckCard =
@@ -22,12 +23,21 @@ export type DeckCard =
       note?: string | null;
       /** 사진 모서리 리본. "생일 6일 전" 같은 것. */
       ribbon?: string | null;
+      /** 펼치기 효과에서 이 카드를 가리키는 이름. person:id / moment:id. */
+      flipKey?: string;
     }
   // 「나」·「＋」 장의 id는 저장된 id와 겹치지 않게 __로 시작한다.
   | { kind: "me"; id: "__me"; href: "/settings"; label: string; value: string; nudge?: string | null }
   | { kind: "add"; id: string; href: string; label: string };
 
-export type CardRowHandle = { go(step: number): void; open(): void };
+export type CardRowHandle = { go(step: number): void; open(): void; play(): void };
+
+/** 효과에서 쓰는 이름. 「＋」 장은 없다. */
+const flipKeyOf = (card: DeckCard) => (card.kind === "me" ? "me" : card.kind === "photo" ? card.flipKey : undefined);
+
+/** 효과가 붙는 요소: 사진 카드는 사진, 「나」는 카드 자체. */
+const flipElOf = (card: DeckCard, link: HTMLElement | null) =>
+  card.kind === "photo" ? link?.querySelector("img") ?? null : card.kind === "me" ? link : null;
 
 type Props = {
   label: string;
@@ -186,8 +196,29 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
     el.scrollTo({ left: target * cardWidth(el), behavior: still ? "auto" : "smooth" });
   };
 
-  // ponytail: open은 지금 장으로 가기만 한다. 펼치는 효과는 Task 6에서 붙인다.
-  useImperativeHandle(ref, () => ({ go, open: () => router.push(cards[shown.current].href) }));
+  // 누르기 직전에 그 카드의 자리를 남긴다.
+  const keep = (card: DeckCard, link: HTMLElement | null) => {
+    const key = flipKeyOf(card);
+    const el = flipElOf(card, link);
+    if (key && el) remember(key, el);
+  };
+  // 진짜 장(덧붙인 장이 아니라)의 링크.
+  const realLink = (i: number) => track.current?.children[i + lead]?.querySelector("a") as HTMLElement | null;
+
+  useImperativeHandle(ref, () => ({
+    go,
+    open: () => {
+      keep(cards[shown.current], realLink(shown.current) ?? null);
+      router.push(cards[shown.current].href);
+    },
+    // 돌아왔을 때 지금 장이 남긴 자리와 같은 카드면 거기서 내려앉는다. 덧붙인 장은 해당 없다.
+    play: () => {
+      const card = cards[shown.current];
+      const key = flipKeyOf(card);
+      const el = key ? flipElOf(card, realLink(shown.current)) : null;
+      if (key && el) playFrom(key, el as HTMLElement);
+    },
+  }));
 
   return (
     <section role="region" aria-label={label} className="relative">
@@ -226,7 +257,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
               className={`shrink-0 snap-center py-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[4%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
             >
               {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. */}
-              <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">
+              <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} onClick={(e) => keep(card, e.currentTarget)} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">
                 <Face card={card} tilt={TILTS[i % TILTS.length]} me={t.me} />
               </Link>
             </div>
