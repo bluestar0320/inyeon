@@ -75,11 +75,11 @@ function cardWidth(el: HTMLElement): number {
 function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) {
   if (card.kind === "me")
     return (
-      <span className="hero flex aspect-square flex-col justify-end">
+      <span className="hero flex aspect-square flex-col justify-end [@media(max-height:500px)]:p-3">
         <span className="text-xs text-ink-600">{me}</span>
         <span className="mt-1 block text-sm text-ink-800">{card.label}</span>
         <span className="numeral mt-2 block text-4xl leading-none text-ink-900">{card.value}</span>
-        {card.nudge && <span className="mt-3 block text-xs leading-relaxed text-ink-600">{card.nudge}</span>}
+        {card.nudge && <span className="mt-3 block text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:line-clamp-1">{card.nudge}</span>}
       </span>
     );
   if (card.kind === "add")
@@ -93,13 +93,13 @@ function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) 
       <Polaroid src={card.photo} size="md" tilt={tilt}>
         <span className="mt-2 block px-1">
           <span className="font-album block truncate text-sm text-ink-800">{card.title}</span>
-          <span className="font-album mt-0.5 block break-keep text-xs leading-relaxed text-ink-600">{card.sentence}</span>
+          <span className="font-album mt-0.5 block break-keep text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:line-clamp-1">{card.sentence}</span>
           {/* 횟수는 바로 위 문장이 이미 말한다. 화면 낭독기가 두 번 읽지 않게 숨긴다. */}
-          <span aria-hidden="true" className="numeral mt-1 block text-4xl leading-none text-ink-900">
+          <span aria-hidden="true" className="numeral mt-1 block text-4xl leading-none text-ink-900 [@media(max-height:500px)]:text-3xl">
             {card.count}
             <span className="ml-1 text-sm font-normal text-ink-600">{card.unit}</span>
           </span>
-          {card.note && <span className="mt-1 block text-xs text-ink-600">{card.note}</span>}
+          {card.note && <span className="mt-1 block text-xs text-ink-600 [@media(max-height:500px)]:line-clamp-1">{card.note}</span>}
         </span>
       </Polaroid>
       {card.ribbon && (
@@ -256,8 +256,8 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
               aria-hidden={copy || undefined}
               className={`shrink-0 snap-center py-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[4%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
             >
-              {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. */}
-              <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} onClick={(e) => keep(card, e.currentTarget)} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))]">
+              {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. 아주 낮은 화면(눕힌 폰)은 사진을 4:3으로 낮추고 글은 한 줄씩. */}
+              <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} onClick={(e) => keep(card, e.currentTarget)} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))] [@media(max-height:500px)]:max-w-[max(8rem,calc(100svh-16rem))] [@media(max-height:500px)]:[&_img]:aspect-[4/3]">
                 <Face card={card} tilt={TILTS[i % TILTS.length]} me={t.me} />
               </Link>
             </div>

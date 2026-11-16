@@ -4,48 +4,28 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 import CardRow, { type CardRowHandle, type DeckCard } from "@/components/CardRow";
 import { readPos, writePos, type DeckPos, type RowKey } from "@/lib/deck";
-import { setDeckRow } from "@/lib/deckRow";
+import { ROW_NAMES, setDeckRow } from "@/lib/deckRow";
 import { defineCopy, tr } from "@/lib/i18n";
 
 const COPY = defineCopy({
   ko: {
     box: "카드",
-    people: "인연",
-    moments: "순간",
-    toMoments: "순간 ↓",
-    toPeople: "↑ 인연",
     overview: (i: number, n: number) => `모아 보기, ${n}장 중 ${i}번째`,
   },
   en: {
     box: "Cards",
-    people: "People",
-    moments: "Moments",
-    toMoments: "Moments ↓",
-    toPeople: "↑ People",
     overview: (i, n) => `See all, ${i} of ${n}`,
   },
   ja: {
     box: "カード",
-    people: "大切な人",
-    moments: "ひととき",
-    toMoments: "ひととき ↓",
-    toPeople: "↑ 大切な人",
     overview: (i, n) => `一覧、${n}枚中${i}枚目`,
   },
   es: {
     box: "Tarjetas",
-    people: "Personas",
-    moments: "Momentos",
-    toMoments: "Momentos ↓",
-    toPeople: "↑ Personas",
     overview: (i, n) => `Ver todo, ${i} de ${n}`,
   },
   zh: {
     box: "卡片",
-    people: "亲友",
-    moments: "时光",
-    toMoments: "时光 ↓",
-    toPeople: "↑ 亲友",
     overview: (i, n) => `查看全部，第${i}张，共${n}张`,
   },
 });
@@ -69,6 +49,7 @@ export default function Deck({
   emptyMoments: string | null;
 }) {
   const t = tr(COPY);
+  const names = tr(ROW_NAMES);
   const box = useRef<HTMLDivElement>(null);
   const sections = { people: useRef<HTMLDivElement>(null), moments: useRef<HTMLDivElement>(null) };
   const rows = { people: useRef<CardRowHandle>(null), moments: useRef<CardRowHandle>(null) };
@@ -114,12 +95,13 @@ export default function Deck({
       tabIndex={0}
       role="group"
       aria-label={t.box}
-      // 높이 = 화면 − 머리글(py-3 + text-sm 한 줄 + 아랫줄 1px + 상태바).
-      className="relative h-[calc(100svh-2.75rem-1px-env(safe-area-inset-top))] snap-y snap-mandatory overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] [scrollbar-width:none] focus-visible:outline-offset-[-2px] [&::-webkit-scrollbar]:hidden"
+      // 높이는 머리글 아래 남은 만큼(app/globals.css의 [data-deck]).
+      className="relative h-full snap-y snap-mandatory overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] [scrollbar-width:none] focus-visible:outline-offset-[-2px] [&::-webkit-scrollbar]:hidden"
       onScroll={(e) => {
         const el = e.currentTarget;
-        // 끝까지 내려가도 순간 칸 윗줄에 못 닿을 수 있다(칸이 88%라). 반을 넘으면 순간 칸.
-        const row: RowKey = el.scrollTop > (el.scrollHeight - el.clientHeight) / 2 ? "moments" : "people";
+        // 상자 가운데가 순간 칸에 들어가면 순간 칸.
+        const row: RowKey =
+          el.scrollTop + el.clientHeight / 2 >= (sections.moments.current?.offsetTop ?? Infinity) ? "moments" : "people";
         if (row !== pos.current.row) save({ row });
       }}
       onKeyDown={(e) => {
@@ -136,7 +118,7 @@ export default function Deck({
       <div ref={sections.people} className="flex min-h-[88%] snap-start flex-col pt-2">
         <CardRow
           ref={rows.people}
-          label={t.people}
+          label={names.people}
           cards={peopleCards}
           index={start.people}
           onIndex={(people) => save({ people })}
@@ -144,16 +126,16 @@ export default function Deck({
           overviewLabel={t.overview}
         />
         <button type="button" onClick={() => toRow("moments")} className="btn-quiet mx-auto mt-auto min-h-11 min-w-11">
-          <span className="deck-nudge inline-block">{t.toMoments}</span>
+          <span className="deck-nudge inline-block">{names.moments} ↓</span>
         </button>
       </div>
       <div ref={sections.moments} className="flex min-h-[88%] snap-start flex-col">
         <button type="button" onClick={() => toRow("people")} className="btn-quiet mx-auto min-h-11 min-w-11">
-          {t.toPeople}
+          ↑ {names.people}
         </button>
         <CardRow
           ref={rows.moments}
-          label={t.moments}
+          label={names.moments}
           cards={momentCards}
           index={start.moments}
           onIndex={(moments) => save({ moments })}

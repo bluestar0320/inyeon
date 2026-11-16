@@ -21,7 +21,7 @@ export default function UndoBar() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 flex justify-center px-4 pb-4 sm:bottom-0 sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
     >
       <div className="flex w-full max-w-md items-center gap-3 rounded-2xl bg-toast px-4 py-3 text-sm text-toast-fg shadow-lg">
         {/* 「만났어요」 한 마디처럼 긴 문장도 있으니 자르지 않고 줄을 넘긴다. */}

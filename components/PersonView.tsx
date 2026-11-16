@@ -10,7 +10,6 @@ import MeetingLog from "@/components/MeetingLog";
 import MemoryLetter from "@/components/MemoryLetter";
 import OwnPhotoPicker from "@/components/OwnPhotoPicker";
 import Polaroid from "@/components/Polaroid";
-import { useFlip } from "@/lib/flip";
 import ResultPanel from "@/components/ResultPanel";
 import Saying from "@/components/Saying";
 import StoryLines from "@/components/StoryLines";
@@ -27,6 +26,7 @@ import {
   josa,
 } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
+import { useFlip } from "@/lib/flip";
 import { useActions, useAppState } from "@/lib/store";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
 import { imageFor } from "@/lib/photos";
@@ -297,10 +297,10 @@ export default function PersonView({ person }: { person: Person }) {
   return (
     <div className="space-y-5">
       <div className="flex justify-center pt-2">
-<span ref={flip} className="block w-full max-w-[16rem]">
-                <Polaroid src={imageFor(person)} size="lg" tilt={-2}>
-          <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
-        </Polaroid>
+        <span ref={flip} className="block w-full max-w-[16rem]">
+          <Polaroid src={imageFor(person)} size="lg" tilt={-2}>
+            <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{person.name}</span>
+          </Polaroid>
         </span>
       </div>
       <OwnPhotoPicker

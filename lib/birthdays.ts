@@ -95,18 +95,18 @@ export function birthdayLine(person: Pick<Person, "name" | "relation">, days: nu
 const RIBBON = defineCopy({
   ko: (days: number, elder: boolean) => {
     const what = elder ? "생신" : "생일";
-    return days === 0 ? `오늘 ${what}` : `${what} ${days}일 전`;
+    return days === 0 ? `오늘 ${what}` : days === 1 ? `내일 ${what}` : `${what} ${days}일 전`;
   },
-  en: (days) => (days === 0 ? "Birthday today" : `Birthday in ${days}d`),
+  en: (days) => (days === 0 ? "Birthday today" : days === 1 ? "Birthday tomorrow" : `Birthday in ${days} days`),
   ja: (days, elder) => {
     const what = elder ? "お誕生日" : "誕生日";
-    return days === 0 ? `今日は${what}` : `${what}まで${days}日`;
+    return days === 0 ? `今日は${what}` : days === 1 ? `明日は${what}` : `${what}まで${days}日`;
   },
-  es: (days) => (days === 0 ? "Cumple hoy" : `Cumple en ${days} d`),
-  zh: (days) => (days === 0 ? "今天生日" : `生日还有${days}天`),
+  es: (days) => (days === 0 ? "Cumple hoy" : days === 1 ? "Cumple mañana" : `Cumple en ${days} días`),
+  zh: (days) => (days === 0 ? "今天生日" : days === 1 ? "明天生日" : `生日还有${days}天`),
 });
 
-/** 카드 위에 붙이는 짧은 리본. 0일이면 오늘, 아니면 며칠 전. */
+/** 카드 위에 붙이는 짧은 리본. 0일이면 오늘, 1일이면 내일, 아니면 며칠 전. */
 export function birthdayRibbon(person: Pick<Person, "name" | "relation" | "bonds">, days: number): string {
   return tr(RIBBON)(days, isElder(person));
 }

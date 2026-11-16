@@ -1,22 +1,26 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-import { useDeckRow } from "@/lib/deckRow";
+import { ROW_NAMES, useDeckRow } from "@/lib/deckRow";
 import { defineCopy, tr } from "@/lib/i18n";
 import { clearDirty, confirmLeave, leaveTo } from "@/lib/unsaved";
 
 const COPY = defineCopy({
-  ko: { brand: "몇번더", back: "뒤로", people: "인연", moments: "순간" },
-  en: { brand: "How Many More", back: "Back", people: "People", moments: "Moments" },
-  ja: { brand: "あと何回", back: "戻る", people: "人", moments: "瞬間" },
-  es: { brand: "Cuántas más", back: "Atrás", people: "Personas", moments: "Momentos" },
-  zh: { brand: "还有几次", back: "返回", people: "亲友", moments: "时光" },
+  ko: { brand: "몇번더", back: "뒤로" },
+  en: { brand: "How Many More", back: "Back" },
+  ja: { brand: "あと何回", back: "戻る" },
+  es: { brand: "Cuántas más", back: "Atrás" },
+  zh: { brand: "还有几次", back: "返回" },
 });
 
-// 앱 안에서 화면을 옮겨 온 적이 있는지. 새로고침하면 false로 돌아가고, 그때는 첫 화면으로 간다.
-let moved = false;
+/*
+ * 앱 안에서 거쳐 온 화면(주소+쿼리). 뒤에 앱 화면이 남아 있을 때만 router.back()을 쓴다.
+ * 주소로 바로 들어와 몇 번 옮긴 뒤 되돌아가도 사이트 밖으로 나가지 않는다.
+ * 새로고침하면 비고, 그때 「←」는 첫 화면(문서는 나 화면)으로 간다.
+ */
+const trail: string[] = [];
 
 const DOC_PAGE = /^\/(about|privacy|terms|reads)(\/|$)/;
 
@@ -25,18 +29,19 @@ export default function Nav() {
   const router = useRouter();
   const t = tr(COPY);
   const row = useDeckRow();
-  const first = useRef<string | null>(null);
 
   useEffect(() => {
-    if (first.current === null) first.current = pathname;
-    else if (pathname !== first.current) moved = true;
+    const here = pathname + window.location.search;
+    // 바로 앞 화면으로 왔으면 뒤로 간 것이다.
+    if (trail.length > 1 && trail[trail.length - 2] === here) trail.pop();
+    else if (trail[trail.length - 1] !== here) trail.push(here);
   }, [pathname]);
 
   function back(): void {
     // 편집 중 저장하지 않은 게 있으면 화면을 옮기기 전에 한 번 묻는다.
     if (!confirmLeave()) return;
     // 이미 물었으니 편집기의 뒤로 가기 가드가 다시 묻지 않게 표시부터 지운다.
-    if (moved) {
+    if (trail.length > 1) {
       clearDirty();
       router.back();
     } else leaveTo(router, DOC_PAGE.test(pathname) ? "/settings" : "/");
@@ -52,7 +57,7 @@ export default function Nav() {
       <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
         {pathname === "/" ? (
           <>
-            <span className="text-sm font-semibold tracking-tight text-ink-900">{t[row]}</span>
+            <span className="text-sm font-semibold tracking-tight text-ink-900">{tr(ROW_NAMES)[row]}</span>
             <span className="text-xs text-ink-400">{t.brand}</span>
           </>
         ) : (

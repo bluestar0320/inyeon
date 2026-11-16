@@ -46,11 +46,13 @@ export function writePos(pos: DeckPos): void {
   }
 }
 
-const NOTE = defineCopy({
-  ko: (age: number, label: string, count: string) => `만 ${age}세까지 ${label} ${count}번`,
-  en: (age, label, count) => `${count} ${label} left until ${age}`,
+const NOTE = defineCopy<(age: number, label: string, count: string, one: boolean) => string>({
+  ko: (age, label, count) => `만 ${age}세까지 ${label} ${count}번`,
+  // 영어 이름표는 복수형("Summers", "Dinners together")이라 한 번이면 그 s를 뗀다.
+  en: (age, label, count, one) =>
+    `${count} ${(one ? label.replace(/s( together)?$/, "$1") : label).toLowerCase()} left until they're ${age}`,
   ja: (age, label, count) => `${age}歳まで${label}はあと${count}回`,
-  es: (age, label, count) => `${count} ${label} hasta los ${age}`,
+  es: (age, label, count) => `Quedan ${count} ${label.toLowerCase()} hasta los ${age}`,
   zh: (age, label, count) => `到${age}岁，${label}还有${count}次`,
 });
 
@@ -58,5 +60,5 @@ const NOTE = defineCopy({
 export function growthNote(growth: GrowthResult): string | null {
   if (growth.grownUp || growth.yearsLeft === null || growth.items.length === 0) return null;
   const least = growth.items.reduce((a, b) => (b.count < a.count ? b : a));
-  return tr(NOTE)(growth.adultAge, least.label, formatCount(least.count));
+  return tr(NOTE)(growth.adultAge, least.label, formatCount(least.count), least.count === 1);
 }

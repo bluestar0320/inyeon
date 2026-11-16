@@ -185,3 +185,17 @@ for (const lang of ["ko", "en"])
       expect(over).toBe(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
     });
+
+/* 눕힌 폰(915×412): 첫 화면의 인연 칸이 카드 상자 안에 다 들어가, 「순간 ↓」가 처음부터 보인다. */
+for (const lang of ["ko", "en"])
+  test(`${lang}: 눕힌 폰에서 인연 칸이 카드 상자 안에 들어간다`, async ({ page }) => {
+    await clearState(page);
+    await page.evaluate(({ key, v }) => localStorage.setItem(key, JSON.stringify(v)), { key: STORAGE_KEY, v: state(lang) });
+    await page.setViewportSize({ width: 915, height: 412 });
+    await page.goto("/");
+    const box = page.getByRole("group", { name: lang === "ko" ? "카드" : "Cards" });
+    await expect(box).toBeVisible();
+    const fit = await box.evaluate((el) => ({ box: el.clientHeight, people: (el.firstElementChild as HTMLElement).offsetHeight }));
+    expect(fit.people).toBeLessThanOrEqual(fit.box);
+    await expect(page.getByRole("button", { name: lang === "ko" ? "순간 ↓" : "Moments ↓" })).toBeInViewport();
+  });

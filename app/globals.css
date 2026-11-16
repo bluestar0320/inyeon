@@ -128,6 +128,28 @@
   }
 
   /*
+   * 첫 화면(카드 줄)은 머리글 아래 남은 높이를 꽉 채우고 페이지는 스크롤하지 않는다.
+   * 100svh 같은 화면 단위는 글씨 크기의 zoom만큼 함께 커져 화면을 넘쳤다. 대신 세로 flex로
+   * 머리글·알림이 먼저 자리를 잡고, 남은 높이를 main이 받는다(알림이 떠도 넘치지 않는다).
+   */
+  html:has([data-deck]),
+  html:has([data-deck]) body {
+    height: 100%;
+  }
+  html:has([data-deck]) body {
+    display: flex;
+    flex-direction: column;
+  }
+  main:has([data-deck]) {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+  }
+  [data-deck] {
+    height: 100%;
+  }
+
+  /*
    * 종이색은 html에만 칠한다. body까지 칠하면 그 색이 아래의 종이 사진을 덮는다
    * (body 배경은 음수 z-index 요소보다 위에 그려진다).
    */

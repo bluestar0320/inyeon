@@ -55,4 +55,36 @@ test("growthNote: 가장 적게 남은 것 하나", () => {
 test("birthdayRibbon", () => {
   assert.equal(birthdayRibbon({ name: "지훈", relation: "친구" }, 6), "생일 6일 전");
   assert.equal(birthdayRibbon({ name: "엄마", relation: "어머니" }, 0), "오늘 생신");
+  assert.equal(birthdayRibbon({ name: "지훈", relation: "친구" }, 1), "내일 생일");
+  assert.equal(birthdayRibbon({ name: "엄마", relation: "어머니" }, 1), "내일 생신");
+});
+test("birthdayRibbon: 다른 언어", () => {
+  const friend = { name: "Ji", relation: "친구" };
+  const want = {
+    en: ["Birthday today", "Birthday tomorrow", "Birthday in 6 days"],
+    ja: ["今日は誕生日", "明日は誕生日", "誕生日まで6日"],
+    es: ["Cumple hoy", "Cumple mañana", "Cumple en 6 días"],
+    zh: ["今天生日", "明天生日", "生日还有6天"],
+  };
+  try {
+    for (const [lang, lines] of Object.entries(want)) {
+      setLang(lang);
+      assert.deepEqual([0, 1, 6].map((d) => birthdayRibbon(friend, d)), lines, lang);
+    }
+  } finally {
+    setLang("ko");
+  }
+});
+test("growthNote: 영어는 소문자, 한 번이면 단수. 스페인어는 Quedan", () => {
+  const g = (label, count) => ({ yearsLeft: 12, adultAge: 19, grownUp: false, items: [{ key: "summer", label, emoji: "", count }] });
+  try {
+    setLang("en");
+    assert.equal(growthNote(g("Summers", 12)), "12 summers left until they're 19");
+    assert.equal(growthNote(g("Summers", 1)), "1 summer left until they're 19");
+    assert.equal(growthNote(g("Dinners together", 1)), "1 dinner together left until they're 19");
+    setLang("es");
+    assert.equal(growthNote(g("Veranos", 12)), "Quedan 12 veranos hasta los 19");
+  } finally {
+    setLang("ko");
+  }
 });

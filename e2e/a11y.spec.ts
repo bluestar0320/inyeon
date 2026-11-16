@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-import { AFTER_ADD_PERSON, clearState, setUpProfile, openMore } from "./helpers";
+import { AFTER_ADD_PERSON, STORAGE_KEY, clearState, setUpProfile, openMore } from "./helpers";
 
 /**
  * 접근성은 눈으로 표본을 훑어서는 안 된다.
@@ -149,13 +149,23 @@ test.describe("키보드", () => {
 
   test("움직임 줄이기 설정을 존중한다", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
+    // 사진 카드가 있어야 사진의 흐려지는 움직임까지 본다.
+    await page.evaluate((key) => {
+      const s = JSON.parse(localStorage.getItem(key)!);
+      const now = new Date().toISOString();
+      s.people = [{ id: "p1", name: "엄마", ageYears: 60, ageAsOf: "2026-01-01", lifeExpectancy: 85, lifeExpectancyManual: true,
+        countryCode: "KR", sex: "female", frequency: { count: 1, unit: "month" }, filters: [], createdAt: now, updatedAt: now }];
+      localStorage.setItem(key, JSON.stringify(s));
+    }, STORAGE_KEY);
     await page.goto("/");
-    const duration = await page.evaluate(() => {
-      // 홈의 카드 줄 한 장. 옆으로 넘길 때 흐려지고 작아지는 움직임이 있다.
-      const el = document.querySelector("section[role=region] .snap-center") as Element;
-      return parseFloat(getComputedStyle(el).transitionDuration);
+    await expect(page.getByRole("region", { name: "인연" })).toBeVisible();
+    const durations = await page.evaluate(() => {
+      // 홈의 카드 줄 한 장(작아지는 움직임)과 사진(흐려지는 움직임).
+      const slide = document.querySelector("section[role=region] .snap-center") as Element;
+      const img = document.querySelector("section[role=region] .snap-center img") as Element;
+      return [slide, img].map((el) => parseFloat(getComputedStyle(el).transitionDuration));
     });
-    expect(duration).toBeLessThan(0.01);
+    for (const d of durations) expect(d).toBeLessThan(0.01);
   });
 
   test("200% 확대 상당에서도 가로 스크롤이 없다", async ({ page }) => {

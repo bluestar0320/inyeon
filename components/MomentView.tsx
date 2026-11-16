@@ -7,12 +7,12 @@ import { useMemo, useState } from "react";
 import { hintFor } from "@/components/DecayHint";
 import OwnPhotoPicker from "@/components/OwnPhotoPicker";
 import Polaroid from "@/components/Polaroid";
-import { useFlip } from "@/lib/flip";
 import ResultPanel from "@/components/ResultPanel";
 import StoryLines from "@/components/StoryLines";
 import WhatIf from "@/components/WhatIf";
 import YearBreakdown from "@/components/YearBreakdown";
 import { DAYS_PER_YEAR, computeMoment, computePast, resolveAge, toPerYear } from "@/lib/calc";
+import { useFlip } from "@/lib/flip";
 import { formatCount, formatFrequency, formatInterval, formatYears, josa } from "@/lib/format";
 import { defineCopy, locale, tr } from "@/lib/i18n";
 import { useActions, useAppState } from "@/lib/store";
@@ -162,10 +162,10 @@ export default function MomentView({ moment }: { moment: Moment }) {
   return (
     <div className="space-y-5">
       <div className="flex justify-center pt-2">
-<span ref={flip} className="block w-full max-w-[16rem]">
-                <Polaroid src={imageFor(moment)} size="lg" tilt={-2}>
-          <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{moment.title}</span>
-        </Polaroid>
+        <span ref={flip} className="block w-full max-w-[16rem]">
+          <Polaroid src={imageFor(moment)} size="lg" tilt={-2}>
+            <span aria-hidden="true" className="font-album mt-2 block px-1 text-center text-sm text-ink-800">{moment.title}</span>
+          </Polaroid>
         </span>
       </div>
       <OwnPhotoPicker

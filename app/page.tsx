@@ -53,7 +53,7 @@ const COPY = defineCopy({
     newMoment: "Nuevo momento",
     loading: "Cargando…",
     times: "veces",
-    backup: "Ya toca hacer una copia",
+    backup: "Ya toca hacer una copia de seguridad",
     emptyMomentsBody: "Cerezos en flor, viajes, surf… solo elige cada cuánto y verás cuántas veces quedan.",
   },
   zh: {

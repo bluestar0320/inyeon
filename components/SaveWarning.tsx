@@ -42,7 +42,7 @@ function ChangedElsewhere() {
   if (!changed) return null;
   const t = tr(ELSEWHERE);
   return (
-    <div role="status" className="mx-auto max-w-3xl px-4 pt-3">
+    <div role="status" className="mx-auto w-full max-w-3xl px-4 pt-3">
       <p className="flex items-start justify-between gap-3 rounded-xl border border-ink-200 bg-surface px-4 py-3 text-xs leading-relaxed text-ink-600">
         <span>{t.text}</span>
         <button type="button" className="shrink-0 font-semibold underline" onClick={dismissChangedElsewhere}>
@@ -59,7 +59,7 @@ export default function SaveWarning() {
   if (!failed) return <ChangedElsewhere />;
   const t = tr(COPY);
   return (
-    <div role="alert" className="mx-auto max-w-3xl px-4 pt-3">
+    <div role="alert" className="mx-auto w-full max-w-3xl px-4 pt-3">
       <p className="rounded-xl bg-accent-50 px-4 py-3 text-xs leading-relaxed text-accent-600">
         {t.text}{" "}
         <Link href="/settings#backup" className="font-semibold underline">

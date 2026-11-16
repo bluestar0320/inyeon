@@ -17,7 +17,11 @@ const moment = (i: number) => ({
   id: `m${i}`, title: `순간${i + 1}`, frequency: { count: i + 1, unit: "year" }, filters: [], createdAt: now, updatedAt: now,
 });
 
-async function seed(page: Page, people: number, extra: { moments?: number; people?: Record<string, unknown>[] } = {}) {
+async function seed(
+  page: Page,
+  people: number,
+  extra: { moments?: number; people?: Record<string, unknown>[]; textSize?: string } = {},
+) {
   await clearState(page);
   await page.evaluate(
     ({ key, v }) => localStorage.setItem(key, JSON.stringify(v)),
@@ -29,7 +33,7 @@ async function seed(page: Page, people: number, extra: { moments?: number; peopl
         people: [...Array.from({ length: people }, (_, i) => person(i)), ...(extra.people ?? [])],
         moments: Array.from({ length: extra.moments ?? 0 }, (_, i) => moment(i)),
         marriage: null,
-        settings: { tone: "aware", theme: "light", showPast: true },
+        settings: { tone: "aware", theme: "light", showPast: true, textSize: extra.textSize },
       },
     },
   );
@@ -82,6 +86,47 @@ test("사람이 없으면 나와 새 인연 두 장", async ({ page }) => {
   const row = await seed(page, 0);
   await expect(row.getByRole("link", { name: /새 인연/ })).toHaveAttribute("href", /^\/people\/new\/?$/);
   await expect(row.getByRole("link", { name: /모아 보기/ })).toHaveAttribute("aria-label", /2장/);
+});
+
+test("두 장이어도 고리가 돈다: 다음 두 번이면 다시 나, 이전 한 번이면 새 인연", async ({ page }) => {
+  const row = await seed(page, 0);
+  await expect.poll(() => current(page, "인연")).toMatch(ME);
+  const next = row.getByRole("button", { name: "다음" });
+  await next.press("Enter");
+  await expect.poll(() => current(page, "인연")).toMatch(/^＋ 새 인연/);
+  await next.press("Enter");
+  await expect.poll(() => current(page, "인연")).toMatch(ME);
+  await row.getByRole("button", { name: "이전" }).press("Enter");
+  await expect.poll(() => current(page, "인연")).toMatch(/^＋ 새 인연/);
+});
+
+/* 첫 화면은 페이지가 아니라 카드 상자만 스크롤한다. 페이지가 넘치면 아래 칸에 손이 닿지 않는다. */
+const pageOverflow = (page: Page) =>
+  page.evaluate(() => document.scrollingElement!.scrollHeight - window.innerHeight);
+
+test("아주 큰 글씨에서도 첫 화면이 화면을 넘치지 않는다", async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 727 });
+  await seed(page, 3, { moments: 2, textSize: "xlarge" });
+  await expect(page.locator("html")).toHaveAttribute("data-text", "xlarge");
+  await expect(title(page)).toHaveText("인연");
+  expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+  await page.getByRole("button", { name: "순간 ↓" }).click();
+  await expect(title(page)).toHaveText("순간");
+});
+
+test("다른 창 알림이 떠도 첫 화면이 화면을 넘치지 않는다", async ({ page, context }) => {
+  await seed(page, 3, { moments: 2 });
+  await expect(title(page)).toHaveText("인연");
+  const other = await context.newPage();
+  await other.goto("/");
+  await other.evaluate((key) => {
+    const s = JSON.parse(localStorage.getItem(key)!);
+    s.people[0].name = "바뀐이름";
+    localStorage.setItem(key, JSON.stringify(s));
+  }, STORAGE_KEY);
+  await other.close();
+  await expect(page.getByText("다른 창에서 고친 내용이 있어서")).toBeVisible();
+  expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
 });
 
 /* 「나」 화면과 바닥글 */
@@ -140,6 +185,16 @@ test("목록에서 상세로 갔다가 뒤로를 누르면 목록", async ({ pag
 
 test("문서 화면에 바로 들어와 뒤로를 누르면 나 화면", async ({ page }) => {
   await page.goto("/privacy");
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/settings\/?$/);
+});
+
+test("문서에 바로 들어와 다른 문서로 갔다가 뒤로 두 번이면 나 화면(사이트 밖으로 나가지 않는다)", async ({ page }) => {
+  await page.goto("/about");
+  await page.getByRole("link", { name: "읽을거리", exact: true }).click();
+  await expect(page).toHaveURL(/\/reads\/?$/);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  await expect(page).toHaveURL(/\/about\/?$/);
   await page.getByRole("button", { name: "뒤로" }).click();
   await expect(page).toHaveURL(/\/settings\/?$/);
 });
@@ -277,7 +332,7 @@ test("카드를 누르면 상세 사진이 날아 온다", async ({ page }) => {
   const row = await seed(page, 1);
   await row.getByRole("link", { name: /사람1/ }).click();
   await expect(page).toHaveURL(/\/people\/detail/);
-  expect(await anims(page)).toBeGreaterThan(0);
+  await expect.poll(() => anims(page)).toBeGreaterThan(0);
 });
 
 test("주소로 바로 들어오면 효과가 없다", async ({ page }) => {
@@ -303,10 +358,10 @@ test("돌아오면 카드 사진이 내려앉는다", async ({ page }) => {
   const row = await seed(page, 1);
   await row.getByRole("link", { name: /사람1/ }).click();
   await expect(page).toHaveURL(/\/people\/detail/);
-  await page.waitForTimeout(600);
+  await expect(page.getByRole("heading", { name: /사람1/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "뒤로" }).click();
   await expect(page).toHaveURL(/\/$/);
-  expect(await anims(page)).toBeGreaterThan(0);
+  await expect.poll(() => anims(page)).toBeGreaterThan(0);
 });
 
 test.describe("움직임 줄이기", () => {

@@ -6,10 +6,13 @@ import { useLayoutEffect, useRef, type RefObject } from "react";
  * Web Animations만 쓴다. fill을 쓰지 않아 끝나면 원래 스타일이고, 중간에 떠나도 엉뚱한 자리에 남지 않는다.
  */
 
-let kept: { key: string; rect: DOMRect } | null = null;
+let kept: { key: string; rect: DOMRect; at: number } | null = null;
+
+/** 남긴 자리는 이만큼만 믿는다. 누른 뒤 다른 화면을 거쳐 한참 뒤에 오면 그 자리는 이미 옛것이다. */
+const FRESH_MS = 1000;
 
 export function remember(key: string, el: Element): void {
-  kept = { key, rect: el.getBoundingClientRect() };
+  kept = { key, rect: el.getBoundingClientRect(), at: performance.now() };
 }
 
 const useLayoutEffectOnClient = typeof window === "undefined" ? () => {} : useLayoutEffect;
@@ -18,7 +21,7 @@ const useLayoutEffectOnClient = typeof window === "undefined" ? () => {} : useLa
 export function playFrom(key: string, el: HTMLElement): void {
   const from = kept;
   kept = null;
-  if (!from || from.key !== key) return;
+  if (!from || from.key !== key || performance.now() - from.at > FRESH_MS) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const to = el.getBoundingClientRect();
   if (!from.rect.width || !from.rect.height || !to.width || !to.height) return;
