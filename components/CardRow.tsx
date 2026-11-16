@@ -79,7 +79,7 @@ function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) 
         <span className="text-xs text-ink-600">{me}</span>
         <span className="mt-1 block text-sm text-ink-800">{card.label}</span>
         <span className="numeral mt-2 block text-4xl leading-none text-ink-900">{card.value}</span>
-        {card.nudge && <span className="mt-3 block text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:line-clamp-1">{card.nudge}</span>}
+        {card.nudge && <span className="mt-3 block text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:truncate">{card.nudge}</span>}
       </span>
     );
   if (card.kind === "add")
@@ -93,13 +93,13 @@ function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) 
       <Polaroid src={card.photo} size="md" tilt={tilt}>
         <span className="mt-2 block px-1">
           <span className="font-album block truncate text-sm text-ink-800">{card.title}</span>
-          <span className="font-album mt-0.5 block break-keep text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:line-clamp-1">{card.sentence}</span>
+          <span className="font-album mt-0.5 block break-keep text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:truncate">{card.sentence}</span>
           {/* 횟수는 바로 위 문장이 이미 말한다. 화면 낭독기가 두 번 읽지 않게 숨긴다. */}
           <span aria-hidden="true" className="numeral mt-1 block text-4xl leading-none text-ink-900 [@media(max-height:500px)]:text-3xl">
             {card.count}
             <span className="ml-1 text-sm font-normal text-ink-600">{card.unit}</span>
           </span>
-          {card.note && <span className="mt-1 block text-xs text-ink-600 [@media(max-height:500px)]:line-clamp-1">{card.note}</span>}
+          {card.note && <span className="mt-1 block text-xs text-ink-600 [@media(max-height:500px)]:truncate">{card.note}</span>}
         </span>
       </Polaroid>
       {card.ribbon && (
