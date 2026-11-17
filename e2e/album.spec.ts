@@ -74,7 +74,8 @@ test.describe("움직임 줄이기", () => {
     await stack.getByRole("button", { name: "다음" }).press("Enter");
     // 맨 앞에 마지막 장을 하나 덧붙여 두므로 진짜 둘째 장(첫 사람)은 2번, 그다음 장은 3번 자리다.
     const pos = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-    expect(pos).toBe(3);
+    // 카드 폭이 소수점이라 스크롤 위치가 한 픽셀 안쪽으로 어긋날 수 있다.
+    expect(pos).toBeCloseTo(3, 1);
   });
 });
 

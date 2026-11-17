@@ -164,7 +164,6 @@ test("아래 탭이 없다", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await seed(page, 1);
   await expect(page.locator("nav.fixed")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "설정", exact: true })).toHaveCount(0);
 });
 
 test("상세에 주소로 바로 들어와 뒤로를 누르면 첫 화면", async ({ page }) => {
@@ -313,6 +312,23 @@ test("키보드만으로 모든 카드에 닿는다", async ({ page }) => {
   await expect(title(page)).toHaveText("순간");
   const moments = await walk("순간", 3);
   for (const name of ["순간1", "순간2", "＋ 새 순간"]) expect(moments.filter((s) => s.startsWith(name))).toHaveLength(1);
+});
+
+test("첫 화면 어느 줄에서든 설정 단추가 보이고 누르면 나 화면", async ({ page }) => {
+  await seed(page, 2, { moments: 1 });
+  await expect(page.getByRole("link", { name: "설정" })).toBeInViewport();
+  await page.getByRole("button", { name: "순간 ↓" }).click();
+  await expect(page.getByRole("link", { name: "설정" })).toBeInViewport();
+  await page.getByRole("link", { name: "설정" }).click();
+  await expect(page).toHaveURL(/\/settings\/?$/);
+});
+
+test("나 카드에 나이·예상 수명과 남은 여름·주말·보름달", async ({ page }) => {
+  await seed(page, 1);
+  const me = page.locator('[data-deck] a[href^="/settings"]').filter({ hasText: "남은 여름" }).first();
+  await expect(me).toContainText("예상 수명 85세");
+  await expect(me).toContainText("남은 주말");
+  await expect(me).toContainText("남은 보름달");
 });
 
 test("나 카드에서 내보내기까지", async ({ page }) => {

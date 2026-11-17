@@ -6,13 +6,16 @@ import { useEffect, useMemo } from "react";
 import type { DeckCard } from "@/components/CardRow";
 import Deck from "@/components/Deck";
 import { lastMetLine } from "@/components/MeetingLog";
+import { meStats, meSub } from "@/components/MeSummary";
 import { backupDue } from "@/lib/backup";
 import { birthdayRibbon, upcomingBirthdays } from "@/lib/birthdays";
 import {
   computeGrowth,
   computeMoment,
   computeRelationship,
+  lifeProgress,
   remainingYears,
+  resolveAge,
 } from "@/lib/calc";
 import { growthNote, startIndex } from "@/lib/deck";
 import { formatCount, formatYears } from "@/lib/format";
@@ -121,6 +124,9 @@ export default function HomePage() {
             href: "/settings",
             label: copy.lifeLabel,
             value: myRemaining === null ? "-" : formatYears(myRemaining),
+            sub: meSub(resolveAge(profile), profile.lifeExpectancy),
+            progress: lifeProgress(profile),
+            stats: meStats(myRemaining),
             nudge: backupDue(state) ? t.backup : null,
           },
           ...people.map(({ person, result }): DeckCard => {

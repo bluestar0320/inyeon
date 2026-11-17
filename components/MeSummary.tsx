@@ -93,6 +93,21 @@ const COPY = defineCopy({
   },
 });
 
+/** 첫 화면 「나」 카드에도 같은 숫자를 보인다. 남은 여름·주말·보름달. */
+export function meStats(myRemaining: number | null): { label: string; value: string }[] {
+  const t = tr(COPY);
+  return [
+    { label: t.summers, value: myRemaining === null ? "-" : t.timesValue(Math.floor(myRemaining)) },
+    { label: t.weekends, value: myRemaining === null ? "-" : formatCount(myRemaining * 52) },
+    { label: t.fullMoons, value: myRemaining === null ? "-" : formatCount(myRemaining * 12.37) },
+  ];
+}
+
+/** 「35세 · 예상 수명 85세」 */
+export function meSub(age: number | null, lifeExpectancy: number): string | null {
+  return age === null ? null : tr(COPY).lifeSub(formatAge(age), lifeExpectancy);
+}
+
 /* 「나」 화면 맨 위. 남은 시간 → (밀린 백업) → 결혼 계획. 첫 화면의 「나」 카드가 이리로 이어진다. */
 export default function MeSummary() {
   const flip = useFlip<HTMLDivElement>("me");
@@ -121,7 +136,7 @@ export default function MeSummary() {
           <BigNumber
             label={copy.lifeLabel}
             value={myRemaining === null ? "-" : formatYears(myRemaining)}
-            sub={age === null ? undefined : t.lifeSub(formatAge(age), profile.lifeExpectancy)}
+            sub={meSub(age, profile.lifeExpectancy) ?? undefined}
           />
           {progress !== null && (
             <div>
@@ -134,9 +149,9 @@ export default function MeSummary() {
             </div>
           )}
           <div className="grid grid-cols-3 gap-3 border-t border-hero-line pt-5">
-            <StatCard label={t.summers} value={myRemaining === null ? "-" : t.timesValue(Math.floor(myRemaining))} />
-            <StatCard label={t.weekends} value={myRemaining === null ? "-" : formatCount(myRemaining * 52)} />
-            <StatCard label={t.fullMoons} value={myRemaining === null ? "-" : formatCount(myRemaining * 12.37)} />
+            {meStats(myRemaining).map((s) => (
+              <StatCard key={s.label} label={s.label} value={s.value} />
+            ))}
           </div>
           <Link href="/setup" className="btn-quiet">
             {t.editProfile}

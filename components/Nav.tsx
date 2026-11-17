@@ -53,8 +53,8 @@ export default function Nav() {
         {/* 처음 온 사람의 시작 설정 화면에는 돌아갈 곳이 없다(첫 화면이 다시 이리로 보낸다). */}
         {pathname === "/" || (pathname.startsWith("/setup") && !profile) ? (
           <>
-            <span className="text-sm font-semibold tracking-tight text-ink-900">{pathname === "/" ? tr(ROW_NAMES)[row] : ""}</span>
-            <span className="text-xs text-ink-400">{t.brand}</span>
+            <span className="text-lg font-semibold tracking-tight text-ink-900">{pathname === "/" ? tr(ROW_NAMES)[row] : ""}</span>
+            <span className="text-sm text-ink-400">{t.brand}</span>
           </>
         ) : (
           <button

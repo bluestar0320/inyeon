@@ -27,7 +27,20 @@ export type DeckCard =
       flipKey?: string;
     }
   // 「나」·「＋」 장의 id는 저장된 id와 겹치지 않게 __로 시작한다.
-  | { kind: "me"; id: "__me"; href: "/settings"; label: string; value: string; nudge?: string | null }
+  | {
+      kind: "me";
+      id: "__me";
+      href: "/settings";
+      label: string;
+      value: string;
+      /** 「35세 · 예상 수명 85세」 */
+      sub?: string | null;
+      /** 지나온 몫(0…1). */
+      progress?: number | null;
+      /** 남은 여름·주말·보름달. */
+      stats?: { label: string; value: string }[];
+      nudge?: string | null;
+    }
   | { kind: "add"; id: string; href: string; label: string };
 
 export type CardRowHandle = { go(step: number): void; open(): void; play(): void };
@@ -75,10 +88,27 @@ function cardWidth(el: HTMLElement): number {
 function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) {
   if (card.kind === "me")
     return (
-      <span className="hero flex aspect-square flex-col justify-end [@media(max-height:500px)]:p-3">
+      <span className="hero flex aspect-square flex-col justify-center [@media(max-height:500px)]:p-3">
         <span className="text-xs text-ink-600">{me}</span>
         <span className="mt-1 block text-sm text-ink-800">{card.label}</span>
-        <span className="numeral mt-2 block text-4xl leading-none text-ink-900">{card.value}</span>
+        <span className="numeral mt-2 block text-5xl leading-none text-ink-900">{card.value}</span>
+        {card.sub && <span className="mt-2 block text-xs text-ink-600">{card.sub}</span>}
+        {/* 눕힌 폰처럼 낮은 화면에서는 막대와 숫자 셋을 뺀다. 「나」 화면에 다 있다. */}
+        {card.progress != null && (
+          <span className="mt-4 block h-1.5 overflow-hidden rounded-full bg-hero-line [@media(max-height:500px)]:hidden">
+            <span className="block h-full rounded-full bg-ink-800" style={{ width: `${card.progress * 100}%` }} />
+          </span>
+        )}
+        {card.stats && (
+          <span className="mt-4 grid grid-cols-3 gap-2 border-t border-hero-line pt-3 [@media(max-height:500px)]:hidden">
+            {card.stats.map((s) => (
+              <span key={s.label} className="block min-w-0">
+                <span className="block truncate text-[11px] text-ink-600">{s.label}</span>
+                <span className="numeral mt-0.5 block truncate text-base text-ink-800">{s.value}</span>
+              </span>
+            ))}
+          </span>
+        )}
         {card.nudge && <span className="mt-3 block text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:truncate">{card.nudge}</span>}
       </span>
     );
@@ -224,7 +254,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
     <section role="region" aria-label={label} className="relative">
       <div
         ref={track}
-        className={`relative flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${many ? "px-[9%]" : ""}`}
+        className={`relative flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${many ? "px-[7%]" : ""}`}
         onScroll={(e) => {
           const el = e.currentTarget;
           // 폭이 바뀌는 중에 나는 스크롤은 옛 위치의 흔적이다. 번호를 믿지 않는다.
@@ -254,7 +284,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
             <div
               key={copy ? `${card.id}-${k}` : card.id}
               aria-hidden={copy || undefined}
-              className={`shrink-0 snap-center py-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[4%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
+              className={`shrink-0 snap-center py-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[3%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
             >
               {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. 아주 낮은 화면(눕힌 폰)은 사진을 4:3으로 낮추고 글은 한 줄씩. */}
               <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} onClick={(e) => keep(card, e.currentTarget)} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))] [@media(max-height:500px)]:max-w-[max(8rem,calc(100svh-16rem))] [@media(max-height:500px)]:[&_img]:aspect-[4/3]">
@@ -275,11 +305,11 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
           {n <= MAX_DOTS ? (
             <span aria-hidden="true" className="flex gap-1.5">
               {cards.map((card, k) => (
-                <span key={card.id} className={`h-1.5 w-1.5 rounded-full ${k === index ? "bg-ink-800" : "bg-ink-200"}`} />
+                <span key={card.id} className={`h-2 w-2 rounded-full ${k === index ? "bg-ink-800" : "bg-ink-200"}`} />
               ))}
             </span>
           ) : (
-            <span aria-hidden="true" className="text-xs tabular-nums text-ink-600">
+            <span aria-hidden="true" className="text-sm tabular-nums text-ink-600">
               {index + 1} / {n}
             </span>
           )}
