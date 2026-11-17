@@ -12,8 +12,13 @@ permissions:
 
 jobs:
   ios:
-    name: iOS 시뮬레이터
+    name: iOS 시뮬레이터 (${{ matrix.ios }})
     runs-on: macos-latest
+    # 최신 iOS와 앱이 받는 가장 낮은 iOS(16.4, Next 16이 Safari 16.4+) 둘 다 본다.
+    strategy:
+      fail-fast: false
+      matrix:
+        ios: [latest, "16.4"]
     steps:
       - uses: actions/checkout@v7
 
@@ -28,6 +33,14 @@ jobs:
         run: npm run build
         env:
           BASE_PATH: ""
+
+      # 시뮬레이터는 누를 수 없으니 확인 스크립트가 예시 기록을 넣고 카드 줄을 직접 움직여 본다.
+      # 이 빌드에만 넣는다(.github/ios-probe.js). 스토어용 빌드에는 들어가지 않는다.
+      - name: 확인 스크립트 넣기
+        run: |
+          cp .github/ios-probe.js out/ios-probe.js
+          sed -i '' 's|</head>|<script src="/ios-probe.js"></script></head>|' out/index.html
+          grep -q ios-probe out/index.html
 
       # ios/ 폴더도 android/처럼 설정에서 만든다. 저장소에 두지 않는다.
       - name: iOS 프로젝트 생성
@@ -62,28 +75,37 @@ jobs:
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO | tail -20
           test -d build/Build/Products/Debug-iphonesimulator/App.app
 
-      # 가장 최신 iPhone 시뮬레이터에 깔고 띄워 화면을 찍는다.
+      # 이 맥에 iOS 16.4 시뮬레이터가 없으면 애플에서 받아 iPhone 14를 하나 만든다.
+      - name: iOS 16.4 시뮬레이터 준비
+        if: matrix.ios == '16.4'
+        run: |
+          xcrun simctl list runtimes | grep -q "iOS 16.4" || sudo xcodebuild -downloadPlatform iOS -buildVersion 16.4
+          xcrun simctl list runtimes
+          RT=$(xcrun simctl list runtimes -j | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).runtimes.find(r=>r.version.startsWith('16.4')).identifier))")
+          xcrun simctl create "iPhone 14 (16.4)" com.apple.CoreSimulator.SimDeviceType.iPhone-14 "$RT" > udid.txt
+
+      # 고른 iPhone 시뮬레이터에 깔고 띄워, 확인 스크립트가 도는 동안 5초마다 화면을 찍는다.
       - name: 시뮬레이터에서 실행
         run: |
+          if [ -f udid.txt ]; then UDID=$(cat udid.txt); else
           UDID=$(xcrun simctl list devices available -j | node -e "
             let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
               const all=Object.entries(JSON.parse(s).devices).filter(([r])=>r.includes('iOS')).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}));
               const phones=all.at(-1)[1].filter(d=>/^iPhone \d+( Pro)?$/.test(d.name));
-              console.log((phones.at(-1)||all.at(-1)[1][0]).udid)})")
+              console.log((phones.at(-1)||all.at(-1)[1][0]).udid)})"); fi
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/App.app
           xcrun simctl launch "$UDID" app.inyeon.counter
-          sleep 15
           mkdir -p shots
-          xcrun simctl io "$UDID" screenshot shots/1-launch.png
+          for t in 05 10 15 20 25 30 35 40; do sleep 5; xcrun simctl io "$UDID" screenshot "shots/t$t.png"; done
           xcrun simctl ui "$UDID" appearance dark
           sleep 3
-          xcrun simctl io "$UDID" screenshot shots/2-dark.png
+          xcrun simctl io "$UDID" screenshot shots/dark.png
           (cd build/Build/Products/Debug-iphonesimulator && zip -qr "$GITHUB_WORKSPACE/shots/App-simulator.zip" App.app)
 
       - uses: actions/upload-artifact@v7
         with:
-          name: inyeon-ios-simulator
+          name: inyeon-ios-simulator-${{ matrix.ios }}
           path: shots/
           retention-days: 30
