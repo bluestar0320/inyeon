@@ -161,12 +161,13 @@ export default function Deck({
         </div>
         <div
           ref={sections.moments}
-          className="flex min-h-full snap-start flex-col justify-center"
+          className="relative flex min-h-full snap-start flex-col justify-center"
         >
+          {/* 「↑ 인연」은 칸 맨 위에 띄워 둔다. 카드 위에 쌓으면 카드가 그만큼 아래로 밀려 위쪽이 비어 보인다. 낮은 화면은 자리가 없어 그대로 쌓는다. */}
           <button
             type="button"
             onClick={() => toRow("people")}
-            className="btn-quiet mx-auto mb-3 min-h-11 min-w-11 text-base text-ink-800 [@media(max-height:500px)]:mb-0"
+            className="btn-quiet absolute inset-x-0 top-2 mx-auto w-fit min-h-11 min-w-11 text-base text-ink-800 [@media(max-height:500px)]:static"
           >
             ↑ {names.people}
           </button>

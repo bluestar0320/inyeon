@@ -86,30 +86,38 @@ function cardWidth(el: HTMLElement): number {
 }
 
 function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) {
+  // 「나」도 폴라로이드 한 장이다. 사진 자리에 숫자를 적고, 아래 여백에 이름과 한마디를 쓴다.
   if (card.kind === "me")
     return (
-      <span className="hero flex aspect-square flex-col justify-center [@media(max-height:500px)]:p-3">
-        <span className="text-xs text-ink-600">{me}</span>
-        <span className="mt-1 block text-sm text-ink-800">{card.label}</span>
-        <span className="numeral mt-2 block text-5xl leading-none text-ink-900">{card.value}</span>
-        {card.sub && <span className="mt-2 block text-xs text-ink-600">{card.sub}</span>}
-        {/* 눕힌 폰처럼 낮은 화면에서는 막대와 숫자 셋을 뺀다. 「나」 화면에 다 있다. */}
-        {card.progress != null && (
-          <span className="mt-4 block h-1.5 overflow-hidden rounded-full bg-hero-line [@media(max-height:500px)]:hidden">
-            <span className="block h-full rounded-full bg-ink-800" style={{ width: `${card.progress * 100}%` }} />
-          </span>
-        )}
-        {card.stats && (
-          <span className="mt-4 grid grid-cols-3 gap-2 border-t border-hero-line pt-3 [@media(max-height:500px)]:hidden">
-            {card.stats.map((s) => (
-              <span key={s.label} className="block min-w-0">
-                <span className="block truncate text-[11px] text-ink-600">{s.label}</span>
-                <span className="numeral mt-0.5 block truncate text-base text-ink-800">{s.value}</span>
-              </span>
-            ))}
-          </span>
-        )}
-        {card.nudge && <span className="mt-3 block text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:truncate">{card.nudge}</span>}
+      <span className="polaroid" style={tilt ? { transform: `rotate(${tilt}deg)` } : undefined}>
+        {/* 화면 낭독기는 「나」부터 읽는다. 눈에는 아래 여백에 적힌 것이 보인다. */}
+        <span className="sr-only">{me} </span>
+        <span className="flex aspect-square flex-col justify-center bg-ink-900/[.06] px-4 [@media(max-height:500px)]:aspect-[4/3]">
+          <span className="block text-sm text-ink-600">{card.label}</span>
+          <span className="numeral mt-2 block text-5xl leading-none text-ink-900 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:text-3xl">{card.value}</span>
+          {card.sub && <span className="mt-2 block text-xs text-ink-600">{card.sub}</span>}
+          {/* 눕힌 폰처럼 낮은 화면에서는 막대와 숫자 셋을 뺀다. 「나」 화면에 다 있다. */}
+          {card.progress != null && (
+            <span className="mt-4 block h-1.5 overflow-hidden rounded-full bg-ink-900/10 [@media(max-height:500px)]:hidden">
+              <span className="block h-full rounded-full bg-ink-800" style={{ width: `${card.progress * 100}%` }} />
+            </span>
+          )}
+          {card.stats && (
+            <span className="mt-4 grid grid-cols-3 gap-2 border-t border-ink-900/10 pt-3 [@media(max-height:500px)]:hidden">
+              {card.stats.map((s) => (
+                <span key={s.label} className="block min-w-0">
+                  <span className="block truncate text-[11px] text-ink-600">{s.label}</span>
+                  <span className="numeral mt-0.5 block truncate text-base text-ink-800">{s.value}</span>
+                </span>
+              ))}
+            </span>
+          )}
+        </span>
+        {/* 낮은 화면에서는 아래 여백의 이름과 한마디를 뺀다. 다른 장보다 키가 커져 줄이 넘친다. */}
+        <span className="mt-2 block px-1 [@media(max-height:500px)]:hidden">
+          <span aria-hidden="true" className="font-album block truncate text-sm text-ink-800">{me}</span>
+          {card.nudge && <span className="font-album mt-0.5 block break-keep text-xs leading-relaxed text-ink-600 [@media(max-height:500px)]:truncate">{card.nudge}</span>}
+        </span>
       </span>
     );
   if (card.kind === "add")
@@ -284,7 +292,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
             <div
               key={copy ? `${card.id}-${k}` : card.id}
               aria-hidden={copy || undefined}
-              className={`shrink-0 snap-center py-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[3%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
+              className={`shrink-0 snap-center pb-5 pt-3 [@media(max-height:500px)]:pb-3 transition-transform duration-300 [&_img]:transition-opacity [&_img]:duration-300 ${many ? "w-full px-[3%]" : "w-full px-[14%]"} ${side ? "motion-safe:scale-[.92] [&_img]:opacity-60" : ""}`}
             >
               {/* 가로로 돌린 폰에서 사진이 화면보다 커지지 않게, 폭을 화면 높이에 맞춰 묶는다. 아주 낮은 화면(눕힌 폰)은 사진을 4:3으로 낮추고 글은 한 줄씩. */}
               <Link href={card.href} prefetch={false} tabIndex={copy ? -1 : undefined} onClick={(e) => keep(card, e.currentTarget)} className="mx-auto block max-w-[max(10rem,calc(100svh-15rem))] [@media(max-height:500px)]:max-w-[max(8rem,calc(100svh-16rem))] [@media(max-height:500px)]:[&_img]:aspect-[4/3]">
