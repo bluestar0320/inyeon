@@ -62,7 +62,7 @@ function MeStrip({ me, edit }: { me: MeLine; edit: string }) {
     <Link
       href="/setup"
       aria-label={`${me.label} ${me.value}${me.sub ? `, ${me.sub}` : ""}. ${edit}`}
-      className="hero mb-6 ml-4 mr-32 flex items-center gap-3 !px-5 !py-4 [@media(max-height:500px)]:hidden"
+      className="hero mb-12 ml-4 mr-32 flex items-center gap-3 !px-5 !py-4 [@media(max-height:500px)]:hidden"
     >
       <span className="min-w-0 flex-1">
         <span className="block text-sm text-ink-600">{me.label}</span>
@@ -262,7 +262,7 @@ export default function Deck({
       {/* 설정(내보내기 포함)으로 가는 길. 두 칸 모두 오른쪽 아래에 늘 떠 있다. */}
       <Link
         href="/settings"
-        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-20 flex min-h-11 items-center gap-1.5 rounded-full border border-ink-200 bg-page/90 px-4 text-sm font-medium text-ink-800 shadow-sm backdrop-blur"
+        className="fixed bottom-[calc(3rem+env(safe-area-inset-bottom))] right-4 z-20 flex min-h-11 items-center gap-1.5 rounded-full border border-ink-200 bg-page/90 px-4 text-sm font-medium text-ink-800 shadow-sm backdrop-blur"
       >
         <span aria-hidden="true">⚙</span>
         {t.settings}

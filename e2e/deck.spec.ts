@@ -337,7 +337,7 @@ test("설정 단추는 두 칸 모두 오른쪽 아래, 남은 시간 줄을 가
     await expect(settings).toBeInViewport();
     const p = await at();
     expect(p.right).toBeLessThan(40);
-    expect(p.bottom).toBeLessThan(40);
+    expect(p.bottom).toBeLessThan(64);
   }
   await page.getByRole("button", { name: "↑ 인연" }).click();
   await expect(strip).toBeInViewport();
