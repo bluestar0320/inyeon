@@ -309,11 +309,11 @@
 
   /*
    * 폴라로이드. 아래가 넓은 테두리, 종이 그림자.
-   * 모서리는 눈치채지 못할 만큼만(3px) 다듬는다 — 진짜 인화지도 칼날처럼 각지지는 않다.
+   * 모서리는 살짝만(5px) 다듬는다 — 진짜 인화지도 칼날처럼 각지지는 않다. 더 둥글면 폴라로이드가 아니라 화면 속 카드가 된다.
    * 그림자는 둘을 겹친다: 바닥에 닿은 짙은 선 하나, 조금 떠 있는 옅은 그늘 하나.
    */
   .polaroid {
-    @apply block rounded-[3px] bg-[rgb(var(--frame))] p-2 pb-3;
+    @apply block rounded-[5px] bg-[rgb(var(--frame))] p-2 pb-3;
     box-shadow:
       0 1px 2px rgba(42, 34, 28, 0.2),
       0 6px 14px -4px rgba(42, 34, 28, 0.3);
@@ -336,6 +336,21 @@
 
   .polaroid img {
     @apply block aspect-square w-full object-cover;
+  }
+
+  /*
+   * 사진과 테두리 사이의 흐릿한 경계. 진짜 폴라로이드는 약품이 번지지 않게 사진 둘레가
+   * 살짝 눌려 있어, 사진 가장자리가 칼같이 끊기지 않고 옅은 그늘이 진다. 사진 위에 안쪽 그림자를 덮는다.
+   */
+  .polaroid-photo {
+    @apply relative block rounded-[1px];
+  }
+  .polaroid-photo::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 rounded-[1px];
+    box-shadow:
+      inset 0 0 0 1px rgb(42 34 28 / 0.22),
+      inset 0 0 4px 1px rgb(42 34 28 / 0.28);
   }
 
   /*

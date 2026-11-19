@@ -92,7 +92,7 @@ function Face({ card, tilt, me }: { card: DeckCard; tilt: number; me: string }) 
       <span className="polaroid" style={tilt ? { transform: `rotate(${tilt}deg)` } : undefined}>
         {/* 화면 낭독기는 「나」부터 읽는다. 눈에는 아래 여백에 적힌 것이 보인다. */}
         <span className="sr-only">{me} </span>
-        <span className="flex aspect-square flex-col justify-center bg-ink-900/[.06] px-4 [@media(max-height:500px)]:aspect-[4/3]">
+        <span className="polaroid-photo flex aspect-square flex-col justify-center bg-ink-900/[.06] px-4 [@media(max-height:500px)]:aspect-[4/3]">
           <span className="block text-sm text-ink-600">{card.label}</span>
           <span className="numeral mt-2 block text-5xl leading-none text-ink-900 [@media(max-height:500px)]:mt-1 [@media(max-height:500px)]:text-3xl">{card.value}</span>
           {card.sub && <span className="mt-2 block text-xs text-ink-600">{card.sub}</span>}

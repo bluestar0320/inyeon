@@ -22,7 +22,9 @@ export default function Polaroid({
       className={`polaroid shrink-0 motion-safe:transition-transform motion-reduce:!transform-none ${WIDTH[size]} ${size === "sm" ? "p-1 pb-1.5" : ""}`}
       style={tilt ? { transform: `rotate(${tilt}deg)` } : undefined}
     >
-      <img src={src} alt="" loading="lazy" decoding="async" />
+      <span className="polaroid-photo">
+        <img src={src} alt="" loading="lazy" decoding="async" />
+      </span>
       {children}
     </span>
   );
