@@ -8,13 +8,13 @@ type Sizes = { people: number; moments: number };
 
 const KEY = "deck.pos.v1";
 
-/** 인연 줄 안의 시작 번호. 0 = 「나」, 사람 k = k+1. upcoming은 가까운 순. */
+/** 인연 줄 안의 시작 번호(사람 k = k). 생일이 가까운 사람이 있으면 그 사람부터. upcoming은 가까운 순. */
 export function startIndex(personIds: string[], upcoming: { id: string; days: number }[]): number {
   for (const u of upcoming) {
     const i = personIds.indexOf(u.id);
-    if (i >= 0) return i + 1;
+    if (i >= 0) return i;
   }
-  return personIds.length > 0 ? 1 : 0;
+  return 0;
 }
 
 const clamp = (n: number, size: number) => Math.min(n, Math.max(0, size - 1));

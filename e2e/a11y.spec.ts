@@ -160,10 +160,10 @@ test.describe("키보드", () => {
     await page.goto("/");
     await expect(page.getByRole("region", { name: "인연" })).toBeVisible();
     const durations = await page.evaluate(() => {
-      // 홈의 카드 줄 한 장(작아지는 움직임)과 사진(흐려지는 움직임).
-      const slide = document.querySelector("section[role=region] .snap-center") as Element;
-      const img = document.querySelector("section[role=region] .snap-center img") as Element;
-      return [slide, img].map((el) => parseFloat(getComputedStyle(el).transitionDuration));
+      // 홈 사진 더미의 한 장(자리를 바꾸며 미끄러지는 움직임)과 그 폴라로이드(기울기).
+      const card = document.querySelector("section[role=region] .pile-card") as Element;
+      const frame = document.querySelector("section[role=region] .pile-card .polaroid") as Element;
+      return [card, frame].map((el) => parseFloat(getComputedStyle(el).transitionDuration));
     });
     for (const d of durations) expect(d).toBeLessThan(0.01);
   });

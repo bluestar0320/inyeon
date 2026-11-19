@@ -107,16 +107,16 @@ test("아랍어·이모지만·보이지 않는 글자 이름도 화면을 밀�
   }
 });
 
-test("다른 창에서 사람을 지워도 끝 장 번호가 '5 / 4'가 되지 않는다", async ({ page, context }) => {
+test("다른 창에서 사람을 지워도 끝 장 번호가 '4 / 3'이 되지 않는다", async ({ page, context }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 }), person("c", "셋", { ageYears: 60 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
   // 폰에서는 ‹ › 단추가 화면 낭독기·키보드용으로 숨어 있다. 키보드로 누른다.
   const next = stack.getByRole("button", { name: "다음" });
-  // 「나」 · 하나 · 둘 · 셋 · 「＋」. 첫 사람(2번째)에서 시작해 끝 장까지.
-  for (const k of [3, 4, 5]) {
+  // 하나 · 둘 · 셋. 첫 사람에서 시작해 끝 장까지.
+  for (const k of [2, 3]) {
     await next.press("Enter");
-    await expect(at(stack)).toHaveAttribute("aria-label", `모아 보기, 5장 중 ${k}번째`);
+    await expect(at(stack)).toHaveAttribute("aria-label", `모아 보기, 3장 중 ${k}번째`);
   }
 
   const other = await context.newPage();
@@ -128,16 +128,23 @@ test("다른 창에서 사람을 지워도 끝 장 번호가 '5 / 4'가 되지 �
   }, STORAGE_KEY);
   await other.close();
 
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 4장 중 4번째");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 2장 중 2번째");
 });
 
-test("열두 명이면 줄에 14장 모두, 점 대신 숫자, 모아 보기에는 열두 명", async ({ page }) => {
+test("열두 명이면 줄에 열두 장 모두, 점 대신 숫자, 모아 보기에는 열두 명", async ({ page }) => {
   await seed(page, { people: Array.from({ length: 12 }, (_, i) => person(`p${i}`, `사람${i + 1}`, { ageYears: 40 + i })) });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
-  await expect(stack.getByText("2 / 14")).toBeVisible();
+  // 열두 장까지는 점이다. 숫자는 열세 장부터.
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 12장 중 1번째");
   await at(stack).click();
   await expect(page.locator("a.card")).toHaveCount(12);
+});
+
+test("열세 명이면 점 대신 「1 / 13」", async ({ page }) => {
+  await seed(page, { people: Array.from({ length: 13 }, (_, i) => person(`p${i}`, `사람${i + 1}`, { ageYears: 40 + i })) });
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "인연" }).getByText("1 / 13")).toBeVisible();
 });
 
 test("셋째 사람을 보다가 화면을 돌려도 같은 장에 머문다", async ({ page }) => {
@@ -146,14 +153,13 @@ test("셋째 사람을 보다가 화면을 돌려도 같은 장에 머문다", a
   const stack = page.getByRole("region", { name: "인연" });
   await stack.getByRole("button", { name: "다음" }).press("Enter");
   await stack.getByRole("button", { name: "다음" }).press("Enter");
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 4번째");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 3장 중 3번째");
+  const name = await stack.locator("[data-top]").innerText();
   const size = page.viewportSize()!;
   await page.setViewportSize({ width: size.height, height: size.width });
   await page.waitForTimeout(400);
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 4번째");
-  const pos = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-  // 「나」 · 하나 · 둘 · 셋. 셋째 사람은 덧붙인 장 하나 뒤라 4번 자리다.
-  expect(Math.abs(pos - 4)).toBeLessThan(0.05);
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 3장 중 3번째");
+  await expect(stack.locator("[data-top]")).toHaveText(name);
   await page.setViewportSize(size);
 });
 
@@ -163,40 +169,31 @@ test("끝에서 다음을 누르면 첫 장으로, 첫 장에서 이전을 누�
   const stack = page.getByRole("region", { name: "인연" });
   const next = stack.getByRole("button", { name: "다음" });
   const prev = stack.getByRole("button", { name: "이전" });
-  // 첫 사람에서 시작한다. 한 번 이전이면 첫 장(「나」), 한 번 더면 끝 장(「＋」).
   await prev.press("Enter");
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 1번째");
-  await page.waitForTimeout(800);
-  await prev.press("Enter");
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 5번째");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 3장 중 3번째");
   await page.waitForTimeout(800);
   await next.press("Enter");
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 1번째");
-  // 이어 붙인 자리에서 멈춘 채로 남지 않고 진짜 장으로 옮겨져 있어야 다음 넘기기도 이어진다.
-  await page.waitForTimeout(400);
-  const pos = await stack.locator("div.snap-x").evaluate((el) => el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-  expect(Math.round(pos)).toBe(1);
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 3장 중 1번째");
+  await page.waitForTimeout(800);
   await next.press("Enter");
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 5장 중 2번째");
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 3장 중 2번째");
 });
 
-test("다음을 열 번 연타해도 번호가 깨지지 않는다", async ({ page }) => {
+test("다음을 열 번 연타해도 번호가 깨지지 않고, 열 장을 넘긴 자리에 선다", async ({ page }) => {
   await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 }), person("c", "셋", { ageYears: 60 })] });
   await page.goto("/");
   const stack = page.getByRole("region", { name: "인연" });
   const next = stack.getByRole("button", { name: "다음" });
   for (let i = 0; i < 10; i++) await next.press("Enter");
-  await page.waitForTimeout(600);
-  await expect(at(stack)).toHaveAttribute("aria-label", /^모아 보기, 5장 중 [1-5]번째$/);
-});
-
-test("손가락으로 밀어도 번호가 따라온다", async ({ page }) => {
-  await seed(page, { people: [person("a", "하나", { ageYears: 80 }), person("b", "둘", { ageYears: 70 })] });
-  await page.goto("/");
-  const stack = page.getByRole("region", { name: "인연" });
-  // 덧붙인 장 | 「나」 · 하나 · 둘 · 「＋」. 첫 사람(2번 자리)에서 시작하니 둘은 3번 자리다.
-  await stack.locator("div.snap-x").evaluate((el) => el.scrollTo({ left: 3 * (el.firstElementChild as HTMLElement).offsetWidth }));
-  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 4장 중 3번째");
+  await page.waitForTimeout(800);
+  // 1에서 열 장: 10 % 3 = 1 → 2번째.
+  await expect(at(stack)).toHaveAttribute("aria-label", "모아 보기, 3장 중 2번째");
+  // 날아간 장이 화면 밖에 남지 않는다: 더미의 장은 모두 더미 안에 있다.
+  const pile = (await stack.locator("[data-pile]").boundingBox())!;
+  for (const card of await stack.locator(".pile-card").all()) {
+    const b = (await card.boundingBox())!;
+    expect(Math.abs(b.x + b.width / 2 - (pile.x + pile.width / 2))).toBeLessThan(pile.width * 0.2);
+  }
 });
 
 test("더미의 사진을 연타해도 한 번만 넘어가고 오류가 없다", async ({ page }) => {
@@ -215,7 +212,9 @@ test("남은 만남이 0번인 사람도 더미에 제대로 걸린다", async (
   // 예상 수명을 넘긴 분은 이제 생명표로 세어 0이 되지 않는다. 0번은 정해 둔 목표 나이를 지났을 때 생긴다.
   await seed(page, { people: [person("a", "연인", { horizon: { kind: "untilMyAge", age: 1 } })] });
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "인연" }).getByRole("link", { name: /연인/ })).toContainText("0");
+  const region = page.getByRole("region", { name: "인연" });
+  await expect(region.getByRole("link", { name: /연인/ })).toBeVisible();
+  await expect(region.locator(".deck-line")).toContainText("0");
 });
 
 test("사진을 고른 사람을 지웠다 되돌리면 사진도 돌아온다", async ({ page }) => {

@@ -14,67 +14,76 @@ import { defineCopy, tr } from "@/lib/i18n";
 const COPY = defineCopy({
   ko: {
     box: "카드",
+    edit: "눌러서 고치기",
     settings: "설정",
     overview: (i: number, n: number) => `모아 보기, ${n}장 중 ${i}번째`,
   },
   en: {
     box: "Cards",
+    edit: "Tap to edit",
     settings: "Settings",
     overview: (i, n) => `See all, ${i} of ${n}`,
   },
   ja: {
     box: "カード",
+    edit: "タップして変更",
     settings: "設定",
     overview: (i, n) => `一覧、${n}枚中${i}枚目`,
   },
   es: {
     box: "Tarjetas",
+    edit: "Toca para cambiar",
     settings: "Ajustes",
     overview: (i, n) => `Ver todo, ${i} de ${n}`,
   },
   zh: {
     box: "卡片",
+    edit: "点按修改",
     settings: "设置",
     overview: (i, n) => `查看全部，第${i}张，共${n}张`,
   },
 });
 
+export type MeLine = {
+  label: string;
+  value: string;
+  sub: string | null;
+  nudge: string | null;
+};
+
 /*
- * 「나에게 남은 시간」 한 줄. 인연 칸에서는 화면 맨 아래, 순간 칸에서는 맨 위에 둔다.
- * 카드 한 장만 있으면 긴 폰에서 위아래가 비는데, 예전 첫 화면처럼 이 줄이 그 자리를 채운다.
- * 설정 단추도 여기 오른쪽에 붙인다(떠 있는 단추가 이 줄을 가리지 않게).
- * 눕힌 폰은 높이가 모자라 숫자는 빼고, 설정 단추만 칸 모서리에 띄운다(숫자는 「나」 카드에 있다).
+ * 「나에게 남은 시간」 한 줄. 두 칸 모두 맨 아래에 둔다. 칸을 바꿔도 이 줄은 그대로라 위의 문장과 사진만 바뀌어 보인다.
+ * 누르면 나이·예상 수명을 고치는 화면(/setup)으로 간다.
+ * 오른쪽은 떠 있는 설정 단추 자리라 비운다.
+ * 눕힌 폰은 높이가 모자라 뺀다.
  */
-function MeStrip({
-  me,
-  settings,
-  edge,
-}: {
-  me: Extract<DeckCard, { kind: "me" }>;
-  settings: string;
-  edge: "top" | "bottom";
-}) {
+function MeStrip({ me, edit }: { me: MeLine; edit: string }) {
   return (
-    <div
-      className={`hero mx-4 flex items-center gap-3 !px-5 !py-4 [@media(max-height:500px)]:absolute [@media(max-height:500px)]:right-4 [@media(max-height:500px)]:m-0 [@media(max-height:500px)]:!bg-transparent [@media(max-height:500px)]:!p-0 ${edge === "bottom" ? "mb-3 [@media(max-height:500px)]:bottom-2" : "mt-3 [@media(max-height:500px)]:top-2"}`}
+    <Link
+      href="/setup"
+      aria-label={`${me.label} ${me.value}${me.sub ? `, ${me.sub}` : ""}. ${edit}`}
+      className="hero mb-6 ml-4 mr-32 flex items-center gap-3 !px-5 !py-4 [@media(max-height:500px)]:hidden"
     >
-      <div className="min-w-0 flex-1 [@media(max-height:500px)]:hidden">
-        <p className="text-sm text-ink-600">{me.label}</p>
-        <p className="numeral mt-1 text-4xl leading-none text-ink-900 [@media(max-height:500px)]:text-2xl">
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm text-ink-600">{me.label}</span>
+        <span className="numeral mt-1 block text-4xl leading-none text-ink-900">
           {me.value}
-        </p>
+        </span>
         {me.sub && (
-          <p className="mt-1.5 truncate text-sm text-ink-600">{me.sub}</p>
+          <span className="mt-1.5 block truncate text-sm text-ink-600">
+            {me.sub}
+          </span>
         )}
-      </div>
-      <Link
-        href="/settings"
-        className="flex min-h-11 shrink-0 items-center gap-1.5 self-end rounded-full border border-ink-200 [@media(max-height:500px)]:bg-page/90 px-4 text-sm font-medium text-ink-800"
-      >
-        <span aria-hidden="true">⚙</span>
-        {settings}
-      </Link>
-    </div>
+        {me.nudge && (
+          <span className="mt-1 block truncate text-xs text-ink-600">
+            {me.nudge}
+          </span>
+        )}
+      </span>
+      <span aria-hidden="true" className="text-xl text-ink-400">
+        ›
+      </span>
+    </Link>
   );
 }
 
@@ -87,11 +96,16 @@ function MeStrip({
  * 상자 하나가 키보드를 받는다: ←/→ 지금 칸 넘기기, ↑/↓ 칸 바꾸기, Enter 지금 장 열기.
  */
 export default function Deck({
+  me,
+  add,
   peopleCards,
   momentCards,
   startPeople,
   emptyMoments,
 }: {
+  me: MeLine;
+  /** 「＋」 단추 이름. 「새 인연」·「새 순간」. */
+  add: { people: string; moments: string };
   peopleCards: DeckCard[];
   momentCards: DeckCard[];
   startPeople: number;
@@ -118,9 +132,6 @@ export default function Deck({
       },
   );
   const pos = useRef(start);
-  const me = peopleCards.find(
-    (c): c is Extract<DeckCard, { kind: "me" }> => c.kind === "me",
-  );
 
   const save = (next: Partial<DeckPos>) => {
     pos.current = { ...pos.current, ...next };
@@ -193,6 +204,8 @@ export default function Deck({
               onIndex={(people) => save({ people })}
               listHref="/people"
               overviewLabel={t.overview}
+              addHref="/people/new"
+              addLabel={add.people}
             />
             <button
               type="button"
@@ -202,21 +215,20 @@ export default function Deck({
               <span className="deck-nudge inline-block">{names.moments} ↓</span>
             </button>
           </div>
-          {me && <MeStrip me={me} settings={t.settings} edge="bottom" />}
+          <MeStrip me={me} edit={t.edit} />
         </div>
         <div
           ref={sections.moments}
           className="relative flex min-h-full snap-start flex-col"
         >
-          {me && <MeStrip me={me} settings={t.settings} edge="top" />}
+          <button
+            type="button"
+            onClick={() => toRow("people")}
+            className="btn-quiet mx-auto mt-1 min-h-11 min-w-11 text-base text-ink-800 [@media(max-height:500px)]:absolute [@media(max-height:500px)]:right-4 [@media(max-height:500px)]:top-1"
+          >
+            ↑ {names.people}
+          </button>
           <div className="flex flex-1 flex-col justify-center">
-            <button
-              type="button"
-              onClick={() => toRow("people")}
-              className="btn-quiet mx-auto mb-3 min-h-11 min-w-11 text-base text-ink-800 [@media(max-height:500px)]:mb-0"
-            >
-              ↑ {names.people}
-            </button>
             <CardRow
               ref={rows.moments}
               label={names.moments}
@@ -225,15 +237,26 @@ export default function Deck({
               onIndex={(moments) => save({ moments })}
               listHref="/moments"
               overviewLabel={t.overview}
+              addHref="/moments/new"
+              addLabel={add.moments}
             />
             {emptyMoments && (
-              <p className="mx-auto max-w-sm break-keep px-4 text-center text-xs leading-relaxed text-ink-600">
+              <p className="mx-auto mt-3 max-w-sm break-keep px-4 text-center text-xs leading-relaxed text-ink-600">
                 {emptyMoments}
               </p>
             )}
           </div>
+          <MeStrip me={me} edit={t.edit} />
         </div>
       </div>
+      {/* 설정(내보내기 포함)으로 가는 길. 두 칸 모두 오른쪽 아래에 늘 떠 있다. */}
+      <Link
+        href="/settings"
+        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-20 flex min-h-11 items-center gap-1.5 rounded-full border border-ink-200 bg-page/90 px-4 text-sm font-medium text-ink-800 shadow-sm backdrop-blur"
+      >
+        <span aria-hidden="true">⚙</span>
+        {t.settings}
+      </Link>
     </>
   );
 }

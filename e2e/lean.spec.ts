@@ -74,8 +74,8 @@ test("미성년자를 넣으면 켜지 않아도 성인이 될 때까지를 센�
   await page.waitForURL(/detail/);
   await expect(page.getByText("성장 캘린더")).toBeVisible();
   await page.goto("/");
-  // 첫 화면의 아이 카드에 성인이 될 때까지 남은 것 한 줄.
-  await expect(page.getByRole("region", { name: "인연" }).getByRole("link", { name: /지우/ })).toContainText("만 20세까지");
+  // 첫 화면 아이 카드의 문장 아래에 성인이 될 때까지 남은 것 한 줄.
+  await expect(page.getByRole("region", { name: "인연" }).locator(".deck-line")).toContainText("만 20세까지");
 
   await page.goto("/people/new");
   await page.getByLabel("이름").fill("엄마");

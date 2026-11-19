@@ -3,8 +3,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { STORAGE_KEY, clearState } from "./helpers";
 
 /*
- * 홈의 카드 줄. 인연 줄은 「나」 → 사람들 → 「＋ 새 인연」, 순간 줄은 순간들 → 「＋ 새 순간」.
- * 줄에는 카드를 모두 넣고, 아래 점 줄 하나가 모아 보기 링크다(12장을 넘으면 「3 / 24」).
+ * 홈의 사진 더미. 인연 줄은 사람들, 순간 줄은 순간들. 추가는 점 줄 옆 「＋」(카드가 없으면 점선 카드 한 장).
+ * 아래 점 줄 하나가 모아 보기 링크다(12장을 넘으면 「3 / 24」).
  */
 
 const now = new Date().toISOString();
@@ -41,63 +41,61 @@ async function seed(
   return page.getByRole("region", { name: "인연" });
 }
 
-/** 줄 가운데에 가장 가까운 장의 글자. 화면에 지금 보이는 카드다(옆 장은 작게 줄어 사이가 비므로 가장 가까운 것). */
+/** 맨 위 장의 글자(이름·리본) 다음 줄에 위의 문장. */
 async function current(page: Page, name: string): Promise<string> {
-  return page.getByRole("region", { name }).evaluate((el) => {
-    const track = el.firstElementChild as HTMLElement;
-    const box = track.getBoundingClientRect();
-    const mid = box.left + box.width / 2;
-    const off = (s: Element) => {
-      const r = s.getBoundingClientRect();
-      return Math.abs(r.left + r.width / 2 - mid);
-    };
-    const hit = [...track.children].reduce((a, b) => (off(b) < off(a) ? b : a)) as HTMLElement;
-    return hit.innerText.trim();
-  });
+  const region = page.getByRole("region", { name });
+  const top = (await region.locator("[data-top]").innerText()).trim();
+  const line = region.locator(".deck-line");
+  return (await line.count()) ? `${top}\n${(await line.innerText()).trim()}` : top;
 }
-
-/** 「나」 카드: 첫 줄이 「나」 한 글자. */
-const ME = /^나\s/;
 
 const title = (page: Page) => page.locator("header").getByText(/^(인연|순간)$/);
 
-test("사람 3명이면 인연 줄은 5장, 점이 5개", async ({ page }) => {
+test("사람 3명이면 인연 줄은 3장, 점이 3개", async ({ page }) => {
   const row = await seed(page, 3);
-  await expect(row.getByRole("link", { name: /모아 보기/ })).toHaveAttribute("aria-label", /5장/);
+  await expect(row.getByRole("link", { name: /모아 보기/ })).toHaveAttribute("aria-label", /3장/);
 });
 
 test("14명이면 점 대신 숫자, 누르면 인연 목록", async ({ page }) => {
   const row = await seed(page, 14);
-  await expect(row.getByText("/ 16")).toBeVisible();
+  await expect(row.getByText("/ 14")).toBeVisible();
   await row.getByRole("link", { name: /모아 보기/ }).click();
   await expect(page).toHaveURL(/\/people\/?$/);
 });
 
-test("끝에서 다음을 누르면 고리를 돌아 나에게 닿는다", async ({ page }) => {
+test("끝에서 다음을 누르면 고리를 돌아 첫 사람에게 닿는다", async ({ page }) => {
   const row = await seed(page, 3);
   // 폰에서는 ‹ › 단추가 화면 낭독기·키보드용으로 숨어 있다. 키보드로 누른다.
   const next = row.getByRole("button", { name: "다음" });
-  // 첫 사람(2번째)에서 네 번: 사람 둘, 새 인연, 그리고 고리를 넘어 「나」. 기다리지 않고 바로 눌러도 하나도 빠지지 않는다.
-  for (let i = 0; i < 4; i++) await next.press("Enter");
-  await expect.poll(() => current(page, "인연")).toMatch(ME);
+  // 첫 사람에서 세 번: 사람 둘, 그리고 고리를 넘어 첫 사람. 기다리지 않고 바로 눌러도 하나도 빠지지 않는다.
+  for (let i = 0; i < 3; i++) await next.press("Enter");
+  await expect.poll(() => current(page, "인연")).toMatch(/^사람1/);
 });
 
-test("사람이 없으면 나와 새 인연 두 장", async ({ page }) => {
+test("사람이 없으면 점선 「＋ 새 인연」 한 장", async ({ page }) => {
   const row = await seed(page, 0);
   await expect(row.getByRole("link", { name: /새 인연/ })).toHaveAttribute("href", /^\/people\/new\/?$/);
-  await expect(row.getByRole("link", { name: /모아 보기/ })).toHaveAttribute("aria-label", /2장/);
+  await expect(row.getByRole("link", { name: /모아 보기/ })).toHaveCount(0);
 });
 
-test("두 장이어도 고리가 돈다: 다음 두 번이면 다시 나, 이전 한 번이면 새 인연", async ({ page }) => {
-  const row = await seed(page, 0);
-  await expect.poll(() => current(page, "인연")).toMatch(ME);
+test("사람이 있으면 점 줄 옆 「＋」로 새 인연", async ({ page }) => {
+  const row = await seed(page, 2);
+  await row.getByRole("link", { name: "새 인연" }).click();
+  await expect(page).toHaveURL(/\/people\/new\/?$/);
+});
+
+test("두 장이어도 고리가 돈다: 다음 두 번이면 다시 첫 사람, 이전 한 번이면 둘째", async ({ page }) => {
+  const row = await seed(page, 2);
+  const name = async () => (await current(page, "인연")).split(/\n/)[0];
+  const first = await name();
   const next = row.getByRole("button", { name: "다음" });
   await next.press("Enter");
-  await expect.poll(() => current(page, "인연")).toMatch(/^＋ 새 인연/);
+  await expect.poll(name).not.toBe(first);
+  const second = await name();
   await next.press("Enter");
-  await expect.poll(() => current(page, "인연")).toMatch(ME);
+  await expect.poll(name).toBe(first);
   await row.getByRole("button", { name: "이전" }).press("Enter");
-  await expect.poll(() => current(page, "인연")).toMatch(/^＋ 새 인연/);
+  await expect.poll(name).toBe(second);
 });
 
 /* 첫 화면은 페이지가 아니라 카드 상자만 스크롤한다. 페이지가 넘치면 아래 칸에 손이 닿지 않는다. */
@@ -305,47 +303,47 @@ test("키보드만으로 모든 카드에 닿는다", async ({ page }) => {
     }
     return seen;
   }
-  const people = await walk("인연", 5);
-  expect(people.filter((s) => ME.test(s))).toHaveLength(1);
-  for (const name of ["사람1", "사람2", "사람3", "＋ 새 인연"]) expect(people.filter((s) => s.startsWith(name))).toHaveLength(1);
+  const people = await walk("인연", 3);
+  for (const name of ["사람1", "사람2", "사람3"]) expect(people.filter((s) => s.startsWith(name))).toHaveLength(1);
   await page.keyboard.press("ArrowDown");
   await expect(title(page)).toHaveText("순간");
-  const moments = await walk("순간", 3);
-  for (const name of ["순간1", "순간2", "＋ 새 순간"]) expect(moments.filter((s) => s.startsWith(name))).toHaveLength(1);
+  const moments = await walk("순간", 2);
+  for (const name of ["순간1", "순간2"]) expect(moments.filter((s) => s.startsWith(name))).toHaveLength(1);
 });
 
-test("인연 칸은 맨 아래, 순간 칸은 맨 위에 남은 시간과 설정 단추, 누르면 나 화면", async ({ page }) => {
+test("두 칸 모두 맨 아래에 남은 시간, 누르면 고치는 화면", async ({ page }) => {
+  await seed(page, 2, { moments: 1 });
+  const box = page.getByRole("group", { name: "카드" });
+  const strips = page.getByRole("link", { name: /나에게 남은 시간/ });
+  const low = async (k: number) =>
+    strips.nth(k).evaluate((el, b) => el.getBoundingClientRect().top - (b as Element).getBoundingClientRect().top > (b as Element).clientHeight / 2, await box.elementHandle());
+  await expect(strips.nth(0)).toBeInViewport();
+  await expect(strips.nth(0)).toContainText("예상 수명 85세");
+  expect(await low(0)).toBe(true);
+  await page.getByRole("button", { name: "순간 ↓" }).click();
+  await expect(strips.nth(1)).toBeInViewport();
+  expect(await low(1)).toBe(true);
+  await strips.nth(1).click();
+  await expect(page).toHaveURL(/\/setup\/?$/);
+});
+
+test("설정 단추는 두 칸 모두 오른쪽 아래, 남은 시간 줄을 가리지 않는다", async ({ page }) => {
   await seed(page, 2, { moments: 1 });
   const settings = page.getByRole("link", { name: "설정" });
-  const box = page.getByRole("group", { name: "카드" });
-  const [people, moments] = [settings.nth(0), settings.nth(1)];
-  await expect(people).toBeInViewport();
-  await expect(people.locator("xpath=..")).toContainText("나에게 남은 시간");
-  // 인연 칸에서는 카드 상자 아래쪽 절반에 있다.
-  const low = await people.evaluate((a, b) => a.getBoundingClientRect().top > (b as Element).getBoundingClientRect().top + (b as Element).clientHeight / 2, await box.elementHandle());
-  expect(low).toBe(true);
-  await page.getByRole("button", { name: "순간 ↓" }).click();
-  await expect(moments).toBeInViewport();
-  const high = await moments.evaluate((a, b) => a.getBoundingClientRect().bottom < (b as Element).getBoundingClientRect().top + (b as Element).clientHeight / 2, await box.elementHandle());
-  expect(high).toBe(true);
-  await moments.click();
-  await expect(page).toHaveURL(/\/settings\/?$/);
-});
-
-test("나 카드에 나이·예상 수명과 남은 여름·주말·보름달", async ({ page }) => {
-  await seed(page, 1);
-  const me = page.locator('[data-deck] a[href^="/settings"]').filter({ hasText: "남은 여름" }).first();
-  await expect(me).toContainText("예상 수명 85세");
-  await expect(me).toContainText("남은 주말");
-  await expect(me).toContainText("남은 보름달");
-});
-
-test("나 카드에서 내보내기까지", async ({ page }) => {
-  await seed(page, 2);
-  await page.getByRole("group", { name: "카드" }).focus();
-  await page.keyboard.press("ArrowLeft");
-  await expect.poll(() => current(page, "인연")).toMatch(ME);
-  await page.keyboard.press("Enter");
+  const strip = page.getByRole("link", { name: /나에게 남은 시간/ }).nth(0);
+  const at = () => settings.evaluate((el) => { const r = el.getBoundingClientRect(); return { right: innerWidth - r.right, bottom: innerHeight - r.bottom }; });
+  for (const step of ["인연", "순간"]) {
+    if (step === "순간") await page.getByRole("button", { name: "순간 ↓" }).click();
+    await expect(settings).toBeInViewport();
+    const p = await at();
+    expect(p.right).toBeLessThan(40);
+    expect(p.bottom).toBeLessThan(40);
+  }
+  await page.getByRole("button", { name: "↑ 인연" }).click();
+  await expect(strip).toBeInViewport();
+  const [s, b] = [await strip.boundingBox(), await settings.boundingBox()];
+  expect(s!.x + s!.width).toBeLessThanOrEqual(b!.x);
+  await settings.click();
   await expect(page).toHaveURL(/\/settings\/?$/);
   await expect(page.getByRole("button", { name: "내보내기" })).toBeVisible();
 });
@@ -369,7 +367,7 @@ test("상세에 갔다 돌아오면 같은 줄의 같은 카드", async ({ page 
 
 test("아이 카드에는 성장 한 줄", async ({ page }) => {
   await seed(page, 0, { people: [{ ...person(0), name: "지우", ageYears: 7 }] });
-  await expect(page.getByRole("region", { name: "인연" }).getByRole("link", { name: /지우/ })).toContainText("만 20세까지");
+  await expect.poll(() => current(page, "인연")).toContain("만 20세까지");
 });
 
 test("세로로 밀면 순간 줄로", async ({ page }) => {

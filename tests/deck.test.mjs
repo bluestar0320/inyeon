@@ -8,10 +8,10 @@ import { setLang } from "../lib/i18n.ts";
 setLang("ko");
 
 test("시작: 생일 가까운 사람 → 첫 사람 → 나", () => {
-  assert.equal(startIndex(["a", "b", "c"], [{ id: "c", days: 3 }, { id: "a", days: 9 }]), 3);
-  assert.equal(startIndex(["a", "b"], []), 1);
+  assert.equal(startIndex(["a", "b", "c"], [{ id: "c", days: 3 }, { id: "a", days: 9 }]), 2);
+  assert.equal(startIndex(["a", "b"], []), 0);
   assert.equal(startIndex([], []), 0);
-  assert.equal(startIndex(["a"], [{ id: "gone", days: 1 }]), 1); // 목록에 없는 id
+  assert.equal(startIndex(["a"], [{ id: "gone", days: 1 }]), 0); // 목록에 없는 id
 });
 test("cleanPos: 범위로 줄이고 이상한 값은 버린다", () => {
   const sizes = { people: 3, moments: 1 };

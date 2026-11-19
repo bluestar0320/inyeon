@@ -122,9 +122,19 @@
      * 아예 안 온다. 한국어 시스템 글꼴은 이미 각 OS가 잘 고른 것들이라,
      * 이름만 제대로 불러 주면 된다. Pretendard는 깔려 있으면 쓰고 없으면 넘어간다.
      */
-    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
-      "Apple SD Gothic Neo", "Segoe UI", "Noto Sans KR", "Malgun Gothic", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      "Pretendard Variable",
+      Pretendard,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Apple SD Gothic Neo",
+      "Segoe UI",
+      "Noto Sans KR",
+      "Malgun Gothic",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
   }
 
   /*
@@ -186,8 +196,16 @@
     inset: 0;
     z-index: -1;
     background:
-      radial-gradient(90% 55% at 50% 0%, rgb(255 186 120 / 0.22), transparent 70%),
-      radial-gradient(140% 100% at 50% 40%, transparent 55%, rgb(0 0 0 / 0.45) 100%);
+      radial-gradient(
+        90% 55% at 50% 0%,
+        rgb(255 186 120 / 0.22),
+        transparent 70%
+      ),
+      radial-gradient(
+        140% 100% at 50% 40%,
+        transparent 55%,
+        rgb(0 0 0 / 0.45) 100%
+      );
     pointer-events: none;
   }
 
@@ -359,7 +377,9 @@
    */
   .letter {
     @apply relative isolate rounded-sm px-5 py-5 text-[16px] text-ink-800 shadow-[0_2px_10px_rgba(42,34,28,0.12)];
-    font-family: "Nanum Myeongjo", "AppleMyungjo", "Batang", "Hiragino Mincho ProN", "Songti SC", Georgia, serif;
+    font-family:
+      "Nanum Myeongjo", "AppleMyungjo", "Batang", "Hiragino Mincho ProN",
+      "Songti SC", Georgia, serif;
   }
 
   .letter::before {
@@ -368,7 +388,8 @@
     inset: 0;
     z-index: -1;
     border-radius: inherit;
-    background: rgb(244 234 214) var(--letter-paper, none) center / cover no-repeat;
+    background: rgb(244 234 214) var(--letter-paper, none) center / cover
+      no-repeat;
   }
 
   .dark .letter {
@@ -381,7 +402,10 @@
     --ink-800: 58 47 39;
     --ink-900: 42 34 28;
     --accent-600: 150 72 42;
-    box-shadow: 0 0 0 1px rgb(255 214 170 / 0.08), 0 10px 40px rgb(255 170 100 / 0.16), 0 6px 18px rgb(0 0 0 / 0.5);
+    box-shadow:
+      0 0 0 1px rgb(255 214 170 / 0.08),
+      0 10px 40px rgb(255 170 100 / 0.16),
+      0 6px 18px rgb(0 0 0 / 0.5);
   }
 
   /* 불빛에 살짝 바랜 종이. 하얗게 번쩍이지 않도록 조금 누른다. */
@@ -394,10 +418,16 @@
 
   .letter-ruled::before {
     background-image:
-      repeating-linear-gradient(to bottom, transparent 0 calc(2rem - 1px), rgb(130 95 55 / 0.3) calc(2rem - 1px) 2rem),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(2rem - 1px),
+        rgb(130 95 55 / 0.3) calc(2rem - 1px) 2rem
+      ),
       var(--letter-paper, none);
     background-size: auto, cover;
-    background-position: 0 0, center;
+    background-position:
+      0 0,
+      center;
     background-repeat: repeat, no-repeat;
   }
 
@@ -407,7 +437,9 @@
 
   /* 사진 아래 이름과 문장. 웹폰트 없이 기기의 명조를 부른다. */
   .font-album {
-    font-family: "Nanum Myeongjo", "AppleMyungjo", "Batang", "Hiragino Mincho ProN", "Songti SC", Georgia, serif;
+    font-family:
+      "Nanum Myeongjo", "AppleMyungjo", "Batang", "Hiragino Mincho ProN",
+      "Songti SC", Georgia, serif;
   }
 
   /* 나눔명조에 없는 일본어·중국어 한자(会·回·数·你…)가 고딕으로 섞이지 않게, 두 언어는 기기 명조로만 쓴다. */
@@ -420,6 +452,48 @@
     from {
       opacity: 0;
       transform: translateY(0.3rem);
+    }
+  }
+
+  /*
+   * 첫 화면 사진 더미(components/CardRow.tsx). 0이 맨 위, 1·2는 뒤에 비스듬히 깔린 다음 장.
+   * 자리를 바꾸면 이 transform 사이를 미끄러진다. 끌거나 날릴 때는 요소의 style이 잠깐 이긴다.
+   */
+  .pile-card {
+    transition:
+      transform 0.45s cubic-bezier(0.2, 0, 0, 1),
+      filter 0.45s;
+  }
+  .pile-card[data-slot="0"] {
+    z-index: 3;
+    transform: rotate(-1deg);
+  }
+  .pile-card[data-slot="1"] {
+    z-index: 2;
+    transform: translate(-7%, -3%) rotate(-5deg);
+    filter: brightness(0.84);
+  }
+  .pile-card[data-slot="2"] {
+    z-index: 1;
+    transform: translate(7%, -5%) rotate(5deg);
+    filter: brightness(0.72);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pile-card {
+      transition: none;
+    }
+  }
+
+  /* 지금 장의 문장. 장이 바뀌면 아래에서 떠오른다. */
+  @media (prefers-reduced-motion: no-preference) {
+    .deck-line {
+      animation: deck-line 0.4s cubic-bezier(0.2, 0, 0, 1) 0.12s backwards;
+    }
+  }
+  @keyframes deck-line {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
     }
   }
 
