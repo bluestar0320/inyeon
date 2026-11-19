@@ -217,15 +217,16 @@ export default function Deck({
               addHref="/people/new"
               addLabel={add.people}
             />
-            <button
-              type="button"
-              onClick={() => toRow("moments")}
-              className="btn-quiet mx-auto mt-3 min-h-11 min-w-11 text-base text-ink-800 [@media(max-height:500px)]:mt-0"
-            >
-              <span className="deck-nudge inline-block">{names.moments} ↓</span>
-            </button>
           </div>
           <MeStrip me={me} edit={t.edit} />
+          {/* 맨 아래 가장자리에 둔다. 순간 칸의 「↑ 인연」이 맨 위에 있는 것과 짝이다. */}
+          <button
+            type="button"
+            onClick={() => toRow("moments")}
+            className="btn-quiet absolute inset-x-0 bottom-0.5 mx-auto min-h-11 w-max min-w-11 text-base text-ink-800"
+          >
+            <span className="deck-nudge inline-block">{names.moments} ↓</span>
+          </button>
         </div>
         <div
           ref={sections.moments}

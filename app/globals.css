@@ -535,7 +535,7 @@
       transform: translateY(0);
     }
     75% {
-      transform: translateY(3px);
+      transform: translateY(7px);
     }
   }
 }
