@@ -520,10 +520,10 @@ test.describe("오프라인", () => {
       // 맞춰 찾다가 캐시를 놓쳐 ERR_FAILED가 찍히고 화면 전체를 다시 불러왔다.
       const failed: string[] = [];
       // 방문자 집계는 오프라인이면 못 보내고 조용히 넘어가는 게 맞으니 빼고 센다.
-      // 명조 글꼴 조각도 그렇다 — 볼 때 받는 것이라 처음 보는 글자는 기기 글꼴로 그린다(PLAN §10).
+      // 명조·손글씨 글꼴 조각도 그렇다 — 볼 때 받는 것이라 처음 보는 글자는 기기 글꼴로 그린다(PLAN §10).
       page.on("requestfailed", (request) => {
         const url = new URL(request.url());
-        if (url.hostname.endsWith(".goatcounter.com") || url.pathname.includes("/fonts/nanum-myeongjo/")) return;
+        if (url.hostname.endsWith(".goatcounter.com") || /\/fonts\/(nanum-myeongjo|east-sea-dokdo)\//.test(url.pathname)) return;
         failed.push(request.url());
       });
       page.on("console", (message) => {

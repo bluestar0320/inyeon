@@ -118,7 +118,7 @@ function Count({ value }: { value: string }) {
   return (
     <b
       ref={ref}
-      className="numeral mx-0.5 font-sans text-[2.75rem] leading-none [@media(max-height:500px)]:text-3xl"
+      className="mx-0.5 text-[4rem] font-normal tabular-nums leading-none [@media(max-height:500px)]:text-4xl"
     />
   );
 }
@@ -127,7 +127,7 @@ function Count({ value }: { value: string }) {
 function Sentence({ card }: { card: DeckCard }) {
   const at = card.sentence.indexOf(card.count);
   return (
-    <p className="font-album break-keep text-[1.625rem] leading-[1.45] text-ink-900 [@media(max-height:500px)]:text-xl">
+    <p className="font-hand ink break-keep text-[2.5rem] leading-[1.3] [@media(max-height:500px)]:text-[1.75rem]">
       {at < 0 ? (
         card.sentence
       ) : (

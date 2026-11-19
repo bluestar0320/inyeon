@@ -124,6 +124,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {process.env.NODE_ENV === "production" && <meta httpEquiv="Content-Security-Policy" content={CSP} />}
         {/* 명조 글꼴(사진 아래 글씨). 기기마다 다른 명조 대신 같은 글꼴로 보이게 한다. 못 받으면 기기 명조로 넘어간다. */}
         <link rel="stylesheet" href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fonts/nanum-myeongjo/font.css`} />
+        {/* 손글씨(첫 화면 큰 문장). 못 받으면 명조로 넘어간다. */}
+        <link rel="stylesheet" href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/fonts/east-sea-dokdo/font.css`} />
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

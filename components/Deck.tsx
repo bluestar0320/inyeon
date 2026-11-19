@@ -161,6 +161,16 @@ export default function Deck({
 
   return (
     <>
+      {/* 손글씨 잉크 결(.ink). 획을 아주 조금 비틀고 잉크가 고르지 않게 묻은 자국을 낸다. */}
+      <svg aria-hidden width="0" height="0" className="absolute">
+        <filter id="ink" x="-5%" y="-20%" width="110%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G" result="d" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="g" />
+          <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.45 1.3" result="ga" />
+          <feComposite in="d" in2="ga" operator="in" />
+        </filter>
+      </svg>
       <div
         ref={box}
         tabIndex={0}

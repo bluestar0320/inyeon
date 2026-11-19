@@ -442,9 +442,34 @@
       "Songti SC", Georgia, serif;
   }
 
+  /* 첫 화면 큰 문장. 동해독도에 없는 글자는 명조로. */
+  .font-hand {
+    font-family:
+      "East Sea Dokdo", "Nanum Myeongjo", "AppleMyungjo", "Batang", serif;
+  }
+
+  /*
+   * 종이에 펜으로 쓴 잉크. 검정 대신 블루블랙, 곱하기로 칠해 구김의 그늘이 글씨 위로도 지나가고,
+   * 가장자리는 살짝 번진다. 결은 Deck의 #ink 필터.
+   */
+  .ink {
+    color: rgb(24 20 36 / 0.97);
+    mix-blend-mode: multiply;
+    text-shadow:
+      0 0 0.7px rgb(24 20 36 / 0.97),
+      0 0 1.6px rgb(24 20 36 / 0.3);
+    filter: url(#ink);
+  }
+  /* 밤에는 어두운 종이라 곱하기가 안 먹는다. 밝은 잉크를 겹쳐 칠한다. */
+  .dark .ink {
+    color: rgb(var(--ink-900));
+    mix-blend-mode: screen;
+    text-shadow: 0 0 0.7px rgb(var(--ink-900) / 0.9);
+  }
+
   /* 나눔명조에 없는 일본어·중국어 한자(会·回·数·你…)가 고딕으로 섞이지 않게, 두 언어는 기기 명조로만 쓴다. */
-  html:lang(ja) :is(.letter, .font-album),
-  html:lang(zh) :is(.letter, .font-album) {
+  html:lang(ja) :is(.letter, .font-album, .font-hand),
+  html:lang(zh) :is(.letter, .font-album, .font-hand) {
     font-family: "Hiragino Mincho ProN", "Yu Mincho", "Songti SC", serif;
   }
 
