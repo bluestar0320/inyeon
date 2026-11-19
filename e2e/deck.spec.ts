@@ -314,12 +314,21 @@ test("키보드만으로 모든 카드에 닿는다", async ({ page }) => {
   for (const name of ["순간1", "순간2", "＋ 새 순간"]) expect(moments.filter((s) => s.startsWith(name))).toHaveLength(1);
 });
 
-test("첫 화면 어느 줄에서든 설정 단추가 보이고 누르면 나 화면", async ({ page }) => {
+test("인연 칸은 맨 아래, 순간 칸은 맨 위에 남은 시간과 설정 단추, 누르면 나 화면", async ({ page }) => {
   await seed(page, 2, { moments: 1 });
-  await expect(page.getByRole("link", { name: "설정" })).toBeInViewport();
+  const settings = page.getByRole("link", { name: "설정" });
+  const box = page.getByRole("group", { name: "카드" });
+  const [people, moments] = [settings.nth(0), settings.nth(1)];
+  await expect(people).toBeInViewport();
+  await expect(people.locator("xpath=..")).toContainText("나에게 남은 시간");
+  // 인연 칸에서는 카드 상자 아래쪽 절반에 있다.
+  const low = await people.evaluate((a, b) => a.getBoundingClientRect().top > (b as Element).getBoundingClientRect().top + (b as Element).clientHeight / 2, await box.elementHandle());
+  expect(low).toBe(true);
   await page.getByRole("button", { name: "순간 ↓" }).click();
-  await expect(page.getByRole("link", { name: "설정" })).toBeInViewport();
-  await page.getByRole("link", { name: "설정" }).click();
+  await expect(moments).toBeInViewport();
+  const high = await moments.evaluate((a, b) => a.getBoundingClientRect().bottom < (b as Element).getBoundingClientRect().top + (b as Element).clientHeight / 2, await box.elementHandle());
+  expect(high).toBe(true);
+  await moments.click();
   await expect(page).toHaveURL(/\/settings\/?$/);
 });
 
