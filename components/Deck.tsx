@@ -172,7 +172,7 @@ export default function Deck({
         role="group"
         aria-label={t.box}
         // 높이는 머리글 아래 남은 만큼(app/globals.css의 [data-deck]).
-        className="relative h-full snap-y snap-mandatory overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] [scrollbar-width:none] focus-visible:outline-offset-[-2px] [&::-webkit-scrollbar]:hidden"
+        className="relative h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] focus-visible:outline-offset-[-2px] [&::-webkit-scrollbar]:hidden"
         onScroll={(e) => {
           const el = e.currentTarget;
           // 상자 가운데가 순간 칸에 들어가면 순간 칸.
@@ -198,9 +198,10 @@ export default function Deck({
       >
         <div
           ref={sections.people}
-          className="relative flex min-h-full snap-start flex-col"
+          className="relative flex min-h-full snap-start flex-col pb-[env(safe-area-inset-bottom)]"
         >
-          <div className="flex flex-1 flex-col justify-center">
+          {/* 위 여백: 큰 문장이 머리글에 붙어 보이지 않게. 순간 칸은 「↑ 인연」이 이 자리를 맡는다. */}
+          <div className="flex flex-1 flex-col justify-center pt-6 [@media(max-height:500px)]:pt-0">
             <CardRow
               ref={rows.people}
               label={names.people}
@@ -218,14 +219,14 @@ export default function Deck({
           <button
             type="button"
             onClick={() => toRow("moments")}
-            className="btn-quiet absolute inset-x-0 bottom-2 mx-auto min-h-12 w-max min-w-11 px-4 text-xl font-semibold text-ink-900"
+            className="btn-quiet absolute inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] mx-auto min-h-12 w-max min-w-11 px-4 text-xl font-semibold text-ink-900"
           >
             {names.moments} <span className="deck-nudge ml-1 inline-block text-2xl">↓</span>
           </button>
         </div>
         <div
           ref={sections.moments}
-          className="relative flex min-h-full snap-start flex-col"
+          className="relative flex min-h-full snap-start flex-col pb-[env(safe-area-inset-bottom)]"
         >
           <button
             type="button"
