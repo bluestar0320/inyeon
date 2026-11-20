@@ -15,31 +15,26 @@ const COPY = defineCopy({
   ko: {
     box: "카드",
     edit: "눌러서 고치기",
-    settings: "설정",
     overview: (i: number, n: number) => `모아 보기, ${n}장 중 ${i}번째`,
   },
   en: {
     box: "Cards",
     edit: "Tap to edit",
-    settings: "Settings",
     overview: (i, n) => `See all, ${i} of ${n}`,
   },
   ja: {
     box: "カード",
     edit: "タップして変更",
-    settings: "設定",
     overview: (i, n) => `一覧、${n}枚中${i}枚目`,
   },
   es: {
     box: "Tarjetas",
     edit: "Toca para cambiar",
-    settings: "Ajustes",
     overview: (i, n) => `Ver todo, ${i} de ${n}`,
   },
   zh: {
     box: "卡片",
     edit: "点按修改",
-    settings: "设置",
     overview: (i, n) => `查看全部，第${i}张，共${n}张`,
   },
 });
@@ -54,7 +49,7 @@ export type MeLine = {
 /*
  * 「나에게 남은 시간」 한 줄. 두 칸 모두 맨 아래에 둔다. 칸을 바꿔도 이 줄은 그대로라 위의 문장과 사진만 바뀌어 보인다.
  * 누르면 나이·예상 수명을 고치는 화면(/setup)으로 간다.
- * 오른쪽은 떠 있는 설정 단추 자리라 비운다.
+ * 바탕 편지지 위에 한 장 더 얹은 엽서처럼 보이게 이야기 편지와 같은 종이(.letter)를 쓴다.
  * 눕힌 폰은 높이가 모자라 뺀다.
  */
 function MeStrip({ me, edit }: { me: MeLine; edit: string }) {
@@ -62,7 +57,7 @@ function MeStrip({ me, edit }: { me: MeLine; edit: string }) {
     <Link
       href="/setup"
       aria-label={`${me.label} ${me.value}${me.sub ? `, ${me.sub}` : ""}. ${edit}`}
-      className="hero mb-12 ml-4 mr-32 flex items-center gap-3 !px-5 !py-4 [@media(max-height:500px)]:hidden"
+      className="letter crumpled mx-4 mb-16 flex -rotate-1 items-center gap-3 !py-4 [@media(max-height:500px)]:hidden"
     >
       <span className="min-w-0 flex-1">
         <span className="block text-sm text-ink-600">{me.label}</span>
@@ -223,9 +218,9 @@ export default function Deck({
           <button
             type="button"
             onClick={() => toRow("moments")}
-            className="btn-quiet absolute inset-x-0 bottom-0.5 mx-auto min-h-11 w-max min-w-11 text-base text-ink-800"
+            className="btn-quiet absolute inset-x-0 bottom-2 mx-auto min-h-12 w-max min-w-11 px-4 text-xl font-semibold text-ink-900"
           >
-            <span className="deck-nudge inline-block">{names.moments} ↓</span>
+            {names.moments} <span className="deck-nudge ml-1 inline-block text-2xl">↓</span>
           </button>
         </div>
         <div
@@ -260,14 +255,6 @@ export default function Deck({
           <MeStrip me={me} edit={t.edit} />
         </div>
       </div>
-      {/* 설정(내보내기 포함)으로 가는 길. 두 칸 모두 오른쪽 아래에 늘 떠 있다. */}
-      <Link
-        href="/settings"
-        className="fixed bottom-[calc(3rem+env(safe-area-inset-bottom))] right-4 z-20 flex min-h-11 items-center gap-1.5 rounded-full border border-ink-200 bg-page/90 px-4 text-sm font-medium text-ink-800 shadow-sm backdrop-blur"
-      >
-        <span aria-hidden="true">⚙</span>
-        {t.settings}
-      </Link>
     </>
   );
 }

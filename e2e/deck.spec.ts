@@ -327,22 +327,17 @@ test("두 칸 모두 맨 아래에 남은 시간, 누르면 고치는 화면", a
   await expect(page).toHaveURL(/\/setup\/?$/);
 });
 
-test("설정 단추는 두 칸 모두 오른쪽 아래, 남은 시간 줄을 가리지 않는다", async ({ page }) => {
+test("설정 아이콘은 두 칸 모두 머리글 오른쪽, 앱 이름 옆에 있다", async ({ page }) => {
   await seed(page, 2, { moments: 1 });
-  const settings = page.getByRole("link", { name: "설정" });
-  const strip = page.getByRole("link", { name: /나에게 남은 시간/ }).nth(0);
-  const at = () => settings.evaluate((el) => { const r = el.getBoundingClientRect(); return { right: innerWidth - r.right, bottom: innerHeight - r.bottom }; });
+  const settings = page.getByRole("banner").getByRole("link", { name: "설정" });
+  const at = () => settings.evaluate((el) => { const r = el.getBoundingClientRect(); return { right: innerWidth - r.right, top: r.top }; });
   for (const step of ["인연", "순간"]) {
     if (step === "순간") await page.getByRole("button", { name: "순간 ↓" }).click();
     await expect(settings).toBeInViewport();
     const p = await at();
     expect(p.right).toBeLessThan(40);
-    expect(p.bottom).toBeLessThan(64);
+    expect(p.top).toBeLessThan(40);
   }
-  await page.getByRole("button", { name: "↑ 인연" }).click();
-  await expect(strip).toBeInViewport();
-  const [s, b] = [await strip.boundingBox(), await settings.boundingBox()];
-  expect(s!.x + s!.width).toBeLessThanOrEqual(b!.x);
   await settings.click();
   await expect(page).toHaveURL(/\/settings\/?$/);
   await expect(page.getByRole("button", { name: "내보내기" })).toBeVisible();

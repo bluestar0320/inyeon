@@ -97,6 +97,8 @@ const THEME_SCRIPT = `
   document.documentElement.style.setProperty("--paper", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-' + paper + '.webp")');
   // 편지는 구김 없이 얼룩만 진 종이 한 장(scripts/stained-paper.mjs).
   document.documentElement.style.setProperty("--letter-paper", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/letter.webp")');
+  // 첫 화면 내 카드(엽서)에 얹는 구김. 가장 많이 구겨진 종이의 그늘만 쓴다.
+  document.documentElement.style.setProperty("--crumple", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-5.webp")');
 })();
 `;
 

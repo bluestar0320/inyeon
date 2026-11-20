@@ -353,7 +353,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
 
       <div
         data-pile=""
-        className="relative mx-auto mt-2 aspect-[100/118] w-[min(70%,calc(82svh-22.5rem))] touch-pan-y select-none [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:row-span-2 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:w-[min(100%,calc((100svh-8rem)/1.18))]"
+        className="relative mx-auto mt-2 aspect-[100/118] w-[min(70%,calc(82svh-23.5rem))] touch-pan-y select-none [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:row-span-2 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:w-[min(100%,calc((100svh-8rem)/1.18))]"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
