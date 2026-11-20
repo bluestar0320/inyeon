@@ -231,9 +231,10 @@ export default function Deck({
           <button
             type="button"
             onClick={() => toRow("people")}
-            className="btn-quiet mx-auto mt-1 min-h-11 min-w-11 text-base text-ink-800 [@media(max-height:500px)]:absolute [@media(max-height:500px)]:right-4 [@media(max-height:500px)]:top-1"
+            className="btn-quiet mx-auto mt-1 min-h-12 min-w-11 px-4 text-xl font-semibold text-ink-900 [@media(max-height:500px)]:absolute [@media(max-height:500px)]:right-4 [@media(max-height:500px)]:top-1"
           >
-            ↑ {names.people}
+            {/* 아래 「순간 ↓」과 같은 크기. */}
+            <span className="mr-1 inline-block text-2xl">↑</span> {names.people}
           </button>
           <div className="flex flex-1 flex-col justify-center">
             <CardRow
