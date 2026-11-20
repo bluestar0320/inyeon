@@ -337,7 +337,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
     <section
       role="region"
       aria-label={label}
-      className="flex flex-col [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-2 [@media(max-height:500px)]:items-center [@media(max-height:500px)]:gap-x-8 [@media(max-height:500px)]:px-[6%]"
+      className="flex min-h-0 flex-col [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-2 [@media(max-height:500px)]:items-center [@media(max-height:500px)]:gap-x-8 [@media(max-height:500px)]:px-[6%]"
     >
       {/* 문장. 장이 바뀔 때마다 새로 떠오른다(key). 높이를 잡아 두어 문장 길이로 더미가 출렁이지 않는다. */}
       <div className="min-h-[9.5rem] px-7 [@media(max-height:500px)]:col-start-1 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:px-0">
@@ -351,9 +351,12 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
         )}
       </div>
 
+      {/* 더미 자리. 문장·점 줄·내 카드를 놓고 남은 높이만큼만 차지하고(모자라면 줄어든다), 더미는 그 안에 맞춘다.
+          vh로 재면 안드로이드 내비게이션 줄 몫까지 셈에 들어가 아래가 잘린다. */}
+      <div data-pile-slot="" className="flex min-h-0 flex-[0_1_calc((min(100vw,48rem)-2rem)*0.826+0.5rem)] justify-center pt-2 [container-type:size] [@media(max-height:500px)]:contents">
       <div
         data-pile=""
-        className="relative mx-auto mt-2 aspect-[100/118] w-[min(70%,calc(82svh-25rem))] touch-pan-y select-none [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:row-span-2 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:w-[min(100%,calc((100svh-8rem)/1.18))]"
+        className="relative aspect-[100/118] w-[min(70cqw,84.7cqh)] touch-pan-y select-none [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:row-span-2 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:w-[min(100%,calc((100svh-8rem)/1.18))]"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
@@ -413,12 +416,14 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
             </div>
           ))}
       </div>
+      </div>
 
-      <div className="mt-5 flex items-center justify-center gap-3 [@media(max-height:500px)]:col-start-1 [@media(max-height:500px)]:row-start-2 [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:justify-start">
+      {/* 점 줄은 정가운데, 「＋」는 그 오른쪽. 가운데 칸 양옆을 같은 너비(1fr)로 둔다. */}
+      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 [@media(max-height:500px)]:flex [@media(max-height:500px)]:col-start-1 [@media(max-height:500px)]:row-start-2 [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:justify-start">
         {n > 1 && (
           <button
             type="button"
-            className="btn-quiet sr-only min-h-11 min-w-11 text-base focus-visible:not-sr-only sm:not-sr-only"
+            className="btn-quiet sr-only col-start-1 min-h-11 min-w-11 justify-self-end text-base focus-visible:not-sr-only sm:not-sr-only"
             aria-label={t.prev}
             onClick={() => go(-1)}
           >
@@ -430,7 +435,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
           <Link
             href={listHref}
             aria-label={overviewLabel(index + 1, n)}
-            className="flex min-h-11 min-w-11 items-center justify-center px-2"
+            className="col-start-2 flex min-h-11 min-w-11 items-center justify-center px-2"
           >
             {n <= MAX_DOTS ? (
               <span aria-hidden="true" className="flex gap-1.5">
@@ -451,6 +456,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
             )}
           </Link>
         )}
+        <div className="col-start-3 flex items-center gap-3 justify-self-start">
         {n > 0 && (
           <Link
             href={addHref}
@@ -471,6 +477,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
             ›
           </button>
         )}
+        </div>
       </div>
       {/* 넘길 때 몇째 장인지 화면 낭독기에 알린다. */}
       <span className="sr-only" aria-live="polite">

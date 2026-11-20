@@ -537,6 +537,18 @@
     }
   }
 
+  /*
+   * 첫 화면 칸은 화면 높이에 딱 맞추고 사진 더미가 남은 자리만큼 줄어든다(Deck, CardRow).
+   * 글씨를 키운 사람은 문장만으로도 자리가 모자랄 수 있어, 예전처럼 칸이 늘어나 스크롤되고 더미는 제 크기를 지킨다.
+   */
+  html[data-text] [data-deck-row] {
+    height: auto;
+    min-height: 100%;
+  }
+  html[data-text] [data-pile-slot] {
+    flex-shrink: 0;
+  }
+
   /* 「순간 ↓」는 아래로, 「↑ 인연」은 위로 살짝 흔들린다. 움직임을 줄인 사람에게는 가만히 있다. */
   @media (prefers-reduced-motion: no-preference) {
     .deck-nudge,

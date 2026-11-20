@@ -52,12 +52,13 @@ export type MeLine = {
  * 바탕 편지지 위에 한 장 더 얹은 엽서처럼 보이게 이야기 편지와 같은 종이(.letter)를 쓴다.
  * 눕힌 폰은 높이가 모자라 뺀다.
  */
-function MeStrip({ me, edit }: { me: MeLine; edit: string }) {
+/** gap: 아래 여백. 인연 칸은 그 아래에 「순간 ↓」이 들어가야 해 넓고, 순간 칸은 좁다. */
+function MeStrip({ me, edit, gap }: { me: MeLine; edit: string; gap: string }) {
   return (
     <Link
       href="/setup"
       aria-label={`${me.label} ${me.value}${me.sub ? `, ${me.sub}` : ""}. ${edit}`}
-      className="letter crumpled mx-4 mb-16 flex -rotate-1 items-center gap-3 !py-4 [@media(max-height:500px)]:hidden"
+      className={`letter crumpled mx-4 ${gap} flex -rotate-1 items-center gap-3 !py-4 [@media(max-height:500px)]:hidden`}
     >
       <span className="font-hand min-w-0 flex-1">
         <span className="block text-xl leading-tight text-ink-600">{me.label}</span>
@@ -198,10 +199,10 @@ export default function Deck({
       >
         <div
           ref={sections.people}
-          className="relative flex min-h-full snap-start flex-col pb-[env(safe-area-inset-bottom)]"
+          data-deck-row="" className="relative flex h-full snap-start flex-col pb-[env(safe-area-inset-bottom)] [@media(max-height:500px)]:h-auto [@media(max-height:500px)]:min-h-full"
         >
           {/* 위 여백: 큰 문장이 머리글에 붙어 보이지 않게. 순간 칸은 「↑ 인연」이 이 자리를 맡는다. */}
-          <div className="flex flex-1 flex-col justify-center pt-6 [@media(max-height:500px)]:pt-0">
+          <div className="flex min-h-0 flex-1 flex-col justify-center pt-6 [@media(max-height:500px)]:pt-0">
             <CardRow
               ref={rows.people}
               label={names.people}
@@ -214,7 +215,7 @@ export default function Deck({
               addLabel={add.people}
             />
           </div>
-          <MeStrip me={me} edit={t.edit} />
+          <MeStrip me={me} edit={t.edit} gap="mb-16" />
           {/* 맨 아래 가장자리에 둔다. 순간 칸의 「↑ 인연」이 맨 위에 있는 것과 짝이다. */}
           <button
             type="button"
@@ -226,7 +227,7 @@ export default function Deck({
         </div>
         <div
           ref={sections.moments}
-          className="relative flex min-h-full snap-start flex-col pb-[env(safe-area-inset-bottom)]"
+          data-deck-row="" className="relative flex h-full snap-start flex-col pb-[env(safe-area-inset-bottom)] [@media(max-height:500px)]:h-auto [@media(max-height:500px)]:min-h-full"
         >
           <button
             type="button"
@@ -236,7 +237,7 @@ export default function Deck({
             {/* 아래 「순간 ↓」과 같은 크기. */}
             <span className="deck-nudge-up mr-1 inline-block text-2xl">↑</span> {names.people}
           </button>
-          <div className="flex flex-1 flex-col justify-center">
+          <div className="flex min-h-0 flex-1 flex-col justify-center">
             <CardRow
               ref={rows.moments}
               label={names.moments}
@@ -254,7 +255,7 @@ export default function Deck({
               </p>
             )}
           </div>
-          <MeStrip me={me} edit={t.edit} />
+          <MeStrip me={me} edit={t.edit} gap="mb-4" />
         </div>
       </div>
     </>
