@@ -234,7 +234,7 @@ export default function Deck({
             className="btn-quiet mx-auto mt-1 min-h-12 min-w-11 px-4 text-xl font-semibold text-ink-900 [@media(max-height:500px)]:absolute [@media(max-height:500px)]:right-4 [@media(max-height:500px)]:top-1"
           >
             {/* 아래 「순간 ↓」과 같은 크기. */}
-            <span className="mr-1 inline-block text-2xl">↑</span> {names.people}
+            <span className="deck-nudge-up mr-1 inline-block text-2xl">↑</span> {names.people}
           </button>
           <div className="flex flex-1 flex-col justify-center">
             <CardRow
