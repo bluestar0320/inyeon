@@ -400,7 +400,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
                 className="block"
               >
                 <Polaroid src={c.photo} size="md">
-                  <span className="font-album mt-2 block truncate px-1 text-[15px] text-ink-800">
+                  <span className="font-hand mt-2 block truncate px-1 text-[22px] leading-tight text-ink-800">
                     {c.title}
                   </span>
                 </Polaroid>

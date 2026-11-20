@@ -59,18 +59,18 @@ function MeStrip({ me, edit }: { me: MeLine; edit: string }) {
       aria-label={`${me.label} ${me.value}${me.sub ? `, ${me.sub}` : ""}. ${edit}`}
       className="letter crumpled mx-4 mb-16 flex -rotate-1 items-center gap-3 !py-4 [@media(max-height:500px)]:hidden"
     >
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm text-ink-600">{me.label}</span>
-        <span className="numeral mt-1 block text-4xl leading-none text-ink-900">
+      <span className="font-hand min-w-0 flex-1">
+        <span className="block text-xl leading-tight text-ink-600">{me.label}</span>
+        <span className="mt-1 block text-5xl leading-none tabular-nums text-ink-900">
           {me.value}
         </span>
         {me.sub && (
-          <span className="mt-1.5 block truncate text-sm text-ink-600">
+          <span className="mt-1.5 block truncate text-xl leading-tight text-ink-600">
             {me.sub}
           </span>
         )}
         {me.nudge && (
-          <span className="mt-1 block truncate text-xs text-ink-600">
+          <span className="mt-1 block truncate text-lg leading-tight text-ink-600">
             {me.nudge}
           </span>
         )}
