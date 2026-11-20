@@ -455,9 +455,10 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
           <Link
             href={addHref}
             aria-label={addLabel}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-200 text-xl text-ink-800"
+            className="flex h-11 w-11 items-center justify-center text-ink-800"
           >
-            <span aria-hidden="true">＋</span>
+            {/* 누르는 자리는 44px 그대로, 눈에 보이는 원만 작게. */}
+            <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full border border-ink-200 text-base leading-none">＋</span>
           </Link>
         )}
         {n > 1 && (
