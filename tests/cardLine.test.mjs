@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { cardLine, yearsKnown } from "../lib/cardLine.ts";
 
-const base = { years: null, rel: "friend", seed: "p1", lang: "ko", bond: "BOND" };
+const base = { years: null, rel: "friend", seed: "p1", lang: "ko", left: "168", bond: "BOND" };
 
 test("cardLine: 이스터 에그가 먼저다", () => {
   assert.match(cardLine({ ...base, past: 777 }), /777/);
@@ -27,7 +27,19 @@ test("cardLine: 연인 15년이면 연인 문장이 섞이고 「애인」은 �
   const seen = new Set();
   for (let k = 0; k < 200; k++) seen.add(cardLine({ ...base, past: 10, years: 16, rel: "partner", seed: `s${k}` }));
   assert.ok([...seen].some((l) => l.includes("15년산 사랑")));
+  assert.ok([...seen].every((l) => !l.includes("{n}")));
   assert.ok([...seen].every((l) => !l.includes("애인") && !l.includes("당신")));
+});
+
+test("cardLine: 맺음 줄이 남은 횟수를 받아 위 이야기와 이어진다", () => {
+  for (let k = 0; k < 300; k++) {
+    const l = cardLine({ ...base, past: 520, years: 30, rel: "parent", seed: `s${k}` });
+    if (l !== "BOND") assert.match(l, /남은 168번/);
+  }
+});
+
+test("cardLine: 남은 횟수가 없으면 비율 문장만", () => {
+  assert.equal(cardLine({ ...base, past: 520, years: 30, left: null }), "BOND");
 });
 
 test("yearsKnown", () => {

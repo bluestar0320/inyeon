@@ -334,7 +334,7 @@ export default function PersonView({ person }: { person: Person }) {
             const past = together.met + together.estimated;
             const band = bondBand(past, result.total);
             const rel = relOf(person);
-            return cardLine({ past, years: yearsKnown({ rel, since: person.since, myAge, theirAge }), rel, seed: person.id, lang: getLang(), bond: band ? t.bond[band] : undefined });
+            return cardLine({ past, years: yearsKnown({ rel, since: person.since, myAge, theirAge }), rel, seed: person.id, lang: getLang(), left: result.total >= 1 ? formatCount(result.total) : null, bond: band ? t.bond[band] : undefined });
           })() : undefined,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,
           // 카드에는 숫자를 풀어 쓴 지금 줄과 맺음(비율)만 — 오늘 할 일은 보는 사람의 몫이 아니다.
