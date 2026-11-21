@@ -5,7 +5,7 @@ import { setLang } from "../lib/i18n.ts";
 import { relationPresets } from "../lib/presets.ts";
 import { BANK } from "../lib/storyBank.ts";
 import {
-  buildStory, countBand, fill, freqBand, hash, metLine, momentStory, pastBand, pastShare, relationKind, relationTag, relOf, spanText,
+  bondBand, buildStory, countBand, fill, freqBand, hash, metLine, momentStory, pastBand, pastShare, relationKind, relationTag, relOf, spanText,
 } from "../lib/story.ts";
 
 const NOW = new Date("2026-10-07T12:00:00");
@@ -379,4 +379,16 @@ test("relOf: 가족 칩이 관계 칸보다 먼저, 다른 칩만 있으면 글�
   assert.equal(relOf({ relation: "엄마" }), "parent");
   assert.equal(relOf({ relation: "팀장님" }), "other");
   assert.equal(relOf(undefined), "other");
+});
+
+test("bondBand: 함께한 횟수와 남은 횟수로 사이를 고른다", () => {
+  assert.equal(bondBand(0, 100), null);
+  assert.equal(bondBand(29, 1000), "new");
+  assert.equal(bondBand(99, 10), "growing");
+  assert.equal(bondBand(1378, 168), "oldFew");
+  assert.equal(bondBand(1000, 1000), "oldMany");
+  assert.equal(bondBand(700, 300), "most");
+  assert.equal(bondBand(400, 600), "half");
+  assert.equal(bondBand(100, 900), "ahead");
+  assert.equal(bondBand(100, -5), "most");
 });

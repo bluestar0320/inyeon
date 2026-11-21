@@ -25,13 +25,15 @@ import {
   formatYears,
   josa,
 } from "@/lib/format";
-import { defineCopy, locale, tr } from "@/lib/i18n";
+import { cardLine, yearsKnown } from "@/lib/cardLine";
+import { defineCopy, getLang, locale, tr } from "@/lib/i18n";
+import { relOf } from "@/lib/rel";
 import { useFlip } from "@/lib/flip";
 import { useActions, useAppState } from "@/lib/store";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, lookupLifeExpectancy } from "@/lib/lifeExpectancy";
 import { imageFor } from "@/lib/photos";
 import { pairTitle } from "@/lib/shareCard";
-import { buildStory, relationTag } from "@/lib/story";
+import { bondBand, buildStory, relationTag, type BondBand } from "@/lib/story";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
 import { ledger } from "@/lib/meetings";
@@ -48,6 +50,7 @@ const COPY = defineCopy({
     // 공유 카드: "어머니와 나 / 함께한 37번, 그리고 앞으로 / 255번".
     togetherSub: (n: string) => `함께한 ${n}번, 그리고 앞으로`,
     togetherSubYear: (n: string) => `올해 함께한 ${n}번, 그리고 앞으로`,
+    bond: { new: "이제 막 가까워지는 사이예요. 앞으로 더 자주 봐요.", growing: "차곡차곡 쌓여 가는 사이예요. 다음 만남이 벌써 기다려져요.", oldFew: "말 안 해도 아는 오래된 사이. 남은 만남이 아쉬울 만큼 소중해요.", oldMany: "천 번을 함께해도 아직 모자란 사이. 남은 날도 하나하나 소중하게.", most: "함께한 날이 남은 날보다 많아졌어요. 한 번 한 번이 소중해요.", half: "딱 반쯤 왔어요. 지금부터 죽이 척척 맞을 거예요.", ahead: "앞으로 함께할 날들이 더 기대돼요." } as Record<BondBand, string>,
     times: (n: string) => `${n}번`,
     interval: "만남 간격",
     together: "함께 보낼 시간",
@@ -72,6 +75,7 @@ const COPY = defineCopy({
     timesUnit: "times",
     togetherSub: (n) => `${n} together, and still to come`,
     togetherSubYear: (n) => `${n} together this year, and still to come`,
+    bond: { new: "Just getting closer. Let's meet more often.", growing: "Growing closer, one visit at a time. Bring on the next.", oldFew: "Old friends who don't need words. Too few left, each one precious.", oldMany: "A thousand times together and still not enough. Treasure each one.", most: "More days together behind you than ahead. Every one counts.", half: "About halfway there. You'll only get more in sync from here.", ahead: "Can't wait for all the days ahead." } as Record<BondBand, string>,
     times: (n) => `${n} times`,
     interval: "Every",
     together: "Time together",
@@ -96,6 +100,7 @@ const COPY = defineCopy({
     timesUnit: "回",
     togetherSub: (n) => `一緒に${n}回、そしてこれから`,
     togetherSubYear: (n) => `今年一緒に${n}回、そしてこれから`,
+    bond: { new: "これから近づいていく仲。もっと会おうね。", growing: "少しずつ積み重なっていく仲。次に会うのがもう楽しみ。", oldFew: "言わなくても分かる長い付き合い。残りが惜しいほど大切。", oldMany: "千回会ってもまだ足りない仲。残りの日も一つひとつ大切に。", most: "一緒に過ごした日のほうが多くなりました。一回一回が宝物。", half: "ちょうど半分くらい。ここからもっと息が合っていくはず。", ahead: "これから一緒に過ごす日がもっと楽しみ。" } as Record<BondBand, string>,
     times: (n) => `${n}回`,
     interval: "会う間隔",
     together: "一緒に過ごす時間",
@@ -120,6 +125,7 @@ const COPY = defineCopy({
     timesUnit: "veces",
     togetherSub: (n) => `${n} juntos, y aún por delante`,
     togetherSubYear: (n) => `${n} juntos este año, y aún por delante`,
+    bond: { new: "Apenas empezando. A verse más a menudo.", growing: "Poco a poco, más cerca. Ya hay ganas de la próxima.", oldFew: "De los de toda la vida. Lo que queda sabe a poco y vale oro.", oldMany: "Mil veces juntos y aún no basta. Cada una, a cuidarla.", most: "Ya hay más días juntos detrás que delante. Cada uno cuenta.", half: "A mitad de camino, y cada vez más compenetrados.", ahead: "Qué ganas de todos los días que vienen." } as Record<BondBand, string>,
     times: (n) => `${n} veces`,
     interval: "Cada",
     together: "Tiempo juntos",
@@ -144,6 +150,7 @@ const COPY = defineCopy({
     timesUnit: "次",
     togetherSub: (n) => `共度${n}次，往后还有`,
     togetherSubYear: (n) => `今年共度${n}次，往后还有`,
+    bond: { new: "刚刚开始熟起来，以后多见面吧。", growing: "一点一点攒起来的交情，已经开始期待下次见面。", oldFew: "不用多说的老交情，剩下的每一次都珍贵得让人不舍。", oldMany: "见了一千多次还嫌不够，剩下的每一次都要好好珍惜。", most: "一起走过的已经比剩下的多了，每一次都很珍贵。", half: "差不多走到一半，往后只会越来越合拍。", ahead: "往后一起的日子，更让人期待。" } as Record<BondBand, string>,
     times: (n) => `${n}次`,
     interval: "见面间隔",
     together: "相处的时间",
@@ -322,6 +329,13 @@ export default function PersonView({ person }: { person: Person }) {
             : copy.meetingLabel,
           value: formatCount(result.total),
           unit: t.timesUnit,
+          // 어떤 사이인지 한 줄. 올해만 센 횟수로는 오래된 사이인지 알 수 없어 평생 기준일 때만.
+          note: scope === "all" ? (() => {
+            const past = together.met + together.estimated;
+            const band = bondBand(past, result.total);
+            const rel = relOf(person);
+            return cardLine({ past, years: yearsKnown({ rel, since: person.since, myAge, theirAge }), rel, seed: person.id, lang: getLang(), bond: band ? t.bond[band] : undefined });
+          })() : undefined,
           caption: `${formatFrequency(draftSetup.frequency)} · ${formatYears(result.sharedYears)}`,
           // 카드에는 숫자를 풀어 쓴 지금 줄과 맺음(비율)만 — 오늘 할 일은 보는 사람의 몫이 아니다.
           // 독립 나이를 가정한 비율은 카드에 그 단서를 붙일 자리가 없어 싣지 않는다.

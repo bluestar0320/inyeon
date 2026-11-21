@@ -56,6 +56,8 @@ export interface ShareSpec {
   label?: string;
   /** 숫자 아래 이야기 줄(지금·오늘·비율). 있으면 caption 대신 그린다. */
   story?: string[];
+  /** 어떤 사이인지 한 줄("말 안 해도 아는 오래된 사이."). 사진 카드에서 이야기 아래에 그린다. */
+  note?: string;
 }
 
 export interface CardTheme {
@@ -72,6 +74,9 @@ export const SERIF_STACK = '"Nanum Myeongjo", AppleMyungjo, Batang, serif';
 // 나눔명조에는 일본어·중국어 한자가 다 들어 있지 않아(会·回·数…) 한 줄에 고딕이 섞인다. 두 언어는 기기 명조로.
 const CJK_SERIF = '"Hiragino Mincho ProN", "Yu Mincho", "Songti SC", serif';
 const serifStack = (): string => (/^(ja|zh)/.test(document.documentElement.lang) ? CJK_SERIF : SERIF_STACK);
+/** 사진 카드 글자. 첫 화면과 같은 손글씨(동해독도), 없는 글자는 명조로. 일본어·중국어는 명조. */
+export const HAND_STACK = `"East Sea Dokdo", ${SERIF_STACK}`;
+const handStack = (): string => (/^(ja|zh)/.test(document.documentElement.lang) ? CJK_SERIF : HAND_STACK);
 
 const FONT_STACK =
   'Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Hiragino Sans", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
@@ -299,8 +304,8 @@ export function drawCard(
    */
   const y = image
     ? story.length
-      ? { title: 800, subtitle: 856, baseline: 1000, caption: 1056, maxSize: 150, lines: 2, rule: 1146 }
-      : { title: 810, subtitle: 866, baseline: 1050, caption: 1104, maxSize: 190, lines: 0, rule: 1146 }
+      ? { title: 790, subtitle: 846, baseline: 1000, caption: 1046, maxSize: 190, lines: 2, rule: 1200 }
+      : { title: 810, subtitle: 866, baseline: 1050, caption: 1104, maxSize: 190, lines: 0, rule: 1200 }
     : { title: 460, subtitle: 530, baseline: 830, caption: story.length ? 916 : 940, maxSize: Infinity, lines: 5, rule: 1120 };
   const serif = Boolean(image);
 
@@ -315,8 +320,13 @@ export function drawCard(
     ctx.shadowBlur = 24;
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = "#fffdf8";
-    ctx.fillRect(-side / 2 - pad, -height / 2, side + pad * 2, height);
+    // 첫 화면 폴라로이드처럼 모서리를 살짝 둥글게. 사진도 같은 결로 깎는다.
+    roundedRect(ctx, -side / 2 - pad, -height / 2, side + pad * 2, height, 14);
+    ctx.fill();
     ctx.shadowColor = "transparent";
+    ctx.save();
+    roundedRect(ctx, -side / 2, -height / 2 + pad, side, side, 6);
+    ctx.clip();
     // 가운데를 정사각형으로 잘라 넣는다(내 사진은 세로·가로 제각각이다).
     const crop = Math.min(image.width, image.height);
     ctx.drawImage(
@@ -330,9 +340,10 @@ export function drawCard(
       side,
       side,
     );
+    ctx.restore();
     if (spec.label) {
       ctx.fillStyle = "#3a2f27";
-      ctx.font = `40px ${serifStack()}`;
+      ctx.font = `56px ${handStack()}`;
       ctx.fillText(truncateToWidth(ctx, spec.label, side), 0, -height / 2 + pad + side + (height - pad - side) / 2);
     }
     ctx.restore();
@@ -342,12 +353,12 @@ export function drawCard(
   }
 
   ctx.fillStyle = theme.text;
-  ctx.font = serif ? `700 58px ${serifStack()}` : `700 56px ${FONT_STACK}`;
+  ctx.font = serif ? `84px ${handStack()}` : `700 56px ${FONT_STACK}`;
   ctx.fillText(truncateToWidth(ctx, spec.title, inner), cx, y.title);
 
   if (spec.subtitle) {
     ctx.fillStyle = theme.muted;
-    ctx.font = `34px ${FONT_STACK}`;
+    ctx.font = serif ? `44px ${handStack()}` : `34px ${FONT_STACK}`;
     ctx.fillText(truncateToWidth(ctx, spec.subtitle, inner), cx, y.subtitle);
   }
 
@@ -362,10 +373,13 @@ export function drawCard(
    */
   let size = Math.min(valueFontSize(spec.value), y.maxSize);
   const gap = 18;
+  const numFont = serif ? handStack() : FONT_STACK;
+  const numWeight = serif ? "" : "700 ";
+  const unitWeight = serif ? "" : "600 ";
   const measure = (s: number) => {
-    ctx.font = `700 ${s}px ${FONT_STACK}`;
+    ctx.font = `${numWeight}${s}px ${numFont}`;
     const value = ctx.measureText(spec.value).width;
-    ctx.font = `600 ${Math.round(s * 0.34)}px ${FONT_STACK}`;
+    ctx.font = `${unitWeight}${Math.round(s * 0.34)}px ${numFont}`;
     return { value, unit: ctx.measureText(spec.unit).width };
   };
   let widths = measure(size);
@@ -383,28 +397,43 @@ export function drawCard(
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = theme.text;
-  ctx.font = `700 ${size}px ${FONT_STACK}`;
+  ctx.font = `${numWeight}${size}px ${numFont}`;
   ctx.fillText(spec.value, startX, baselineY);
 
   ctx.fillStyle = theme.muted;
-  ctx.font = `600 ${unitSize}px ${FONT_STACK}`;
+  ctx.font = `${unitWeight}${unitSize}px ${numFont}`;
   ctx.fillText(spec.unit, startX + valueWidth + gap, baselineY);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  let storyLines = 0;
   if (story.length) {
     ctx.fillStyle = serif ? theme.text : theme.muted;
-    ctx.font = serif ? `30px ${serifStack()}` : `28px ${FONT_STACK}`;
+    ctx.font = serif ? `40px ${handStack()}` : `28px ${FONT_STACK}`;
     const out: string[] = [];
     for (const line of story) {
       if (out.length >= y.lines) break;
       out.push(...balanceLines(ctx, line, inner, y.lines - out.length));
     }
-    out.forEach((line, i) => ctx.fillText(line, cx, y.caption + i * 42));
+    out.forEach((line, i) => ctx.fillText(line, cx, y.caption + i * (serif ? 48 : 42)));
+    storyLines = out.length;
   } else if (spec.caption) {
     ctx.fillStyle = theme.muted;
     ctx.font = `34px ${FONT_STACK}`;
     ctx.fillText(truncateToWidth(ctx, spec.caption, inner), cx, y.caption);
+  }
+
+  if (serif && spec.note) {
+    ctx.fillStyle = theme.accent;
+    // 한 줄에 다 들어가게 넘치면 글자를 줄인다(36px까지). 그래도 넘치면 말줄임.
+    let noteSize = 44;
+    ctx.font = `${noteSize}px ${handStack()}`;
+    const noteWidth = ctx.measureText(spec.note).width;
+    if (noteWidth > inner) {
+      noteSize = Math.max(36, Math.floor((noteSize * inner) / noteWidth));
+      ctx.font = `${noteSize}px ${handStack()}`;
+    }
+    ctx.fillText(truncateToWidth(ctx, spec.note, inner), cx, y.caption + Math.max(1, storyLines) * 48 + 20);
   }
 
   ctx.strokeStyle = theme.border;
@@ -415,7 +444,11 @@ export function drawCard(
   ctx.stroke();
 
   ctx.fillStyle = theme.accent;
-  ctx.font = `600 34px ${FONT_STACK}`;
+  ctx.font = serif ? `48px ${handStack()}` : `600 34px ${FONT_STACK}`;
+  if (serif) {
+    ctx.fillText(wordmark, cx, y.rule + 56);
+    return;
+  }
   // 주소는 찍지 않는다 — 사진마다 주소가 붙으면 광고처럼 보인다(사용자 요청).
   ctx.fillText(wordmark, cx, y.rule + 70);
 }

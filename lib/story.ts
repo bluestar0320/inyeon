@@ -44,6 +44,22 @@ export function freqBand(frequency: Frequency): FreqBand {
   return perYear >= 52 ? "often" : perYear >= 12 ? "sometimes" : "rarely";
 }
 
+export type BondBand = "new" | "growing" | "oldFew" | "oldMany" | "most" | "half" | "ahead";
+
+/**
+ * 공유 카드에 붙는 "어떤 사이" 한 줄. 함께한 횟수(past)와 남은 횟수(left)로 고른다.
+ * 30번 미만은 이제 알아 가는 사이, 100번 미만은 쌓여 가는 사이, 1000번 이상은 오래된 사이. 그 사이는 지나온 몫(비율)으로.
+ * 함께한 기록이 없으면 붙이지 않는다(null).
+ */
+export function bondBand(past: number, left: number): BondBand | null {
+  if (!(past >= 1)) return null;
+  if (past < 30) return "new";
+  if (past < 100) return "growing";
+  const pct = (past / (past + Math.max(0, left))) * 100;
+  if (past >= 1000) return pct >= 70 ? "oldFew" : "oldMany";
+  return pct >= 70 ? "most" : pct >= 40 ? "half" : "ahead";
+}
+
 export function pastBand(pct: number): PastBand {
   return pct < 10 ? "start" : pct < 40 ? "early" : pct < 70 ? "middle" : pct < 90 ? "late" : "last";
 }

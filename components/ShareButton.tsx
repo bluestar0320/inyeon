@@ -12,6 +12,7 @@ import {
   drawCard,
   drawLetter,
   loadImage,
+  HAND_STACK,
   PAPER_THEME,
   SERIF_STACK,
   safeFileName,
@@ -82,9 +83,9 @@ export default function ShareButton({
     // 명조 글꼴은 글자 조각마다 따로 받는다. 카드에 쓸 글자의 조각을 먼저 받아 두지 않으면 기본 글꼴로 그려진다.
     const text = letter
       ? JSON.stringify(letter)
-      : [spec.title, spec.label, ...(spec.story ?? [])].filter(Boolean).join("");
+      : [spec.title, spec.subtitle, spec.label, spec.value, spec.unit, spec.note, ...(spec.story ?? [])].filter(Boolean).join("") + t.wordmark;
     try {
-      await document.fonts?.load(`40px ${SERIF_STACK}`, text);
+      await Promise.all([document.fonts?.load(`40px ${SERIF_STACK}`, text), document.fonts?.load(`40px ${HAND_STACK}`, text)]);
     } catch {
       // 글꼴을 못 받아도 카드는 그린다(오프라인 등).
     }

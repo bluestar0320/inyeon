@@ -128,6 +128,8 @@ for (const lang of ["ko", "en"])
         for (const path of PAGES) {
           await page.goto(path);
           await page.waitForLoadState("networkidle");
+          // 손글씨 글꼴이 늦게 오면 대체 글꼴로 줄이 바뀐 채 재서 가끔 겹침으로 잡힌다. 글꼴을 다 받은 뒤 잰다.
+          await page.evaluate(() => document.fonts.ready);
           await page.waitForTimeout(250);
           if (scale === "font130") await systemFont(page, 1.3);
           for (const p of await problems(page)) found.push(`${w}×${h} ${path} ${p}`);
