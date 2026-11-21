@@ -59,7 +59,8 @@ function isFlat(slices: YearSlice[]): boolean {
  * 화면만 밀어낸다. 그럴 때는 한 줄로 접는다. 이 그림은 "변하는 것"을 보여줄 때만 값이 있다.
  */
 export default function YearBreakdown({ slices }: { slices: YearSlice[] }) {
-  const peak = slices.reduce((max, slice) => Math.max(max, slice.baseline), 0);
+  // 조건이 횟수를 늘리면(빈도 늘리기) 조정값이 기준값보다 커진다. 둘 중 큰 쪽에 맞춰야 막대가 넘치지 않는다.
+  const peak = slices.reduce((max, s) => Math.max(max, s.baseline, s.adjusted), 0);
   if (peak <= 0 || slices.length === 0) return null;
 
   const t = tr(COPY);

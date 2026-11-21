@@ -442,7 +442,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
                 {cards.map((c, k) => (
                   <span
                     key={c.id}
-                    className={`h-2 w-2 rounded-full ${k === index ? "bg-ink-800" : "bg-ink-200"}`}
+                    className={`h-2 w-2 rounded-full ${k === index ? "bg-ink-800" : "bg-ink-400"}`}
                   />
                 ))}
               </span>
