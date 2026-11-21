@@ -209,6 +209,31 @@
     pointer-events: none;
   }
 
+  /*
+   * 넓은 화면(웹으로 PC·태블릿에서 열 때): 앱을 폰 너비 한 장으로 가운데 둔다.
+   * 종이 사진은 720×1280이라 화면 전체에 펴면 두세 배로 늘어나 뭉개진다. 한 장 너비에만 깐다.
+   */
+  @media (min-width: 640px) {
+    :root {
+      --app-w: 30rem;
+      background-color: rgb(var(--ink-200));
+    }
+    body {
+      position: relative;
+      max-width: var(--app-w);
+      min-height: 100dvh;
+      margin-inline: auto;
+      box-shadow: 0 0 2.5rem rgb(0 0 0 / 0.18);
+    }
+    body::before,
+    .dark body::after {
+      left: 50%;
+      right: auto;
+      width: var(--app-w);
+      transform: translateX(-50%);
+    }
+  }
+
   /* 브라우저 기본 위젯(날짜 선택기, 스크롤바)도 테마를 따라가게 한다. */
   :root {
     color-scheme: light;
