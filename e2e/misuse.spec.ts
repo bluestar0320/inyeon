@@ -76,6 +76,24 @@ test("손으로 고친 백업의 이상한 사진 값에도 깨진 사진이 없
   expect(errors).toEqual([]);
 });
 
+test("손으로 고친 백업의 엄청난 빈도·겹치는 id에도 상세가 열리고 id가 갈린다", async ({ page }) => {
+  await seed(page, {
+    people: [person("dup", "많이", { frequency: { count: 1e305, unit: "day" } }), person("dup", "같은id")],
+    moments: [moment("dup", "순간도같은id")],
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/people/detail?id=dup");
+  await expect(page.getByText("많이").first()).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+  // 저장이 한 번 돌면 고친 값이 남는다. 빈도는 입력 칸 상한(1000), id는 셋 다 다르다.
+  await page.goto("/people/");
+  const saved = (await readState(page)) as { people: { id: string; frequency: { count: number } }[]; moments: { id: string }[] };
+  expect(saved.people[0].frequency.count).toBe(1000);
+  expect(new Set([...saved.people, ...saved.moments].map((x: { id: string }) => x.id)).size).toBe(3);
+});
+
 test("이름에 스크립트를 넣어도 글자로만 보인다", async ({ page }) => {
   const evil = '<img src=x onerror="window.__pwned=1">';
   await seed(page, { people: [person("a", evil)], moments: [moment("m", "<script>window.__pwned=2</script>")] });

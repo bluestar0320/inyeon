@@ -112,7 +112,11 @@ export default function ShareButton({
         if (action === "save" && !isIOS()) {
           await saveFileNatively(file, file.name);
           done = "savedFolder";
-        } else await shareFileNatively(file, file.name);
+        } else if (!(await shareFileNatively(file, file.name))) {
+          // 시트를 그냥 닫았다. 「공유했어요」·「저장했어요」를 띄우지 않는다.
+          setStatus("idle");
+          return;
+        }
       } else if (action === "share" || isIOS()) {
         // 공유 시트가 없으면(PC 등) 내려받기로 대신한다.
         if (navigator.canShare?.({ files: [file] })) {

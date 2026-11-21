@@ -43,30 +43,11 @@ jobs:
           grep -q ios-probe out/index.html
 
       # ios/ 폴더도 android/처럼 설정에서 만든다. 저장소에 두지 않는다.
+      # 아이콘·Info.plist·최소 iOS 판은 스토어 빌드(ios-release.yml)와 같은 스크립트로.
       - name: iOS 프로젝트 생성
         run: |
           xcodebuild -version
-          npx cap add ios
-          npx cap sync ios
-
-      # 앱스토어 아이콘은 1024 한 장(투명 없이). 모서리는 iOS가 깎는다.
-      - name: 앱 아이콘과 Info.plist
-        run: |
-          d=ios/App/App/Assets.xcassets/AppIcon.appiconset
-          f=$(ls "$d"/*.png | head -1)
-          node -e "require('sharp')('public/icon-maskable.png').resize(1024,1024).flatten({background:'#24252d'}).png().toFile(process.argv[1])" "$f"
-          # 켜는 순간의 화면도 Capacitor 로고 대신 시계로(scripts/native-splash.mjs).
-          node scripts/native-splash.mjs ios/App/App/Assets.xcassets/Splash.imageset/*.png
-          P=ios/App/App/Info.plist
-          # 암호화는 HTTPS뿐이라 수출 규정 문서가 필요 없다.
-          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$P"
-          # 내보낸 백업 파일을 「파일」 앱에서 볼 수 있게.
-          /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" "$P"
-          /usr/libexec/PlistBuddy -c "Add :LSSupportsOpeningDocumentsInPlace bool true" "$P"
-          # Next 16이 만드는 스크립트는 Safari 16.4 이상을 바란다. iOS 웹뷰는 iOS 판과 같이 가므로
-          # 그보다 낮은 iPhone에는 아예 설치되지 않게 한다(템플릿 기본은 15.0 — 빈 화면이 뜬다).
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 16.4;/g' ios/App/App.xcodeproj/project.pbxproj
-          ! grep -q 'IPHONEOS_DEPLOYMENT_TARGET = 15' ios/App/App.xcodeproj/project.pbxproj
+          bash scripts/ios-native.sh
 
       - name: 시뮬레이터용 빌드
         run: |

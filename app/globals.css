@@ -260,6 +260,15 @@
  * (예: `class="input w-24"`의 w-24가 .input의 w-full에 먹혀 입력칸이 안 좁아짐)
  */
 @layer components {
+  /* 작은 글자 단추(고치기·지금까지/올해 등). 보이는 크기는 그대로 두고 눌리는 자리만 위아래로 넓힌다. */
+  .hit {
+    position: relative;
+  }
+  .hit::before {
+    content: "";
+    position: absolute;
+    inset: -12px -6px;
+  }
   .card {
     @apply rounded-3xl border border-ink-200/70 bg-surface p-5 shadow-[0_1px_2px_rgba(21,22,27,0.04)];
   }

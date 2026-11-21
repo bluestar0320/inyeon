@@ -127,7 +127,7 @@ function Count({ value }: { value: string }) {
 function Sentence({ card }: { card: DeckCard }) {
   const at = card.sentence.indexOf(card.count);
   return (
-    <p className="font-hand ink break-keep text-[2.5rem] leading-[1.3] [@media(max-height:500px)]:text-[1.75rem]">
+    <p className="font-hand ink break-keep text-[2.5rem] leading-[1.3] [@media(max-height:740px)]:text-[2rem] [@media(max-height:600px)]:text-[1.75rem]">
       {at < 0 ? (
         card.sentence
       ) : (
@@ -340,7 +340,7 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
       className="flex min-h-0 flex-col [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-2 [@media(max-height:500px)]:items-center [@media(max-height:500px)]:gap-x-8 [@media(max-height:500px)]:px-[6%]"
     >
       {/* 문장. 장이 바뀔 때마다 새로 떠오른다(key). 높이를 잡아 두어 문장 길이로 더미가 출렁이지 않는다. */}
-      <div className="min-h-[9.5rem] px-7 [@media(max-height:500px)]:col-start-1 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:px-0">
+      <div className="min-h-[9.5rem] shrink-0 px-7 [@media(max-height:500px)]:col-start-1 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:px-0">
         {card && (
           <div key={card.id} className="deck-line">
             <Sentence card={card} />
@@ -352,11 +352,12 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
       </div>
 
       {/* 더미 자리. 문장·점 줄·내 카드를 놓고 남은 높이만큼만 차지하고(모자라면 줄어든다), 더미는 그 안에 맞춘다.
-          vh로 재면 안드로이드 내비게이션 줄 몫까지 셈에 들어가 아래가 잘린다. */}
+          vh로 재면 안드로이드 내비게이션 줄 몫까지 셈에 들어가 아래가 잘린다.
+          뒤에 깔린 카드는 기울어 더미 위로 삐져나온다(폭의 6~7%). 그만큼 위를 비워 「마지막 만남」 줄을 덮지 않게 한다. */}
       <div data-pile-slot="" className="flex min-h-0 flex-[0_1_calc((min(100vw,48rem)-2rem)*0.826+0.5rem)] justify-center pt-2 [container-type:size] [@media(max-height:500px)]:contents">
       <div
         data-pile=""
-        className="relative aspect-[100/118] w-[min(70cqw,84.7cqh)] touch-pan-y select-none [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:row-span-2 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:w-[min(100%,calc((100svh-8rem)/1.18))]"
+        className="relative mt-[7cqw] aspect-[100/118] w-[min(70cqw,calc((100cqh-7cqw)*0.847))] touch-pan-y select-none [@media(max-height:500px)]:col-start-2 [@media(max-height:500px)]:row-span-2 [@media(max-height:500px)]:row-start-1 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:w-[min(100%,calc((100svh-8rem)/1.18))]"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}

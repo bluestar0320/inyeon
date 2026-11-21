@@ -349,7 +349,7 @@ export default function ResultPanel({
                         key={key}
                         type="button"
                         aria-pressed={active}
-                        className={active ? "font-semibold text-ink-800" : "underline"}
+                        className={active ? "hit font-semibold text-ink-800" : "hit underline"}
                         onClick={() => together.onScope?.(key)}
                       >
                         {key === "all" ? t.scopeAll : t.scopeYear}

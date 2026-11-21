@@ -177,7 +177,7 @@ export default function MeetingLog({ person }: { person: Person }) {
           </p>
           {memories.length > 1 && (
             <>
-              <button type="button" className="mt-1 text-ink-400 underline" aria-expanded={open} onClick={() => setOpen(!open)}>
+              <button type="button" className="hit mt-1 text-ink-400 underline" aria-expanded={open} onClick={() => setOpen(!open)}>
                 {t.memories(memories.length)}
               </button>
               {open && (

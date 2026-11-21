@@ -44,7 +44,7 @@ function toBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** 성공하면 true. 사용자가 공유 시트를 닫은 경우도 true로 본다(실패가 아니다). */
+/** 성공하면 true, 사용자가 공유 시트를 닫으면 false(실패가 아니니 오류도 아니다). */
 export async function shareFileNatively(blob: Blob, fileName: string): Promise<boolean> {
   const { Filesystem, Directory } = await import("@capacitor/filesystem");
   const { Share } = await import("@capacitor/share");
@@ -62,6 +62,7 @@ export async function shareFileNatively(blob: Blob, fileName: string): Promise<b
     // 사용자가 시트를 닫은 것은 실패가 아니다.
     const message = error instanceof Error ? error.message : String(error);
     if (!/cancel|abort|dismiss/i.test(message)) throw error;
+    return false;
   }
   return true;
 }

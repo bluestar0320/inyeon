@@ -486,6 +486,8 @@ export default function SettingsPage() {
   async function importFile(file: File): Promise<void> {
     let parsed: unknown;
     try {
+      // 내보내기 파일은 사진을 넣어도 몇 MB다. 엉뚱한 큰 파일을 통째로 읽다가 앱이 멈추지 않게.
+      if (file.size > 50_000_000) throw new Error("too big");
       parsed = JSON.parse(await file.text());
     } catch {
       setMessage(t.readFailed);

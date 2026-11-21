@@ -709,3 +709,9 @@ test("causes.age: 마지막 조각의 한가운데 나이로 본다", () => {
   assert.equal(computeRelationship(short, profile({ ageYears: 28.8 }), NOW).causes.age, false);
   assert.equal(computeRelationship(friend(), profile({ ageYears: 25 }), NOW).causes.age, true);
 });
+
+test("resolveAge: 2월 29일생은 평년 2월 28일에 한 살 먹는다(생일 알림과 같은 날)", () => {
+  assert.equal(Math.floor(resolveAge({ birthDate: "2000-02-29" }, new Date(2027, 1, 28, 9))), 27);
+  assert.equal(Math.floor(resolveAge({ birthDate: "2000-02-29" }, new Date(2027, 1, 27, 23))), 26);
+  assert.equal(Math.floor(resolveAge({ birthDate: "2000-02-29" }, new Date(2028, 1, 29, 9))), 28);
+});

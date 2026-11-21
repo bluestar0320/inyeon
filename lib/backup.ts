@@ -25,13 +25,15 @@ const REMIND_HOUR = 9;
  */
 function waitingSince(state: AppState): string | null {
   const items = [...state.people, ...state.moments];
-  const changes = items.map((item) => item.updatedAt);
-  if (state.marriage) changes.push(state.marriage.updatedAt);
+  // 불러온 백업에는 날짜가 빈("") 기록이 있을 수 있다. 정렬에서 맨 앞에 와 Invalid Date가 되면 백업 권유가 영영 꺼진다.
+  const dated = (at: string) => !Number.isNaN(new Date(at).getTime());
+  const changes = items.map((item) => item.updatedAt).filter(dated);
+  if (state.marriage && dated(state.marriage.updatedAt)) changes.push(state.marriage.updatedAt);
   if (changes.length === 0) return null;
 
   const last = state.settings.lastBackupAt;
   if (last && changes.every((at) => at <= last)) return null;
-  return last ?? items.map((item) => item.createdAt).concat(changes).sort()[0];
+  return last ?? items.map((item) => item.createdAt).filter(dated).concat(changes).sort()[0];
 }
 
 export function backupDue(state: AppState, now: Date = new Date()): boolean {

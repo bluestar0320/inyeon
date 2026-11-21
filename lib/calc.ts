@@ -66,8 +66,11 @@ export function resolveAge(source: AgeSource, now: Date = new Date()): number | 
        * "만 24세"로 보였고, 윤년 언저리에서는 생일 전날 이미 한 살을 먹었다.
        * 정수 부분은 지난 생일까지의 햇수, 소수 부분은 지난 생일부터 다음 생일까지 간 비율.
        */
-      const birthdayIn = (year: number) =>
-        new Date(year, born.getMonth(), born.getDate());
+      // 2월 29일생은 평년에 2월 28일로 센다(생일 리본·알림 lib/birthdays.ts와 같은 날).
+      const birthdayIn = (year: number) => {
+        const d = new Date(year, born.getMonth(), born.getDate());
+        return d.getMonth() === born.getMonth() ? d : new Date(year, born.getMonth() + 1, 0);
+      };
       let full = now.getFullYear() - born.getFullYear();
       if (birthdayIn(now.getFullYear()) > now) full -= 1;
       if (full < 0) return 0;

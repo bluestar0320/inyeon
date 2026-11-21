@@ -54,11 +54,15 @@ export function setMemory(memories: Memory[], date: string, text: string): Memor
 /** 저장소·백업에서 온 값을 믿지 않는다. 화면에 그대로 찍히는 글이라 모양과 길이를 다시 확인한다. */
 export function cleanMemories(value: unknown): Memory[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  let out: Memory[] = [];
+  // 날짜마다 마지막 것 하나(setMemory와 같은 규칙). 한 번만 정렬한다 — 항목마다 정렬하면 큰 파일에서 몇 분씩 멈췄다.
+  const byDate = new Map<string, string>();
   for (const m of value) {
-    if (m && typeof m === "object" && typeof m.date === "string" && DATE.test(m.date) && typeof m.text === "string")
-      out = setMemory(out, m.date, m.text);
+    if (!m || typeof m !== "object" || typeof m.date !== "string" || !DATE.test(m.date) || typeof m.text !== "string") continue;
+    const clean = m.text.replace(/\s+/g, " ").trim().slice(0, MEMORY_MAX_LENGTH);
+    byDate.delete(m.date);
+    if (clean) byDate.set(m.date, clean);
   }
+  const out = [...byDate].map(([date, text]) => ({ date, text })).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(-MEMORY_MAX);
   return out.length ? out : undefined;
 }
 

@@ -87,9 +87,10 @@ export default function FrequencyInput({
       <label className="label" htmlFor={`${ids}-count`}>
         {label ?? t.label}
       </label>
-      <div className="flex items-center gap-2">
+      {/* 단위 이름이 길면(영어·스페인어, 큰 글씨) 고르는 칸이 잘리지 않게 한 줄을 다 쓰고 숫자는 아랫줄로 내려간다. */}
+      <div className="flex flex-wrap items-center gap-2">
         <select
-          className="input w-32 min-w-0"
+          className="input min-w-[9rem] flex-1"
           value={value.unit}
           onChange={(e) => onChange({ ...value, unit: e.target.value as FrequencyUnit })}
           aria-label={t.unitAria}
@@ -102,7 +103,7 @@ export default function FrequencyInput({
         </select>
         <NumberInput
           id={`${ids}-count`}
-          className="input w-24 min-w-0"
+          className="input w-24 shrink-0"
           min={0}
           max={1000}
           step="0.5"

@@ -21,7 +21,8 @@ export default function BirthdayNotifier() {
     enabled,
     backupAt,
     getLang(),
-    state.people.map((p) => [p.id, p.name, p.relation, p.birthDate]),
+    // 「생신」인지 「생일」인지는 관계 칩(bonds)으로도 정해진다.
+    state.people.map((p) => [p.id, p.name, p.relation, p.bonds, p.birthDate]),
   ]);
 
   useEffect(() => {

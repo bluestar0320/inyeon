@@ -48,4 +48,7 @@ test("yearsKnown", () => {
   assert.equal(yearsKnown({ rel: "parent", myAge: 35, theirAge: 65, now }), 35);
   assert.equal(yearsKnown({ rel: "child", myAge: 35, theirAge: 5, now }), 5);
   assert.equal(yearsKnown({ rel: "friend", myAge: 35, theirAge: 5, now }), null);
+  // 기념일 당일 아침이면 벌써 한 해가 찬다.
+  assert.equal(yearsKnown({ rel: "friend", since: "2016-11-22", myAge: null, theirAge: null, now: new Date(2026, 10, 22, 7) }), 10);
+  assert.equal(yearsKnown({ rel: "friend", since: "2016-11-22", myAge: null, theirAge: null, now: new Date(2026, 10, 21, 23) }), 9);
 });

@@ -38,13 +38,21 @@ const BACKUP_COPY = defineCopy({
   zh: "上次备份后记录有了变化，在手机里存一份吧。",
 });
 
+// 한 번에 하나씩. 겹쳐 돌면 뒤 실행이 앞 실행이 걸 알림을 못 보고 지나가, 지운 사람의 알림이 남았다.
+let queue: Promise<void> = Promise.resolve();
+
 /** 생일 알림에 더해, 백업할 때가 되면(lib/backup.ts backupReminderAt) 한 달에 한 번 한 줄. */
-export async function syncBirthdayNotifications(
+export function syncBirthdayNotifications(
   people: Person[],
   enabled: boolean,
   backupAt: Date | null,
   now: Date = new Date(),
 ): Promise<void> {
+  queue = queue.then(() => sync(people, enabled, backupAt, now));
+  return queue;
+}
+
+async function sync(people: Person[], enabled: boolean, backupAt: Date | null, now: Date): Promise<void> {
   if (!isNativeApp()) return;
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");

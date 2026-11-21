@@ -304,7 +304,7 @@ export function drawCard(
    */
   const y = image
     ? story.length
-      ? { title: 790, subtitle: 846, baseline: 1000, caption: 1046, maxSize: 190, lines: 2, rule: 1200 }
+      ? { title: 780, subtitle: 834, baseline: 985, caption: 1046, maxSize: 150, lines: 2, rule: 1200 }
       : { title: 810, subtitle: 866, baseline: 1050, caption: 1104, maxSize: 190, lines: 0, rule: 1200 }
     : { title: 460, subtitle: 530, baseline: 830, caption: story.length ? 916 : 940, maxSize: Infinity, lines: 5, rule: 1120 };
   const serif = Boolean(image);

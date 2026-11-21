@@ -116,7 +116,7 @@ export default function Saying({ person }: { person: Person }) {
   if (!shown) {
     return (
       <div className="flex justify-center text-xs text-ink-400">
-        <button type="button" className="underline" onClick={open}>
+        <button type="button" className="hit underline" onClick={open}>
           {t.add(elder)}
         </button>
       </div>
@@ -129,7 +129,7 @@ export default function Saying({ person }: { person: Person }) {
       </blockquote>
       <figcaption className="mt-1 text-xs text-ink-400">
         {t.label(elder)} ·{" "}
-        <button type="button" className="underline" onClick={open}>
+        <button type="button" className="hit underline" onClick={open}>
           {t.edit}
         </button>
       </figcaption>

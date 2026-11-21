@@ -66,3 +66,9 @@ test("날짜가 깨진 기록이면 알림을 걸지 않는다(끝없이 돌지 
   assert.equal(backupReminderAt(state([item("", "")]), NOW), null);
   assert.equal(backupReminderAt(state([item("not a date", "not a date")]), NOW), null);
 });
+
+test("날짜가 빈 기록이 섞여 있어도 백업을 권한다", () => {
+  const s = { ...state([item("2026-09-20T00:00:00Z"), item("")]), marriage: { updatedAt: "" } };
+  assert.equal(backupDue(s, NOW), true);
+  assert.ok(backupReminderAt(s, NOW));
+});

@@ -211,6 +211,10 @@ jobs:
             adb exec-out screencap -p > shots/api-${{ matrix.api }}.png
             adb shell dumpsys package com.google.android.webview | grep -m1 versionName > shots/api-${{ matrix.api }}-webview.txt || true
             cat shots/api-${{ matrix.api }}-webview.txt
+            # 앱이 혼자 닫히면 원인을 볼 수 있게 충돌 기록과 앱·웹뷰 로그를 남긴다.
+            adb logcat -d -b crash > shots/api-${{ matrix.api }}-crash.txt || true
+            adb logcat -d | grep -iE "inyeon|chromium|AndroidRuntime|Capacitor|WebView" | tail -400 > shots/api-${{ matrix.api }}-log.txt || true
+            cat shots/api-${{ matrix.api }}-crash.txt
             adb shell pidof app.inyeon.counter
 
       - uses: actions/upload-artifact@v7

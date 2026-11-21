@@ -18,6 +18,10 @@ function open(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => request.result.createObjectStore(STORE);
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error("IndexedDB blocked"));
+    // WebKit에서 open이 아무 답도 안 하는 일이 있다. 그러면 앱이 「불러오는 중」에 멈추므로
+    // 몇 초 뒤 「IndexedDB 없음」으로 보고 사진 없이 연다.
+    setTimeout(() => reject(new Error("IndexedDB timeout")), 4000);
   }).catch((error: unknown) => {
     opening = null;
     throw error;

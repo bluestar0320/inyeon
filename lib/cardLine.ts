@@ -150,8 +150,11 @@ export function yearsKnown(i: { rel: Rel; since?: string; myAge: number | null; 
   if (i.since) {
     const start = new Date(`${i.since}T00:00:00`);
     if (Number.isNaN(start.getTime())) return null;
-    const years = ((i.now ?? new Date()).getTime() - start.getTime()) / 31_557_600_000;
-    return years >= 0 ? Math.floor(years) : null;
+    // 달력으로 센다. 365.25일로 나누면 기념일 당일 낮까지 한 해 모자랐다.
+    const now = i.now ?? new Date();
+    let years = now.getFullYear() - start.getFullYear();
+    if (new Date(now.getFullYear(), start.getMonth(), start.getDate()) > now) years -= 1;
+    return years >= 0 ? years : null;
   }
   if (i.rel === "parent" || i.rel === "grandparent") return i.myAge;
   if (i.rel === "child") return i.theirAge;

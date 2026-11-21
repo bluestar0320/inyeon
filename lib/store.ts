@@ -86,7 +86,8 @@ type Loose = Record<string, unknown>;
 
 const isObject = (value: unknown): value is Loose =>
   !!value && typeof value === "object" && !Array.isArray(value);
-const text = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
+// 불러온 파일의 글은 길이를 묶는다. 수백 KB짜리 이름이면 공유 카드가 글자를 재다가 멈춘다.
+const text = (value: unknown): string | undefined => (typeof value === "string" ? value.slice(0, 2000) : undefined);
 const oneOf = <T,>(value: unknown, allowed: readonly string[], fallback: T): T =>
   allowed.includes(value as string) ? (value as T) : fallback;
 
@@ -99,10 +100,10 @@ function frequencyOk(value: unknown): boolean {
   return isObject(value) && finite(value.count) && UNITS.includes(value.unit as string);
 }
 
-/** 빈도는 음수일 수 없다. 계산은 0으로 보지만 화면에 "주에 -5번"이 찍힌다. */
+/** 빈도는 0~1000(입력 칸과 같은 범위). 음수면 "주에 -5번"이 찍히고, 너무 크면 합이 Infinity가 되어 상세가 터진다. */
 function fixFrequency(value: unknown): Frequency {
   const f = value as Frequency;
-  return { unit: f.unit, count: Math.max(0, f.count) };
+  return { unit: f.unit, count: Math.min(1000, Math.max(0, f.count)) };
 }
 
 /** 나이·수명처럼 사람마다 있는 칸. 숫자가 아니면 비우고, 수명은 표에서 다시 채운다. */
@@ -273,15 +274,25 @@ export function looksLikeBackup(raw: unknown): boolean {
   return Array.isArray(value.people) && Array.isArray(value.moments) && "settings" in value;
 }
 
+/** 손으로 고친 백업에 같은 id가 둘이면 사진·순서·지우기가 엉킨다. 뒤에 나온 쪽에 새 id를 준다. */
+function uniqueIds<T extends { id: string }>(items: T[], seen: Set<string>): T[] {
+  return items.map((item) => {
+    const id = seen.has(item.id) ? newId() : item.id;
+    seen.add(id);
+    return id === item.id ? item : { ...item, id };
+  });
+}
+
 function normalise(raw: unknown): AppState {
   if (!isObject(raw)) return EMPTY_STATE;
+  const seen = new Set<string>();
   return {
     version: 1,
     profile: isObject(raw.profile)
       ? { ...refresh(repairSpan(raw.profile) as unknown as Profile), nickname: text(raw.profile.nickname)?.trim().slice(0, 20) || undefined }
       : null,
-    people: keep(raw.people, repairPerson).map(refresh),
-    moments: keep(raw.moments, repairMoment),
+    people: uniqueIds(keep(raw.people, repairPerson).map(refresh), seen),
+    moments: uniqueIds(keep(raw.moments, repairMoment), seen),
     // 결혼 계획이 생기기 전에 저장된 데이터에는 이 키가 없다. null로 떨어뜨린다.
     marriage: repairMarriage(raw.marriage),
     settings: repairSettings(raw.settings),
