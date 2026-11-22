@@ -103,22 +103,29 @@ export function leaveTo(router: { push: (href: string) => void; replace: (href: 
  * 기억해 두고, 뒤로 가기(popstate)로 다시 들어오면 목적지로 바꿔 친다.
  * 「추가」 단추로 새로 들어오는 건 popstate가 아니라서 걸리지 않는다.
  */
-let addedFrom: { path: string; to: string } | null = null;
+let addedFrom: { path: string; to: string; before: boolean } | null = null;
 let poppedAt = 0;
 if (typeof window !== "undefined") window.addEventListener("popstate", () => (poppedAt = Date.now()));
 
 /** 새 항목을 저장하고 떠날 때. leaveTo 대신 부른다. */
 export function leaveAfterAdd(router: { push: (href: string) => void; replace: (href: string) => void }, href: string): void {
-  addedFrom = { path: window.location.pathname, to: href };
+  // 추가 화면 앞에 앱 화면(첫 화면·목록)이 있었는지. 있으면 뒤로 가기는 그리로 간다.
+  addedFrom = { path: window.location.pathname, to: href, before: trail.length > 1 };
   leaveTo(router, href);
 }
 
-/** 추가 화면이 뜰 때: 저장을 마친 화면에 뒤로 가기로 돌아온 거면 갈 곳을, 아니면 null. */
-export function returnedAfterAdd(): string | null {
-  if (!addedFrom || addedFrom.path !== window.location.pathname || Date.now() - poppedAt > 1500) return null;
-  const to = addedFrom.to;
+/**
+ * 추가 화면이 뜰 때: 저장을 마친 추가 화면에 뒤로 가기로 돌아왔으면 빈 칸을 다시 보여 주지 않는다.
+ * 추가 화면 앞에 앱 화면이 있으면 한 번 더 뒤로 가서 거기(첫 화면·목록)로 돌아간다.
+ * 예전에는 저장 뒤의 목적지로 바꿔 쳐서, 목록에서 「←」를 누르면 목록으로 되돌아와 갇혔다.
+ * 주소로 바로 들어온 추가 화면이면 앞이 앱 밖이니 목적지로 바꿔 친다.
+ */
+export function bounceAfterAdd(router: { replace: (href: string) => void }): void {
+  if (!addedFrom || addedFrom.path !== window.location.pathname || Date.now() - poppedAt > 1500) return;
+  const { to, before } = addedFrom;
   addedFrom = null;
-  return to;
+  if (before) window.history.back();
+  else replaceTo(router, to);
 }
 
 /**

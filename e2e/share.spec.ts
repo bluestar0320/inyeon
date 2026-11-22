@@ -13,7 +13,8 @@ test.beforeEach(async ({ page }) => {
 
 async function addMother(page: import("@playwright/test").Page) {
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("68");
   await page.waitForTimeout(300);
 }
@@ -202,7 +203,8 @@ test("다른 창에서 고치면 이 화면도 따라 바뀌고, 그렇다고 �
   await page.goto("/people");
   const other = await context.newPage();
   await other.goto("/people/new");
-  await other.getByRole("button", { name: "어머니", exact: true }).click();
+  await other.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await other.getByLabel("이름").fill("어머니");
   await other.getByLabel("나이", { exact: true }).fill("60");
   await other.getByRole("button", { name: "추가하기" }).click();
   await other.waitForURL(/\/people\/detail/);

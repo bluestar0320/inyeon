@@ -247,7 +247,7 @@ export function momentPresets(): MomentPreset[] {
 export interface RelationPreset {
   /** 단추에 보이는 말이자, 이름 칸이 비어 있을 때 넣는 이름. */
   label: string;
-  /** 관계 칸에 들어가는 말. 어머니·아버지는 「부모님」으로 묶는다. */
+  /** 관계 칸에 들어가는 말. */
   relation: string;
   emoji: string;
   frequency: Frequency;
@@ -258,7 +258,6 @@ export interface RelationPreset {
 
 const RELATION_SPECS: Omit<RelationPreset, "label" | "relation">[] = [
   { emoji: "🌷", frequency: { count: 1, unit: "month" }, hoursPerMeeting: 6 },
-  { emoji: "🌳", frequency: { count: 1, unit: "month" }, hoursPerMeeting: 6 },
   { emoji: "🫖", frequency: { count: 2, unit: "year" }, hoursPerMeeting: 8 },
   { emoji: "🧩", frequency: { count: 1, unit: "month" }, hoursPerMeeting: 5 },
   { emoji: "🕊️", frequency: { count: 5, unit: "week" }, hoursPerMeeting: 4 },
@@ -267,21 +266,18 @@ const RELATION_SPECS: Omit<RelationPreset, "label" | "relation">[] = [
 ];
 
 const RELATION_COPY = defineCopy<string[]>({
-  ko: ["어머니", "아버지", "조부모", "형제·자매", "배우자·연인", "자녀", "가까운 친구"],
-  en: ["Mom", "Dad", "Grandparents", "Siblings", "Partner", "Child", "Close friend"],
-  ja: ["お母さん", "お父さん", "祖父母", "きょうだい", "パートナー", "子ども", "親友"],
-  es: ["Mamá", "Papá", "Abuelos", "Hermanos", "Pareja", "Hijos", "Amistad cercana"],
-  zh: ["妈妈", "爸爸", "祖父母", "兄弟姐妹", "伴侣", "孩子", "好友"],
+  ko: ["부모님", "조부모", "형제·자매", "배우자·연인", "자녀", "가까운 친구"],
+  en: ["Parent", "Grandparents", "Siblings", "Partner", "Child", "Close friend"],
+  ja: ["両親", "祖父母", "きょうだい", "パートナー", "子ども", "親友"],
+  es: ["Padres", "Abuelos", "Hermanos", "Pareja", "Hijos", "Amistad cercana"],
+  zh: ["父母", "祖父母", "兄弟姐妹", "伴侣", "孩子", "好友"],
 });
-
-/** 어머니·아버지 단추가 관계 칸에 넣는 말. lib/story.ts의 relationKind가 부모님으로 읽어야 한다. */
-const PARENT_COPY = defineCopy({ ko: "부모님", en: "Parent", ja: "両親", es: "Padres", zh: "父母" });
 
 /** 렌더 중에 부른다. */
 export function relationPresets(): RelationPreset[] {
   return tr(RELATION_COPY).map((label, i) => ({
     label,
-    relation: i < 2 ? tr(PARENT_COPY) : label,
+    relation: label,
     ...RELATION_SPECS[i],
   }));
 }

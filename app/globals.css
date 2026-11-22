@@ -210,27 +210,16 @@
   }
 
   /*
-   * 넓은 화면(웹으로 PC·태블릿에서 열 때): 앱을 폰 너비 한 장으로 가운데 둔다.
-   * 종이 사진은 720×1280이라 화면 전체에 펴면 두세 배로 늘어나 뭉개진다. 한 장 너비에만 깐다.
+   * 넓은 화면(웹으로 PC·태블릿에서 열 때). 종이 사진은 720×1280 세로라 가로 화면에 펴면
+   * 두세 배로 늘어나 구김이 뭉개진다. 넓은 화면에서는 사진 대신 크기와 상관없이 선명한
+   * 종이 결(SVG 잡음, 400px 타일)과 은은한 색 얼룩을 깐다.
    */
   @media (min-width: 640px) {
-    :root {
-      --app-w: 30rem;
-      background-color: rgb(var(--ink-200));
-    }
-    body {
-      position: relative;
-      max-width: var(--app-w);
-      min-height: 100dvh;
-      margin-inline: auto;
-      box-shadow: 0 0 2.5rem rgb(0 0 0 / 0.18);
-    }
-    body::before,
-    .dark body::after {
-      left: 50%;
-      right: auto;
-      width: var(--app-w);
-      transform: translateX(-50%);
+    body::before {
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+        radial-gradient(60% 50% at 20% 15%, rgb(255 255 255 / 0.35), transparent 70%),
+        radial-gradient(70% 60% at 85% 90%, rgb(150 110 60 / 0.08), transparent 70%);
     }
   }
 
@@ -516,9 +505,19 @@
     text-shadow: 0 0 0.7px rgb(var(--ink-900) / 0.9);
   }
 
+  /*
+   * 상세 화면(사람·순간 안으로 들어갔을 때)은 전부 펜글씨. 편지·숫자·폴라로이드 이름까지.
+   * 입력 칸은 읽고 고치는 게 먼저라 그대로 둔다. 설정·편집 화면은 이 표시가 없다.
+   */
+  .hand-page :not(input, textarea, select, option),
+  .hand-page :is(.letter, .font-album, .numeral) {
+    font-family:
+      "East Sea Dokdo", "Nanum Myeongjo", "AppleMyungjo", "Batang", serif;
+  }
+
   /* 나눔명조에 없는 일본어·중국어 한자(会·回·数·你…)가 고딕으로 섞이지 않게, 두 언어는 기기 명조로만 쓴다. */
-  html:lang(ja) :is(.letter, .font-album, .font-hand),
-  html:lang(zh) :is(.letter, .font-album, .font-hand) {
+  html:lang(ja) :is(.letter, .font-album, .font-hand, .hand-page :not(input, textarea, select, option)),
+  html:lang(zh) :is(.letter, .font-album, .font-hand, .hand-page :not(input, textarea, select, option)) {
     font-family: "Hiragino Mincho ProN", "Yu Mincho", "Songti SC", serif;
   }
 

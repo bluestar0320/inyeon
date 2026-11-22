@@ -422,3 +422,18 @@ test.describe("움직임 줄이기", () => {
     expect(await anims(page)).toBe(0);
   });
 });
+
+test("첫 화면에서 인연을 추가하고 목록에서 「←」를 누르면 첫 화면으로 돌아온다", async ({ page }) => {
+  await seed(page, 1);
+  await page.goto("/");
+  await page.getByRole("link", { name: "새 인연" }).first().click();
+  await page.waitForURL(/\/people\/new\/?$/);
+  await page.getByLabel("이름").fill("테스트");
+  await page.getByLabel("나이", { exact: true }).fill("60");
+  await page.getByRole("button", { name: "추가하기" }).click();
+  await page.waitForURL(/\/people\/?$/);
+  await page.getByRole("button", { name: "뒤로" }).click();
+  // 빈 추가 화면이나 목록에 갇히지 않고 첫 화면으로.
+  await expect(page).toHaveURL(/:\d+\/$/);
+  await expect(page.getByRole("link", { name: "새 인연" }).first()).toBeVisible();
+});

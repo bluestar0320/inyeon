@@ -5,7 +5,8 @@ import { STORAGE_KEY, headline, readState, setUpProfile } from "./helpers";
 test("「만났어요」를 누르면 오늘이 기록되고, 상세와 홈에 마지막 만남이 보인다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("60");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/detail/);
@@ -21,7 +22,8 @@ test("「만났어요」를 누르면 오늘이 기록되고, 상세와 홈에 �
 test("잘못 눌렀으면 되돌린다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("60");
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/detail/);

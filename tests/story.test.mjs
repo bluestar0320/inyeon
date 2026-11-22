@@ -218,7 +218,7 @@ test("관계 판별: 사돈·친척·낱말 일부가 부모님·자녀로 잡�
 });
 
 test("관계 판별: 5개 언어의 프리셋 이름은 모두 제자리로", () => {
-  const expected = ["parent", "parent", "grandparent", "sibling", "partner", "child", "friend"];
+  const expected = ["parent", "grandparent", "sibling", "partner", "child", "friend"];
   for (const lang of ["ko", "en", "ja", "es", "zh"]) {
     setLang(lang);
     assert.deepEqual(relationPresets().map((p) => relationKind(p.relation)), expected, lang);

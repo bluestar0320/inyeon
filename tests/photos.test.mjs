@@ -41,7 +41,7 @@ test("프리셋 이모지마다 제 사진이 있다 — 이모지를 바꾸면 
   // presets.ts는 확장자 없는 import를 써서 Node에서 바로 못 읽는다. 원본에서 이모지만 뽑는다.
   const source = readFileSync("lib/presets.ts", "utf8");
   const emojis = [...source.matchAll(/\{ emoji: "([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(emojis.length, 18);
+  assert.equal(emojis.length, 17);
   for (const emoji of emojis) {
     assert.ok(!SHARED_PHOTOS.includes(photoFor({ id: "x", emoji })), emoji);
   }

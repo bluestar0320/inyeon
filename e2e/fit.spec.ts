@@ -155,7 +155,7 @@ for (const lang of ["ko", "en"])
         await page.setViewportSize({ width: w, height: h });
         await page.goto("/people/new");
         await page.waitForLoadState("networkidle");
-        for (const n of names) await page.getByRole("button", { name: n, exact: true }).click();
+        for (const n of names) await page.getByRole("button", { name: n, exact: true }).last().click();
         await page.locator("details > summary").filter({ hasText: lang === "ko" ? "언제부터" : "Since when" }).click();
         await page.getByRole("button", { name: served, exact: true }).click();
         // 붙어 다니는 윗줄이 스크롤된 내용을 덮는 것은 겹침이 아니다. 맨 위에서 잰다.

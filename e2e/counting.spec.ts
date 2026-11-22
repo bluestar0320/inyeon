@@ -9,7 +9,8 @@ test.beforeEach(async ({ page }) => {
 test("컨셉의 예시가 화면에 그대로 나온다: 어머니 60세·수명 80세·월 1회 = 240번", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
@@ -32,7 +33,8 @@ test("자녀는 내 남은 시간이 기준이 된다", async ({ page }) => {
 test("조건 필터가 결과를 줄이고 얼마나 줄었는지 알려준다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
@@ -108,7 +110,8 @@ test("데이트 계산: 목표 나이까지만 세고 그 사실을 밝힌다", 
 test("톤을 바꾸면 문구만 바뀌고 숫자는 그대로다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("60");
   await openMore(page);
   await page.getByLabel("예상 수명").fill("80");
@@ -156,7 +159,8 @@ test("생활 습관을 고르면 남은 시간이 줄고, 해제하면 그대로
 test("부모님도 담배를 피우시면 남은 만남이 줄어든다", async ({ page }) => {
   await setUpProfile(page, 30);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("60");
   await expect.poll(() => headline(page)).toMatch(/번$/);
   const before = parseInt(await headline(page), 10);
@@ -191,7 +195,8 @@ test("첫 실행은 약한 숫자가 아니라 큰 숫자로 끝난다", async (
   await page.waitForURL(/\/people\/new\/?$/);
   await expect(page.getByRole("heading", { name: "먼저 한 사람만" })).toBeVisible();
 
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("68");
   await page.getByRole("button", { name: "추가하기" }).click();
 
@@ -252,7 +257,8 @@ test("언제부터를 넣으면 지나온 횟수도 같이 보이고, 설정으�
 
   // 꺼 두면 편집 화면의 「지금까지 적어도 N번」 미리보기도 없다.
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await page.getByLabel("이름").fill("어머니");
   await page.getByLabel("나이", { exact: true }).fill("68");
   await expect(page.getByTestId("past-preview")).toHaveCount(0);
 });
@@ -273,20 +279,23 @@ test("생년월일은 달력 없이 숫자 자판으로 친다 — 19650312가 1
   await expect(birth).toHaveValue("1965-03-12");
 });
 
-test("템플릿을 바꿔 누르면 이름도 따라 바뀌고, 어머니·아버지는 관계가 「부모님」이다", async ({ page }) => {
+test("템플릿을 바꿔 누르면 이름도 따라 바뀌고, 부모님 단추는 이름을 비워 두고 관계가 「부모님」이다", async ({ page }) => {
   await setUpProfile(page, 38);
   await page.goto("/people/new");
   const name = page.getByLabel("이름");
   const relation = page.getByLabel("관계");
-  await page.getByRole("button", { name: "아버지", exact: true }).click();
-  await expect(name).toHaveValue("아버지");
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await expect(name).toHaveValue("");
   await expect(relation).toHaveValue("부모님");
   await page.getByRole("button", { name: "가까운 친구", exact: true }).click();
   await expect(name).toHaveValue("가까운 친구");
   await expect(relation).toHaveValue("가까운 친구");
+  // 다른 단추가 넣은 이름은 부모님 단추가 비운다.
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
+  await expect(name).toHaveValue("");
   // 직접 쓴 이름은 지킨다.
   await name.fill("민수");
-  await page.getByRole("button", { name: "어머니", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).first().click();
   await expect(name).toHaveValue("민수");
   await expect(relation).toHaveValue("부모님");
 });

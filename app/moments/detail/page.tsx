@@ -59,7 +59,7 @@ function Detail() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="hand-page space-y-5">
       <h1 className="pt-2 text-xl font-semibold tracking-tight text-ink-900">
         {moment.emoji} {moment.title}
       </h1>

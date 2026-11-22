@@ -47,7 +47,7 @@ test("부모님에게는 건강 칩 하나만 있고, 누르면 숫자가 는다
   await clearState(page);
   await setUpProfile(page, 40);
   await page.goto("/people/new");
-  await page.getByRole("button", { name: "부모님", exact: true }).click();
+  await page.getByRole("button", { name: "부모님", exact: true }).last().click();
   await page.getByLabel("나이", { exact: true }).fill("70");
   const chips = page.getByTestId("ahead-chips").getByRole("button");
   await expect(chips).toHaveCount(1);

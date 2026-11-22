@@ -30,7 +30,7 @@ import { pairTitle } from "@/lib/shareCard";
 import { useActions, useAppState } from "@/lib/store";
 import { copyFor, horizonPassedSentence } from "@/lib/tone";
 import { offerUndo } from "@/lib/undo";
-import { confirmLeave, useUnsavedGuard, leaveTo, leaveAfterAdd, returnedAfterAdd, replaceTo, blockImeEnter } from "@/lib/unsaved";
+import { confirmLeave, useUnsavedGuard, leaveTo, leaveAfterAdd, bounceAfterAdd, blockImeEnter } from "@/lib/unsaved";
 import type { Person } from "@/lib/types";
 
 const COPY = defineCopy({
@@ -169,10 +169,7 @@ const COPY = defineCopy({
 export default function PersonEditor({ initial }: { initial: Person }) {
   const router = useRouter();
   // 저장을 마친 추가 화면에 뒤로 가기로 돌아왔으면 빈 칸을 다시 보여 주지 않는다(lib/unsaved.ts).
-  useEffect(() => {
-    const to = returnedAfterAdd();
-    if (to) replaceTo(router, to);
-  }, [router]);
+  useEffect(() => bounceAfterAdd(router), [router]);
   const { state } = useAppState();
   const { savePerson, removePerson } = useActions();
   const ids = useId();
@@ -317,16 +314,18 @@ export default function PersonEditor({ initial }: { initial: Person }) {
               type="button"
               className="chip"
               onClick={() => {
-                if (presets.indexOf(preset) < 2) setOther(false);
+                const parent = presets.indexOf(preset) === 0;
+                if (parent) setOther(false);
                 setDraft({
                   ...draft,
-                  // 어머니·아버지 단추는 부모님 칩도 함께 고른다.
-                  bonds: presets.indexOf(preset) < 2 ? withBond(draft.bonds, "parent") : draft.bonds,
+                  // 부모님 단추는 아래 부모님 칩도 함께 고른다.
+                  bonds: parent ? withBond(draft.bonds, "parent") : draft.bonds,
                   relation: preset.relation,
                   // 이모지는 화면에 보이지 않고 폴라로이드 사진을 고르는 데만 쓴다(lib/photos.ts).
                   emoji: preset.emoji,
                   // 비어 있거나 다른 단추가 넣은 이름이면 바꾼다. 직접 쓴 이름은 지키고.
-                  name: !draft.name.trim() || presets.some((p) => p.label === draft.name) ? preset.label : draft.name,
+                  // 부모님은 두 분이라 이름(엄마, 아빠…)은 비워 두고 직접 쓰게 한다.
+                  name: !draft.name.trim() || presets.some((p) => p.label === draft.name) ? (parent ? "" : preset.label) : draft.name,
                   frequency: preset.frequency,
                   hoursPerMeeting: preset.hoursPerMeeting,
                 });
