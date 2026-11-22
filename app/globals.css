@@ -210,16 +210,12 @@
   }
 
   /*
-   * 넓은 화면(웹으로 PC·태블릿에서 열 때). 종이 사진은 720×1280 세로라 가로 화면에 펴면
-   * 두세 배로 늘어나 구김이 뭉개진다. 넓은 화면에서는 사진 대신 크기와 상관없이 선명한
-   * 종이 결(SVG 잡음, 400px 타일)과 은은한 색 얼룩을 깐다.
+   * 넓은 화면(웹으로 PC·태블릿에서 열 때). 세로 종이 사진(720×1280)을 가로 화면에 펴면
+   * 두세 배로 늘어나 구김이 뭉개진다. 넓은 화면에는 가로로 찍은 종이(2752×1536)를 깐다.
    */
   @media (min-width: 640px) {
     body::before {
-      background:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-        radial-gradient(60% 50% at 20% 15%, rgb(255 255 255 / 0.35), transparent 70%),
-        radial-gradient(70% 60% at 85% 90%, rgb(150 110 60 / 0.08), transparent 70%);
+      background-image: var(--paper-wide, none);
     }
   }
 

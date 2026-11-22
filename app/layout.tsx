@@ -14,7 +14,7 @@ import SkipLink from "@/components/SkipLink";
 import UndoBar from "@/components/UndoBar";
 import { SITE_URL } from "@/lib/contact";
 import { STORAGE_KEY } from "@/lib/storageKey";
-import { PAPER_COUNT } from "@/lib/paper";
+import { PAPER_COUNT, WIDE_PAPER_COUNT } from "@/lib/paper";
 import { THEME_COLOR } from "@/lib/themeColor";
 import { GOATCOUNTER_CODE } from "@/lib/analytics";
 import { LANGS } from "@/lib/i18n";
@@ -95,6 +95,7 @@ const THEME_SCRIPT = `
   var paper = 1 + Math.floor(Math.random() * ${PAPER_COUNT});
   document.documentElement.dataset.paper = String(paper);
   document.documentElement.style.setProperty("--paper", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-' + paper + '.webp")');
+  document.documentElement.style.setProperty("--paper-wide", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-wide-' + (((paper - 1) % ${WIDE_PAPER_COUNT}) + 1) + '.webp")');
   // 편지는 구김 없이 얼룩만 진 종이 한 장(scripts/stained-paper.mjs).
   document.documentElement.style.setProperty("--letter-paper", 'url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/letter.webp")');
   // 첫 화면 내 카드(엽서)에 얹는 구김. 가장 많이 구겨진 종이의 그늘만 쓴다.

@@ -18,6 +18,16 @@ export function paperUrl(n: number): string {
   return `url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-${n}.webp")`;
 }
 
+/*
+ * 넓은 화면(PC·태블릿 웹)용 가로 종이 4장(public/paper/paper-wide-1..4.webp, 2752×1536).
+ * 세로 종이를 가로 화면에 펴면 두세 배로 늘어나 뭉개진다. 고른 세로 종이 번호에 따라 정한다.
+ */
+export const WIDE_PAPER_COUNT = 4;
+
+export function paperWideUrl(n: number): string {
+  return `url("${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/paper-wide-${((n - 1) % WIDE_PAPER_COUNT) + 1}.webp")`;
+}
+
 /** 편지·공유 카드의 종이. 구김 없이 바랜 색과 얼룩만(scripts/stained-paper.mjs). */
 export function letterPaperSrc(): string {
   return `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/paper/letter.webp`;

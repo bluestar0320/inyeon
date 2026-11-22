@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { paperUrl, pickPaper } from "@/lib/paper";
+import { paperUrl, paperWideUrl, pickPaper } from "@/lib/paper";
 
 /*
  * 페이지를 옮길 때마다 배경 종이를 바꿔 깐다. 첫 화면의 종이는 layout.tsx의 그리기 전
@@ -22,6 +22,7 @@ export default function PaperBackground() {
     const next = pickPaper(previous);
     root.dataset.paper = String(next);
     root.style.setProperty("--paper", paperUrl(next));
+    root.style.setProperty("--paper-wide", paperWideUrl(next));
   }, [pathname]);
   return null;
 }
