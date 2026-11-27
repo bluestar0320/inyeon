@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { flushSync } from "react-dom";
 import {
   forwardRef,
   useEffect,
@@ -238,7 +239,9 @@ const CardRow = forwardRef<CardRowHandle, Props>(function CardRow(
         // 밖에 둔 채로 번호를 바꾸고, 다음 그림에서 더미 맨 뒤 자리로 미끄러져 들어간다.
         el.style.transition = "none";
         el.style.transform = OUT;
-        commit(to);
+        // 더미 순서를 바로 바꿔 그린다. React가 늦게 그리면 아래에서 transform을 지우는 순간
+        // 날아간 장이 맨 위 자리에 한 장면 되살아난다(넘길 때마다 보이던 잔상).
+        flushSync(() => commit(to));
         requestAnimationFrame(() => {
           el.style.transition = "";
           el.style.transform = "";
