@@ -49,6 +49,8 @@ for (const scheme of ["light", "dark"] as const) {
       test(`${label}에 위반이 없다`, async ({ page }) => {
         await page.goto(path);
         await page.waitForTimeout(200);
+        // 서서히 나타나는 글자(첫 화면 문장 등)가 다 나타난 뒤에 잰다. 중간에 재면 흐린 글자를 대비 부족으로 잡는다.
+        await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))));
         const { violations } = await new AxeBuilder({ page }).withTags(RULES).analyze();
         expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
       });
