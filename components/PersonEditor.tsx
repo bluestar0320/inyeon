@@ -185,8 +185,8 @@ export default function PersonEditor({ initial }: { initial: Person }) {
   const presets = relationPresets();
   const copy = copyFor(state.settings.tone);
   const result = useMemo(
-    () => computeRelationship(draft, state.profile),
-    [draft, state.profile],
+    () => computeRelationship(draft, state.profile, undefined, state.marriage),
+    [draft, state.profile, state.marriage],
   );
   // 「지금까지 적어도 N번」 미리보기. 상세 화면과 같은 방식으로 태어난 해를 구한다.
   const pastPreview = useMemo(() => {

@@ -202,8 +202,8 @@ export default function PersonView({ person }: { person: Person }) {
   // 화면을 켜 둔 채 자정을 넘기면 큰 숫자와 「오늘」 문장, 말투 바꾸기도 새날 기준으로 바뀐다.
   const today = useToday();
   const result = useMemo(
-    () => computeRelationship(draft, state.profile),
-    [draft, state.profile, today],
+    () => computeRelationship(draft, state.profile, undefined, state.marriage),
+    [draft, state.profile, state.marriage, today],
   );
   const growth = useMemo(() => computeGrowth(person), [person]);
   /*
@@ -396,7 +396,7 @@ export default function PersonView({ person }: { person: Person }) {
         draft={draftSetup}
         onDraft={setDraftSetup}
         saved={{ frequency: person.frequency, filters: person.filters }}
-        totalFor={(setup) => computeRelationship({ ...person, ...setup }, state.profile).total}
+        totalFor={(setup) => computeRelationship({ ...person, ...setup }, state.profile, undefined, state.marriage).total}
         scenarios={person.scenarios ?? []}
         onScenarios={(scenarios) => savePerson({ ...person, scenarios, updatedAt: new Date().toISOString() })}
         onApply={() => savePerson({ ...person, ...draftSetup, updatedAt: new Date().toISOString() })}

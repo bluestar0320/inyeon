@@ -236,7 +236,7 @@ export default function PeoplePage() {
   const rows = useMemo(() => {
     const all = state.people.map((person) => ({
       person,
-      result: computeRelationship(person, state.profile),
+      result: computeRelationship(person, state.profile, undefined, state.marriage),
     }));
     const found = all.filter(({ person }) =>
       matches(query, [person.name, person.relation, person.note]),
@@ -261,7 +261,7 @@ export default function PeoplePage() {
       return a.result.total - b.result.total;
     });
     return { all, mine, sorted };
-  }, [state.people, state.profile, state.settings.peopleOrder, query, sort]);
+  }, [state.people, state.profile, state.marriage, state.settings.peopleOrder, query, sort]);
   // 찾는 중에는 옮기지 않는다. 걸러진 목록에서 한 칸이 전체 순서의 어디인지 알 수 없다.
   const reordering = sort === "mine" && !query.trim();
   const move = (id: string, step: -1 | 1) => saveSettings({ peopleOrder: moved(rows.mine, rows.mine.indexOf(id), step) });

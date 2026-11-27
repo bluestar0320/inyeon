@@ -15,7 +15,7 @@ import type {
 } from "./types";
 import { defineCopy, tr } from "./i18n.ts";
 import { lookupLifeExpectancy } from "./lifeExpectancy.ts";
-import { ageApplies, ageFactorAt, aheadFor, cleanAhead, yearFactor } from "./future.ts";
+import { ageApplies, ageFactorAt, aheadFor, cleanAhead, myMarryApplies, yearFactor } from "./future.ts";
 import { ledger, type Ledger } from "./meetings.ts";
 import { relOf } from "./rel.ts";
 
@@ -308,7 +308,7 @@ export interface RelationshipResult extends CountResult {
   /** 「만났어요」 기록으로 센 함께한·놓친 만남(lib/meetings.ts). 인연을 넣은 날부터 센다. */
   together: Ledger;
   /** 숫자를 바꾼 이유: 나이 감소, 앞으로 칩, 켜진 필터. */
-  causes: { age: boolean; ahead: Ahead[]; filters: boolean };
+  causes: { age: boolean; ahead: Ahead[]; myMarry: boolean; filters: boolean };
 }
 
 /** 목표 시점까지 남은 기간. horizon이 life면 상한이 없으므로 null. */
@@ -343,6 +343,8 @@ export function computeRelationship(
   person: Person,
   profile: Profile | null,
   now: Date = new Date(),
+  /** 내 결혼 계획. 목표 나이가 아직 앞이면 그때부터 친구·형제·그 밖의 만남이 준다. */
+  marriage: MarriagePlan | null = null,
 ): RelationshipResult {
   const theirYears = remainingYears(person, now);
   const myYears = profile ? remainingYears(profile, now) : null;
@@ -378,19 +380,22 @@ export function computeRelationship(
   const rel = relOf(person);
   const baseAge = resolveAge(profile ?? person, now) ?? resolveAge(person, now);
   const ahead = cleanAhead(person.ahead);
+  const myAge = profile ? resolveAge(profile, now) : null;
+  const marryIn = marriage && myAge !== null && marriage.targetAge > myAge ? marriage.targetAge - myAge : null;
   const counted = countOccurrences({
     years: sharedYears,
     perYear,
     filters: person.filters,
-    yearFactor: yearFactor(rel, ahead, baseAge),
+    yearFactor: yearFactor(rel, ahead, baseAge, marryIn),
   });
   // yearFactor는 조각의 한가운데 나이를 보므로, 여기서도 마지막 조각의 한가운데로 본다.
   const lastI = Math.ceil(sharedYears) - 1;
   const lastMid = lastI + (sharedYears - lastI) / 2;
-  const plain = countOccurrences({ years: sharedYears, perYear, yearFactor: yearFactor(rel, ahead, baseAge) });
+  const plain = countOccurrences({ years: sharedYears, perYear, yearFactor: yearFactor(rel, ahead, baseAge, marryIn) });
   const causes = {
     age: sharedYears > 0 && ageApplies(rel) && baseAge !== null && ageFactorAt(baseAge, lastMid) < 1,
     ahead: sharedYears > 1 ? aheadFor(rel).filter((a) => ahead?.includes(a)) : [],
+    myMarry: marryIn !== null && myMarryApplies(rel) && sharedYears > marryIn,
     // 켜 둔 필터가 실제로 개수를 바꿀 때만 원인으로 본다.
     filters:
       (person.filters ?? []).some((f) => f.enabled) &&

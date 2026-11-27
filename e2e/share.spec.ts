@@ -116,6 +116,14 @@ test("내 사진을 넣으면 폴라로이드와 카드에 들어가고, 이 기
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/\/people\/detail/);
   await page.getByTestId("own-photo").setInputFiles("public/photos/railway.webp");
+  // 맞추기 창: 취소하면 그대로, 끌어서 옮긴 뒤 넣으면 들어간다.
+  await page.getByRole("button", { name: "취소" }).click();
+  await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", /\/photos\/mother(-\d)?\.webp$/);
+  await page.getByTestId("own-photo").setInputFiles("public/photos/railway.webp");
+  const frame = page.getByTestId("crop-frame");
+  await frame.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.getByRole("button", { name: "이대로 넣기" }).click();
   const polaroid = page.locator(".polaroid img").first();
   await expect(polaroid).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
   // 사진은 기록(localStorage)이 아니라 IndexedDB에 들어가고, 새로고침해도 남는다.
@@ -162,6 +170,7 @@ test("IndexedDB를 못 쓰는 환경에서는 사진을 예전처럼 기록 안�
   await page.getByRole("button", { name: "추가하기" }).click();
   await page.waitForURL(/\/people\/detail/);
   await page.getByTestId("own-photo").setInputFiles("public/photos/railway.webp");
+  await page.getByRole("button", { name: "이대로 넣기" }).click();
   await expect(page.locator(".polaroid img").first()).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
   const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!).people[0].ownPhoto, STORAGE_KEY);
   expect(saved).toMatch(/^data:image\/jpeg;base64,/);

@@ -26,3 +26,6 @@ export const AHEAD_FACTOR: Record<Rel, Partial<Record<Ahead, number>>> = {
   parent: { health: 2 },
   grandparent: { health: 2 },
 };
+
+// 앱이 정한 값(사용자 결정 2026-11-27): 내 결혼(결혼 계획의 목표 나이)부터 친구·형제·그 밖의 만남이 반으로. 「앞으로」 결혼 칩과 같은 값.
+export const MY_MARRY_FACTOR: Partial<Record<Rel, number>> = { friend: 0.5, other: 0.5, sibling: 0.5 };

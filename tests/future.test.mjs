@@ -55,3 +55,12 @@ test("친구의 나이 감소와 칩이 함께 곱해진다, 그 밖에도 나�
   assert.ok(Math.abs(yearFactor("friend", ["marry"], 25)(10, 1) - 0.45) < 1e-9);
   assert.ok(yearFactor("other", undefined, 25)(10, 1) < 1);
 });
+
+test("yearFactor: 내 결혼(marryIn)부터 친구·형제·그 밖만 반으로, 이미 지났으면 그대로", () => {
+  const f = yearFactor("friend", undefined, null, 3);
+  assert.equal(f(1, 1), 1);
+  assert.equal(f(3, 1), 0.5);
+  assert.equal(yearFactor("parent", undefined, null, 3)(5, 1), 1);
+  assert.equal(yearFactor("friend", undefined, null, null)(5, 1), 1);
+  assert.equal(yearFactor("friend", ["marry"], null, 3)(5, 1), 0.25);
+});

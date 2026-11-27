@@ -655,7 +655,20 @@ test("35세 사용자의 칩 없는 친구는 보정이 없다", () => {
   const r = computeRelationship(p, profile({ ageYears: 35 }), NOW);
   const plain = countOccurrences({ years: r.sharedYears, perYear: 12 }).total;
   assert.ok(Math.abs(r.total - plain) < 1e-9);
-  assert.deepEqual(r.causes, { age: false, ahead: [], filters: false });
+  assert.deepEqual(r.causes, { age: false, ahead: [], myMarry: false, filters: false });
+});
+
+test("결혼 계획의 목표 나이가 앞이면 그때부터 친구만 줄고, 부모님은 그대로", () => {
+  const marriage = { targetAge: 38, frequency: { count: 1, unit: "month" }, filters: [], updatedAt: "" };
+  const me = profile({ ageYears: 35 });
+  const before = computeRelationship(friend(), me, NOW);
+  const after = computeRelationship(friend(), me, NOW, marriage);
+  assert.ok(after.total < before.total);
+  assert.equal(after.causes.myMarry, true);
+  const mom = person({ relation: "어머니", ageYears: 60, lifeExpectancy: 85 });
+  assert.equal(computeRelationship(mom, me, NOW, marriage).total, computeRelationship(mom, me, NOW).total);
+  // 목표 나이가 이미 지났으면 반영하지 않는다.
+  assert.equal(computeRelationship(friend(), profile({ ageYears: 40 }), NOW, marriage).causes.myMarry, false);
 });
 
 test("25세 사용자의 친구는 나이 감소로 줄어든다", () => {

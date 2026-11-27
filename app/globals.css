@@ -506,7 +506,12 @@
    * 입력 칸은 읽고 고치는 게 먼저라 그대로 둔다. 설정·편집 화면은 이 표시가 없다.
    */
   .hand-page :not(input, textarea, select, option),
-  .hand-page :is(.letter, .font-album, .numeral) {
+  .hand-page :is(.letter, .font-album) {
+    font-family:
+      "East Sea Dokdo Page", "East Sea Dokdo", "Nanum Myeongjo", "AppleMyungjo", "Batang", serif;
+  }
+  /* 큰 숫자는 이미 커서 키우지 않는다(넘치지 않게). */
+  .hand-page .numeral-hero {
     font-family:
       "East Sea Dokdo", "Nanum Myeongjo", "AppleMyungjo", "Batang", serif;
   }

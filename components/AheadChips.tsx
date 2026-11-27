@@ -10,23 +10,23 @@ import type { Ahead } from "@/lib/types";
 /* 인연 편집 화면의 「앞으로」 칩. 관계마다 보이는 칩이 다르고(lib/future.ts), 하나도 없으면 줄째 감춘다. */
 const COPY = defineCopy({
   ko: {
-    title: "앞으로", either: "나든 이 사람이든, 둘 중 한 사람 이야기면 골라 주세요.", them: "이 사람 이야기예요.",
+    title: "앞으로", either: "결혼은 이 사람 이야기일 때만 골라 주세요. 내 결혼은 결혼 계획의 목표 나이로 따져요. 아이·건강은 둘 중 누구 이야기든 괜찮아요.", them: "이 사람 이야기예요.",
     names: { marry: "결혼할 것 같아요", child: "아이가 생길 것 같아요", health: "건강이 나빠지고 있어요" },
   },
   en: {
-    title: "Coming up", either: "Pick it whether it's you or them.", them: "This is about them.",
+    title: "Coming up", either: "Marriage means theirs; yours comes from your marriage plan. Child and health can be either of you.", them: "This is about them.",
     names: { marry: "Likely to marry", child: "Likely to have a child", health: "Health is getting worse" },
   },
   ja: {
-    title: "これから", either: "自分でも相手でも、どちらかの話なら選んでください。", them: "相手の話です。",
+    title: "これから", either: "結婚は相手の話のときだけ選んでください。自分の結婚は結婚の計画の目標年齢で数えます。子ども・体調はどちらの話でも構いません。", them: "相手の話です。",
     names: { marry: "結婚しそう", child: "子どもができそう", health: "体調が悪くなってきた" },
   },
   es: {
-    title: "Lo que viene", either: "Márcalo si es tu caso o el suyo.", them: "Se refiere a esta persona.",
+    title: "Lo que viene", either: "La boda es la suya; la tuya sale de tu plan de boda. Hijos y salud pueden ser de cualquiera.", them: "Se refiere a esta persona.",
     names: { marry: "Probablemente se case", child: "Probablemente tenga hijos", health: "Su salud está empeorando" },
   },
   zh: {
-    title: "接下来", either: "不管是你还是对方，有一方是这样就选。", them: "说的是对方。",
+    title: "接下来", either: "结婚只在说对方时选，你自己的结婚按结婚计划的目标年龄算。孩子、健康说谁都可以。", them: "说的是对方。",
     names: { marry: "可能要结婚了", child: "可能要有孩子了", health: "身体越来越差" },
   },
 });

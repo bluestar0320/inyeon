@@ -84,12 +84,12 @@ export default function HomePage() {
   const people = useMemo(() => {
     const rows = state.people.map((person) => ({
       person,
-      result: computeRelationship(person, profile),
+      result: computeRelationship(person, profile, undefined, state.marriage),
     }));
     return order?.length
       ? inOrder(rows, order, ({ person }) => person.id)
       : rows.sort((a, b) => a.result.total - b.result.total);
-  }, [state.people, profile, order]);
+  }, [state.people, profile, state.marriage, order]);
 
   const moments = useMemo(
     () =>

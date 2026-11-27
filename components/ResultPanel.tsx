@@ -24,7 +24,7 @@ function afterWhat(kind: PastLineKind | undefined): AfterWhat {
 
 const COPY = defineCopy({
   ko: {
-    causeNames: { age: "나이", marry: "결혼", child: "아이", health: "건강", filters: "직접 건 조건" },
+    causeNames: { age: "나이", marry: "결혼", myMarry: "내 결혼", child: "아이", health: "건강", filters: "직접 건 조건" },
     join: "·",
     and: "·",
     reason: (names: string, from: string, pct: string, down: boolean) => `${josa(names, "을/를")} 따져 보니 ${from}번에서 ${pct} ${down ? "줄었어요" : "늘었어요"}.`,
@@ -58,7 +58,7 @@ const COPY = defineCopy({
     estimatedYear: (years: string) => `올해 앱에 넣기 전까지(${years})는 지금 빈도로 어림했어요.`,
   },
   en: {
-    causeNames: { age: "age", marry: "marriage", child: "a child", health: "health", filters: "your own conditions" },
+    causeNames: { age: "age", marry: "marriage", myMarry: "your own wedding", child: "a child", health: "health", filters: "your own conditions" },
     join: ", ",
     and: " and ",
     reason: (names, from, pct, down) => `With ${names} factored in, it's ${down ? "down" : "up"} ${pct} from ${from}.`,
@@ -92,7 +92,7 @@ const COPY = defineCopy({
     estimatedYear: (years) => `The part of this year before you added them (${years}) is estimated at the current frequency.`,
   },
   ja: {
-    causeNames: { age: "年齢", marry: "結婚", child: "子ども", health: "健康", filters: "自分で付けた条件" },
+    causeNames: { age: "年齢", marry: "結婚", myMarry: "自分の結婚", child: "子ども", health: "健康", filters: "自分で付けた条件" },
     join: "・",
     and: "・",
     reason: (names, from, pct, down) => `${names}を考えると、${from}回から${pct}${down ? "減りました" : "増えました"}。`,
@@ -126,7 +126,7 @@ const COPY = defineCopy({
     estimatedYear: (years) => `今年、登録する前まで(${years})は今の頻度で見積もっています。`,
   },
   es: {
-    causeNames: { age: "la edad", marry: "el matrimonio", child: "un hijo", health: "la salud", filters: "tus condiciones" },
+    causeNames: { age: "la edad", marry: "el matrimonio", myMarry: "tu boda", child: "un hijo", health: "la salud", filters: "tus condiciones" },
     join: ", ",
     and: " y ",
     reason: (names, from, pct, down) => `Teniendo en cuenta ${names}, ${down ? "bajó" : "subió"} un ${pct} desde ${from}.`,
@@ -160,7 +160,7 @@ const COPY = defineCopy({
     estimatedYear: (years) => `La parte de este año antes de añadirlo (${years}) se estima con la frecuencia actual.`,
   },
   zh: {
-    causeNames: { age: "年龄", marry: "结婚", child: "孩子", health: "健康", filters: "自己设的条件" },
+    causeNames: { age: "年龄", marry: "结婚", myMarry: "你自己结婚", child: "孩子", health: "健康", filters: "自己设的条件" },
     join: "、",
     and: "、",
     reason: (names, from, pct, down) => `考虑到${names}，从${from}次${down ? "减少" : "增加"}了${pct}。`,
@@ -247,10 +247,10 @@ export default function ResultPanel({
   const filtered = result.total < result.baselineTotal - 0.5;
   const cut = result.baselineTotal > 0 ? 1 - result.total / result.baselineTotal : 0;
   const causeKeys = causes
-    ? [...(causes.age ? ["age" as const] : []), ...causes.ahead, ...(causes.filters ? ["filters" as const] : [])]
+    ? [...(causes.age ? ["age" as const] : []), ...causes.ahead, ...(causes.myMarry ? ["myMarry" as const] : []), ...(causes.filters ? ["filters" as const] : [])]
     : [];
   const changed = Math.abs(result.total - result.baselineTotal) > 0.5;
-  const aheadNames = causes?.ahead.map((a) => t.causeNames[a]).join(t.join) ?? "";
+  const aheadNames = causes ? [...causes.ahead, ...(causes.myMarry ? ["myMarry" as const] : [])].map((a) => t.causeNames[a]).join(t.join) : "";
   const hasPast = !together && Boolean(past && past.count >= 1);
   const metTotal = together ? together.met + together.estimated : 0;
   // 1번도 안 되는 줄만 감춘다. 해가 짧아도 셈에 들어갔으면 근거에 보인다.
